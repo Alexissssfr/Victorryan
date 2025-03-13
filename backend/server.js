@@ -2,6 +2,8 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const app = express();
+const gamesRouter = require("./routes/games");
+const cardsRouter = require("./routes/cards");
 
 // Configuration de base
 app.use(cors());
@@ -12,6 +14,10 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
+
+// Routes pour les parties et les cartes
+app.use("/games", gamesRouter);
+app.use("/cards", cardsRouter);
 
 // Port d'écoute
 const PORT = process.env.PORT || 3000;

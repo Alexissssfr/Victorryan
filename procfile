@@ -1,1 +1,1 @@
-web: node render-start.js
+web: npm start
