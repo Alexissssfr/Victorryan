@@ -3,7 +3,7 @@ services:
     name: victorryan
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node render-start.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -12,3 +12,4 @@ services:
         - backend/**
         - frontend/**
         - package.json
+        - render-start.js
