@@ -1,0 +1,35 @@
+/* Styles principaux du jeu */
+
+#game-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  #main-menu {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  #game-board {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .card {
+    width: 100px;
+    height: 150px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  /* ... autres styles ... */

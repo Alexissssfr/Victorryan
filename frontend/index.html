@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Jeu de Cartes Cosmiques</title>
+    <link rel="stylesheet" href="css/game.css" />
+  </head>
+  <body>
+    <div id="game-container">
+      <!-- Menu principal -->
+      <div id="main-menu">
+        <button id="create-game-btn">Créer une partie</button>
+        <div id="join-game">
+          <input type="text" id="game-id-input" placeholder="ID de la partie" />
+          <button id="join-game-btn">Rejoindre une partie</button>
+        </div>
+      </div>
+
+      <!-- Plateau de jeu -->
+      <div id="game-board" style="display: none">
+        <!-- Cartes du joueur 1 -->
+        <div id="player1-cards"></div>
+
+        <!-- Cartes du joueur 2 -->
+        <div id="player2-cards"></div>
+
+        <!-- Actions du joueur -->
+        <div id="player-actions">
+          <button id="play-bonus-btn">Jouer un bonus</button>
+          <button id="attack-btn">Attaquer</button>
+          <button id="end-turn-btn">Finir le tour</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/game.js"></script>
+  </body>
+</html>
