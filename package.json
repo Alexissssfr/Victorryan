@@ -2,10 +2,10 @@
   "name": "victorryan",
   "version": "1.0.0",
   "description": "Jeu de cartes en ligne",
-  "main": "start.js",
+  "main": "backend/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node start.js",
+    "start": "bash start.sh",
     "dev": "cd backend && nodemon server.js"
   },
   "dependencies": {
