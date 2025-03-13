@@ -3,7 +3,7 @@ services:
     name: victorryan
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node start.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -13,3 +13,4 @@ services:
         - frontend/**
         - package.json
         - package-lock.json
+        - start.js
