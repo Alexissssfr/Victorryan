@@ -2,18 +2,9 @@
   "name": "victorryan",
   "version": "1.0.0",
   "description": "Jeu de cartes en ligne",
-  "main": "backend/server.js",
-  "type": "commonjs",
+  "private": true,
   "scripts": {
-    "start": "bash start.sh",
-    "dev": "cd backend && nodemon server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "cors": "^2.8.5"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+    "start": "cd backend && npm start",
+    "install": "cd backend && npm install"
   }
 }
