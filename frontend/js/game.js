@@ -151,6 +151,10 @@ function generatePlayerId() {
 // Configurer les événements pour les boutons du menu principal
 createGameBtn.addEventListener("click", createGame);
 joinGameBtn.addEventListener("click", () => {
-  gameId = gameIdInput.value;
+  if (!gameIdInput.value.trim()) {
+    alert("Veuillez entrer un ID de partie valide.");
+    return;
+  }
+  gameId = gameIdInput.value.trim();
   joinGame();
 });
