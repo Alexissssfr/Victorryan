@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
-const socketIo = require("socket.io");
+const { Server } = require("socket.io");
 require("dotenv").config();
 const crypto = require("crypto");
 const gameCache = require("./backend/services/gameCache");
@@ -10,13 +10,16 @@ const cardManager = require("./backend/services/cardManager");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new Server(server);
 
-// Afficher les chemins pour le débogage
+// Configuration des chemins
+const frontendPath = path.join(__dirname, "frontend");
+const stockPath = path.join(__dirname, "stock");
+
 console.log("Chemins de l'application:");
-console.log("- Répertoire courant:", process.cwd());
-console.log("- Chemin du frontend:", path.join(__dirname, "frontend"));
-console.log("- Chemin du stock:", path.join(__dirname, "stock"));
+console.log("- Répertoire courant:", __dirname);
+console.log("- Chemin du frontend:", frontendPath);
+console.log("- Chemin du stock:", stockPath);
 console.log("- Structure des répertoires:");
 console.log("  - backend/:", path.join(__dirname, "backend"));
 console.log("  - backend/services/:", path.join(__dirname, "backend/services"));
@@ -26,10 +29,10 @@ app.use(cors());
 app.use(express.json());
 
 // Servir les fichiers statiques du frontend
-app.use(express.static(path.join(__dirname, "frontend")));
+app.use(express.static(frontendPath));
 
 // Servir les fichiers du dossier stock (pour les images des cartes)
-app.use("/stock", express.static(path.join(__dirname, "stock")));
+app.use("/stock", express.static(stockPath));
 
 // Initialiser le module de gestion des jeux avec Socket.io
 const gameManager = require("./backend/services/gameManager")(io);
@@ -41,23 +44,23 @@ app.use("/cards", require("./backend/routes/cards"));
 // Routes pour la gestion des parties
 app.post("/api/games/create", async (req, res) => {
   try {
-    const gameId = gameCache.createGame();
-    const playerId = req.body.playerId || crypto.randomUUID();
+    const { playerId } = req.body;
+    if (!playerId) {
+      throw new Error("playerId requis");
+    }
 
-    const game = gameCache.getGame(gameId);
-    game.addPlayer(playerId); // Le créateur est player1
-
+    const result = await gameCache.createGame(playerId);
     res.json({
       success: true,
-      gameId,
-      playerId,
-      state: game.getStateForPlayer(playerId),
+      gameId: result.gameId,
+      playerId: playerId,
+      state: result.state,
     });
   } catch (error) {
     console.error("Erreur création partie:", error);
     res.status(500).json({
       success: false,
-      error: "Erreur lors de la création de la partie",
+      error: error.message,
     });
   }
 });
@@ -156,69 +159,25 @@ app.get("/api/check-svg/:type/:id", async (req, res) => {
   }
 });
 
-// Configuration des WebSockets
+// Gestion des WebSockets
 io.on("connection", (socket) => {
   console.log("Un client s'est connecté:", socket.id);
 
-  // Rejoindre une partie
   socket.on("joinGame", async ({ gameId, playerId }) => {
     try {
       const game = gameCache.getGame(gameId);
       if (!game) {
-        socket.emit("error", { message: "Partie non trouvée" });
-        return;
+        throw new Error("Partie non trouvée");
+      }
+
+      const playerRole = game.addPlayer(playerId);
+      if (!playerRole) {
+        throw new Error("Impossible de rejoindre la partie");
       }
 
       socket.join(gameId);
-      console.log(`Joueur ${playerId} a rejoint la partie ${gameId}`);
-
-      // Envoyer l'état actuel de la partie au joueur
       socket.emit("gameState", game.getStateForPlayer(playerId));
-
-      // Notifier les autres joueurs
       socket.to(gameId).emit("playerJoined", { playerId });
-    } catch (error) {
-      socket.emit("error", { message: error.message });
-    }
-  });
-
-  // Jouer un bonus
-  socket.on("playBonus", async ({ gameId, playerId, bonusId, targetId }) => {
-    try {
-      const game = gameCache.getGame(gameId);
-      if (!game) {
-        socket.emit("error", { message: "Partie non trouvée" });
-        return;
-      }
-
-      const newState = game.applyBonusToCard(bonusId, targetId, playerId);
-
-      // Envoyer le nouvel état à tous les joueurs
-      io.to(gameId).emit("gameStateUpdated", {
-        player1State: game.getStateForPlayer(game.players.player1),
-        player2State: game.getStateForPlayer(game.players.player2),
-      });
-    } catch (error) {
-      socket.emit("error", { message: error.message });
-    }
-  });
-
-  // Fin de tour
-  socket.on("endTurn", ({ gameId, playerId }) => {
-    try {
-      const game = gameCache.getGame(gameId);
-      if (!game) {
-        socket.emit("error", { message: "Partie non trouvée" });
-        return;
-      }
-
-      game.endTurn();
-
-      // Envoyer le nouvel état à tous les joueurs
-      io.to(gameId).emit("gameStateUpdated", {
-        player1State: game.getStateForPlayer(game.players.player1),
-        player2State: game.getStateForPlayer(game.players.player2),
-      });
     } catch (error) {
       socket.emit("error", { message: error.message });
     }

@@ -19,6 +19,10 @@ async function createGame() {
     console.log("Réponse reçue:", data);
 
     if (data.success) {
+      // Stocker l'ID de partie et l'ID joueur
+      window.gameId = data.gameId;
+      window.playerId = playerId;
+
       // Cacher le menu et afficher le plateau
       document.getElementById("main-menu").style.display = "none";
       document.getElementById("game-board").style.display = "block";
@@ -26,22 +30,61 @@ async function createGame() {
       // Mettre à jour l'affichage du code de partie
       const gameIdDisplay = document.getElementById("game-id-display");
       if (gameIdDisplay) {
-        gameIdDisplay.textContent = `Code partie: ${data.state.gameId}`;
+        gameIdDisplay.textContent = `Code partie: ${data.gameId}`;
       }
 
-      // Stocker l'ID de partie et l'ID joueur
-      window.gameId = data.state.gameId;
-      window.playerId = playerId;
-
-      // Mettre à jour l'état du jeu
-      if (window.gameUI) {
-        window.gameUI.updateState(data.state);
+      // Connecter au WebSocket
+      if (window.gameSocket) {
+        window.gameSocket.joinGame(data.gameId, playerId);
       }
     }
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
+    alert("Erreur lors de la création de la partie");
   }
 }
+
+async function joinGame() {
+  try {
+    const gameId = document.getElementById("game-id-input").value.toUpperCase();
+    const playerId = crypto.randomUUID();
+
+    if (!gameId) {
+      alert("Veuillez entrer un code de partie");
+      return;
+    }
+
+    // Cacher le menu et afficher le plateau
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game-board").style.display = "block";
+
+    // Stocker l'ID de partie et l'ID joueur
+    window.gameId = gameId;
+    window.playerId = playerId;
+
+    // Connecter au WebSocket
+    if (window.gameSocket) {
+      window.gameSocket.joinGame(gameId, playerId);
+    }
+  } catch (error) {
+    console.error("Erreur lors de la connexion à la partie:", error);
+    alert("Erreur lors de la connexion à la partie");
+  }
+}
+
+// Ajouter les gestionnaires d'événements quand le DOM est chargé
+document.addEventListener("DOMContentLoaded", () => {
+  const createBtn = document.getElementById("create-game-btn");
+  const joinBtn = document.getElementById("join-game-btn");
+
+  if (createBtn) {
+    createBtn.addEventListener("click", createGame);
+  }
+
+  if (joinBtn) {
+    joinBtn.addEventListener("click", joinGame);
+  }
+});
 
 class GameUI {
   constructor(container) {
