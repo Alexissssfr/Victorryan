@@ -4,14 +4,31 @@ const cardManager = require("./cardManager");
 // Map pour stocker les parties actives en mémoire
 const activeGames = new Map();
 
+// Déplacer le code de distribution des cartes dans une fonction asynchrone
+async function distributeInitialCards(game, playerId) {
+  if (!game.player1.hand || game.player1.hand.length === 0) {
+    const persoCards = await cardManager.getRandomCards("perso", 5);
+    const bonusCards = await cardManager.getRandomCards("bonus", 5);
+
+    game.player1.hand = [...persoCards, ...bonusCards];
+    game.player1.cardSVGs = {};
+
+    // Stocker les SVG
+    [...persoCards, ...bonusCards].forEach((card) => {
+      if (card.svgContent) {
+        game.player1.cardSVGs[card.id] = card.svgContent;
+      }
+    });
+  }
+  return game;
+}
+
 // Fonction pour gérer les parties avec Socket.io
 module.exports = function (io) {
   return {
     createGame: async function (playerId) {
       try {
         const gameId = generateUniqueId();
-
-        // Structure initiale de la partie
         const gameState = {
           id: gameId,
           player1: {
@@ -31,9 +48,11 @@ module.exports = function (io) {
           createdAt: new Date().toISOString(),
         };
 
+        // Distribuer les cartes initiales
+        await distributeInitialCards(gameState, playerId);
+
         // Sauvegarder dans la Map locale
         activeGames.set(gameId, gameState);
-        console.log(`Partie ${gameId} créée pour le joueur ${playerId}`);
 
         return gameId;
       } catch (error) {
@@ -59,6 +78,8 @@ module.exports = function (io) {
         // Si le joueur 1 essaie de rejoindre à nouveau
         if (game.player1 && game.player1.id === playerId) {
           console.log(`Le joueur 1 (${playerId}) rejoint sa propre partie`);
+          // Si le joueur 1 rejoint, s'assurer qu'il a des cartes
+          game = await distributeInitialCards(game, playerId);
           return true;
         }
 
@@ -137,22 +158,4 @@ module.exports = function (io) {
 function generateUniqueId() {
   // Générer un UUID v4
   return crypto.randomUUID();
-}
-
-// Dans la fonction joinGame, modifier la distribution des cartes
-if (!game.player1.hand || game.player1.hand.length === 0) {
-  const persoCards = await cardManager.getRandomCards("perso", 5);
-  const bonusCards = await cardManager.getRandomCards("bonus", 5);
-
-  game.player1.hand = [...persoCards, ...bonusCards];
-  game.player1.cardSVGs = {};
-
-  // Stocker les SVG
-  [...persoCards, ...bonusCards].forEach((card) => {
-    if (card.svgContent) {
-      game.player1.cardSVGs[card.id] = card.svgContent;
-    }
-  });
-
-  // ... reste du code de distribution des cartes ...
 }
