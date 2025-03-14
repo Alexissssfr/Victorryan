@@ -1,37 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
-    <title>Jeu de Cartes Cosmiques</title>
-    <link rel="stylesheet" href="css/game.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Victor Ryan - Jeu de Cartes</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   </head>
   <body>
-    <div id="game-container">
+    <div class="container">
       <!-- Menu principal -->
       <div id="main-menu">
-        <button id="create-game-btn">Créer une partie</button>
-        <div id="join-game">
-          <input type="text" id="game-id-input" placeholder="ID de la partie" />
-          <button id="join-game-btn">Rejoindre une partie</button>
+        <h1>Victor Ryan</h1>
+        <p>Un jeu de cartes stratégique dans un univers fantastique</p>
+
+        <div class="menu-options">
+          <div class="menu-option">
+            <h2>Créer une nouvelle partie</h2>
+            <p>
+              Commencez une nouvelle partie et invitez un ami à vous rejoindre
+            </p>
+            <button id="create-game-btn" class="btn">Créer une partie</button>
+          </div>
+
+          <div class="menu-option">
+            <h2>Rejoindre une partie</h2>
+            <p>
+              Rejoignez une partie existante en utilisant un code d'invitation
+            </p>
+            <input
+              type="text"
+              id="game-id-input"
+              placeholder="Entrez l'ID de la partie"
+            />
+            <button id="join-game-btn" class="btn">Rejoindre</button>
+          </div>
         </div>
       </div>
 
       <!-- Plateau de jeu -->
-      <div id="game-board" style="display: none">
-        <!-- Cartes du joueur 1 -->
-        <div id="player1-cards"></div>
+      <div id="game-board">
+        <div class="game-header">
+          <div class="game-info">
+            <div id="game-id-display">Partie #ABC123</div>
+            <div id="turn-indicator" class="your-turn">C'est votre tour</div>
+          </div>
 
-        <!-- Cartes du joueur 2 -->
-        <div id="player2-cards"></div>
-
-        <!-- Actions du joueur -->
-        <div id="player-actions">
-          <button id="play-bonus-btn">Jouer un bonus</button>
-          <button id="attack-btn">Attaquer</button>
-          <button id="end-turn-btn">Finir le tour</button>
+          <div class="game-status">
+            <span id="status-display">En attente...</span>
+            <span id="status" class="status-indicator connected"></span>
+          </div>
         </div>
+
+        <div class="cards-container">
+          <!-- Zone de l'adversaire -->
+          <div class="player-area opponent">
+            <h2>Cartes de l'adversaire</h2>
+            <div id="player2-cards" class="cards-grid">
+              <!-- Les cartes de l'adversaire seront ajoutées ici dynamiquement -->
+            </div>
+          </div>
+
+          <!-- Zone du joueur -->
+          <div class="player-area">
+            <h2>Vos cartes</h2>
+            <div id="player1-cards" class="cards-grid">
+              <!-- Les cartes du joueur seront ajoutées ici dynamiquement -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Contrôles de jeu -->
+        <div id="game-controls">
+          <button id="play-bonus-btn" class="action-btn" disabled>
+            Jouer Bonus
+          </button>
+          <button id="attack-btn" class="action-btn" disabled>Attaquer</button>
+          <button id="end-turn-btn" class="action-btn" disabled>
+            Terminer Tour
+          </button>
+        </div>
+      </div>
+
+      <!-- Zone de notification -->
+      <div id="notification-area">
+        <!-- Les notifications seront ajoutées ici dynamiquement -->
       </div>
     </div>
 
-    <script src="js/game.js"></script>
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/websocket.js"></script>
+    <script src="/js/game.js"></script>
   </body>
 </html>
