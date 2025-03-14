@@ -150,6 +150,33 @@ function reloadCardData() {
   return { persoCount: persoData.length, bonusCount: bonusData.length };
 }
 
+function displayCard(card, container) {
+  const cardElement = document.createElement("div");
+  cardElement.className = "card";
+  cardElement.dataset.cardId = card.id;
+
+  if (card.svgContent) {
+    // Si nous avons le contenu SVG, l'utiliser directement
+    cardElement.innerHTML = card.svgContent;
+  } else {
+    // Sinon, créer une image qui pointe vers le fichier
+    const img = document.createElement("img");
+    img.src = card.imageUrl;
+    img.alt = card.type === "perso" ? card.nomcarteperso : card.nomcartebonus;
+    cardElement.appendChild(img);
+  }
+
+  container.appendChild(cardElement);
+
+  // Log pour le débogage
+  console.log(`Carte affichée:`, {
+    id: card.id,
+    type: card.type,
+    hasSVG: !!card.svgContent,
+    imageUrl: card.imageUrl,
+  });
+}
+
 module.exports = {
   getRandomCards,
   getCardById,

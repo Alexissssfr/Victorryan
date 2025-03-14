@@ -77,12 +77,40 @@ function generateDummyData(type, count) {
 // Charger les données au démarrage
 loadCardData();
 
-// Méthode pour récupérer des cartes aléatoires d'un type spécifique
-function getRandomCards(type, count) {
-  // Déterminer quelle source de données utiliser
-  const data = type === "perso" ? persoData : bonusData;
+// Ajouter cette fonction pour charger les SVG
+async function loadCardSVG(type, cardId) {
+  try {
+    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
+    const svgPath = path.join(
+      __dirname,
+      `../../stock/${svgType}/${cardId}.svg`
+    );
 
-  // S'assurer que count ne dépasse pas le nombre de cartes disponibles
+    console.log(`Tentative de chargement du SVG: ${svgPath}`);
+
+    if (fs.existsSync(svgPath)) {
+      const svgContent = fs.readFileSync(svgPath, "utf8");
+      console.log(
+        `SVG chargé avec succès pour ${cardId} (${svgContent.length} caractères)`
+      );
+      return svgContent;
+    } else {
+      console.error(`SVG non trouvé: ${svgPath}`);
+      // Retourner un SVG par défaut
+      return `<svg width="100" height="150" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#ddd"/>
+        <text x="50%" y="50%" text-anchor="middle">${cardId}</text>
+      </svg>`;
+    }
+  } catch (error) {
+    console.error(`Erreur lors du chargement du SVG pour ${cardId}:`, error);
+    return null;
+  }
+}
+
+// Modifier la fonction getRandomCards pour inclure les SVG
+async function getRandomCards(type, count) {
+  const data = type === "perso" ? persoData : bonusData;
   count = Math.min(count, data.length);
 
   if (data.length === 0) {
@@ -90,23 +118,27 @@ function getRandomCards(type, count) {
     return [];
   }
 
-  // Copier le tableau pour ne pas modifier l'original
   const shuffled = [...data];
+  // Mélanger le tableau...
 
-  // Mélanger le tableau
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
+  const selectedCards = shuffled.slice(0, count);
 
-  // Ajouter l'URL de l'image pour chaque carte
-  return shuffled.slice(0, count).map((card) => {
-    // Construire l'URL du SVG
-    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
-    card.imageUrl = `/stock/${svgType}/${card.id}.svg`;
-    card.type = type;
-    return card;
-  });
+  // Charger les SVG pour chaque carte
+  const cardsWithSVG = await Promise.all(
+    selectedCards.map(async (card) => {
+      const svg = await loadCardSVG(type, card.id);
+      return {
+        ...card,
+        type,
+        imageUrl: `/stock/${type === "perso" ? "svg_perso" : "svg_bonus"}/${
+          card.id
+        }.svg`,
+        svgContent: svg,
+      };
+    })
+  );
+
+  return cardsWithSVG;
 }
 
 // Méthode pour récupérer une carte spécifique par son ID

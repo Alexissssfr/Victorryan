@@ -71,6 +71,27 @@ app.get("/api/diagnostic", (req, res) => {
   }
 });
 
+// Route de diagnostic pour les SVG
+app.get("/api/check-svg/:type/:id", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const cardManager = require("./backend/services/cardManager");
+    const svg = await cardManager.loadCardSVG(type, id);
+
+    res.json({
+      success: true,
+      svg: svg,
+      cardId: id,
+      type: type,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 // Configuration des WebSockets
 io.on("connection", (socket) => {
   console.log("Un client s'est connecté:", socket.id);

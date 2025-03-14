@@ -11,4 +11,25 @@ if (!supabaseUrl || !supabaseKey) {
 // Création du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-module.exports = supabase;
+// Ajouter une fonction pour stocker les SVG
+async function storeCardSVG(gameId, playerId, cardId, svgContent) {
+  try {
+    const { error } = await supabase
+      .from("game_cards")
+      .update({
+        svg_content: svgContent,
+      })
+      .match({ game_id: gameId, player_name: playerId, card_id: cardId });
+
+    if (error) {
+      console.error("Erreur lors du stockage du SVG:", error);
+    }
+  } catch (err) {
+    console.error("Exception lors du stockage du SVG:", err);
+  }
+}
+
+module.exports = {
+  ...supabase,
+  storeCardSVG,
+};
