@@ -191,11 +191,34 @@ class GameCache {
     this.games = new Map();
   }
 
-  createGame() {
-    const gameId = crypto.randomUUID().slice(0, 6).toUpperCase();
-    const game = new Game(gameId);
-    this.games.set(gameId, game);
-    return gameId;
+  async createGame(playerId) {
+    try {
+      const gameId = crypto.randomUUID().slice(0, 6).toUpperCase();
+      const game = new Game(gameId);
+
+      // Ajouter le premier joueur
+      game.addPlayer(playerId);
+
+      // Distribuer les cartes initiales
+      const cardManager = require("./cardManager");
+      const persoCards = await cardManager.getRandomCards("perso", 5);
+      const bonusCards = await cardManager.getRandomCards("bonus", 5);
+
+      game.cards.player1 = {
+        perso: persoCards,
+        bonus: bonusCards,
+      };
+
+      this.games.set(gameId, game);
+
+      return {
+        gameId,
+        state: game.getStateForPlayer(playerId),
+      };
+    } catch (error) {
+      console.error("Erreur création partie:", error);
+      throw error;
+    }
   }
 
   getGame(gameId) {

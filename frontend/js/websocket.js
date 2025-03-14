@@ -325,56 +325,30 @@ class GameSocket {
   setupListeners() {
     this.socket.on("connect", () => {
       console.log("Connecté au serveur WebSocket");
+      // Ne pas essayer d'accéder au DOM ici
     });
 
     this.socket.on("gameState", (state) => {
+      console.log("État du jeu reçu:", state);
       if (window.gameUI) {
-        console.log("État du jeu reçu:", state);
         window.gameUI.updateState(state);
       }
     });
 
-    this.socket.on("gameStateUpdated", (states) => {
-      if (window.gameUI) {
-        const playerState =
-          states[
-            window.gameUI.playerId === states.player1State.playerId
-              ? "player1State"
-              : "player2State"
-          ];
-        window.gameUI.updateState(playerState);
-      }
-    });
-
     this.socket.on("playerJoined", ({ playerId }) => {
-      console.log("Un joueur a rejoint la partie:", playerId);
-      this.showNotification(`Un joueur a rejoint la partie`, "info");
+      console.log("Joueur rejoint:", playerId);
+      this.showNotification("Un joueur a rejoint la partie");
     });
 
-    this.socket.on("error", ({ message }) => {
-      console.error("Erreur socket:", message);
-      this.showNotification(message, "error");
+    this.socket.on("error", (error) => {
+      console.error("Erreur socket:", error);
+      this.showNotification(error.message, "error");
     });
-  }
-
-  showNotification(message, type = "info") {
-    const notification = document.createElement("div");
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-
-    setTimeout(() => notification.remove(), 3000);
   }
 
   joinGame(gameId, playerId) {
-    console.log(
-      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
-    );
+    console.log(`Tentative de rejoindre ${gameId} en tant que ${playerId}`);
     this.socket.emit("joinGame", { gameId, playerId });
-  }
-
-  endTurn(gameId, playerId) {
-    this.socket.emit("endTurn", { gameId, playerId });
   }
 }
 
