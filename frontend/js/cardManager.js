@@ -177,6 +177,63 @@ function displayCard(card, container) {
   });
 }
 
+function displayAllCards(gameState, playerId, container) {
+  // Vider le conteneur
+  container.innerHTML = "";
+
+  // Créer une section pour les cartes du joueur
+  const playerSection = document.createElement("div");
+  playerSection.className = "player-cards";
+  playerSection.innerHTML = "<h3>Vos cartes</h3>";
+
+  // Créer une section pour les cartes de l'adversaire
+  const opponentSection = document.createElement("div");
+  opponentSection.className = "opponent-cards";
+  opponentSection.innerHTML = "<h3>Cartes adverses</h3>";
+
+  // Déterminer qui est le joueur et qui est l'adversaire
+  const isPlayer1 = gameState.player1.id === playerId;
+  const playerCards = isPlayer1
+    ? gameState.player1.hand
+    : gameState.player2.hand;
+  const opponentCards = isPlayer1
+    ? gameState.player2.hand
+    : gameState.player1.hand;
+
+  // Afficher les cartes du joueur
+  playerCards.forEach((card) => {
+    const cardElement = createCardElement(card, true);
+    playerSection.appendChild(cardElement);
+  });
+
+  // Afficher les cartes de l'adversaire
+  opponentCards.forEach((card) => {
+    const cardElement = createCardElement(card, false);
+    opponentSection.appendChild(cardElement);
+  });
+
+  // Ajouter les sections au conteneur
+  container.appendChild(opponentSection);
+  container.appendChild(playerSection);
+}
+
+function createCardElement(card, isPlayable) {
+  const cardElement = document.createElement("div");
+  cardElement.className = `card ${isPlayable ? "playable" : "opponent"}`;
+  cardElement.dataset.cardId = card.id;
+
+  if (card.svgContent) {
+    cardElement.innerHTML = card.svgContent;
+  } else {
+    const img = document.createElement("img");
+    img.src = card.imageUrl;
+    img.alt = card.type === "perso" ? card.nomcarteperso : card.nomcartebonus;
+    cardElement.appendChild(img);
+  }
+
+  return cardElement;
+}
+
 module.exports = {
   getRandomCards,
   getCardById,

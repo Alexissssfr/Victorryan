@@ -5,20 +5,25 @@ const cardManager = require("./cardManager");
 const activeGames = new Map();
 
 // Déplacer le code de distribution des cartes dans une fonction asynchrone
-async function distributeInitialCards(game, playerId) {
-  if (!game.player1.hand || game.player1.hand.length === 0) {
+async function distributeInitialCards(game, playerId, isPlayer2 = false) {
+  const playerKey = isPlayer2 ? "player2" : "player1";
+
+  if (!game[playerKey].hand || game[playerKey].hand.length === 0) {
+    // Distribuer 5 cartes de chaque type
     const persoCards = await cardManager.getRandomCards("perso", 5);
     const bonusCards = await cardManager.getRandomCards("bonus", 5);
 
-    game.player1.hand = [...persoCards, ...bonusCards];
-    game.player1.cardSVGs = {};
+    game[playerKey].hand = [...persoCards, ...bonusCards];
+    game[playerKey].cardSVGs = {};
 
     // Stocker les SVG
     [...persoCards, ...bonusCards].forEach((card) => {
       if (card.svgContent) {
-        game.player1.cardSVGs[card.id] = card.svgContent;
+        game[playerKey].cardSVGs[card.id] = card.svgContent;
       }
     });
+
+    console.log(`${playerKey} a reçu ${game[playerKey].hand.length} cartes`);
   }
   return game;
 }
@@ -67,29 +72,16 @@ module.exports = function (io) {
       );
 
       try {
-        // Récupérer la partie depuis la Map
         let game = activeGames.get(gameId);
+        if (!game) return false;
 
-        if (!game) {
-          console.log("Partie non trouvée:", gameId);
-          return false;
-        }
-
-        // Si le joueur 1 essaie de rejoindre à nouveau
         if (game.player1 && game.player1.id === playerId) {
-          console.log(`Le joueur 1 (${playerId}) rejoint sa propre partie`);
-          // Si le joueur 1 rejoint, s'assurer qu'il a des cartes
-          game = await distributeInitialCards(game, playerId);
+          game = await distributeInitialCards(game, playerId, false);
           return true;
         }
 
-        // Si la partie n'a pas de joueur 2 ou si c'est le joueur 2 qui rejoint
         if (!game.player2 || (game.player2 && game.player2.id === playerId)) {
-          // Si c'est un nouveau joueur 2
           if (!game.player2) {
-            console.log(`Nouveau joueur 2 (${playerId}) rejoint la partie`);
-
-            // Initialiser le joueur 2
             game.player2 = {
               id: playerId,
               health: {},
@@ -98,29 +90,27 @@ module.exports = function (io) {
               activeBonus: {},
               deck: [],
               hand: [],
+              cardSVGs: {},
             };
 
-            // Mettre à jour dans la Map locale
+            // Distribuer les cartes au joueur 2
+            game = await distributeInitialCards(game, playerId, true);
+
             activeGames.set(gameId, game);
 
-            // Notifier les joueurs via Socket.io
             if (io) {
               io.to(gameId).emit("gameStarted", {
                 gameId,
                 player1Id: game.player1.id,
                 player2Id: game.player2.id,
                 currentPlayer: game.currentPlayer,
+                player1Cards: game.player1.hand,
+                player2Cards: game.player2.hand,
               });
-              console.log("Événement gameStarted émis");
             }
-          } else {
-            console.log(`Le joueur 2 existant (${playerId}) rejoint à nouveau`);
           }
-
           return true;
         }
-
-        console.log("Impossible de rejoindre la partie (déjà complète)");
         return false;
       } catch (error) {
         console.error(
