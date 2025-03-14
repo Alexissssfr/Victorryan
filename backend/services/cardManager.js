@@ -78,8 +78,17 @@ class CardManager {
         ...card,
         type,
         svgContent,
-        // Construire l'URL pour le SVG
+        // Construire l'URL pour le SVG statique
         svgUrl: `/stock/svg_${type}/${type === "perso" ? "P" : "B"}${id}.svg`,
+        // Ajouter les stats actuelles si c'est une carte perso
+        ...(type === "perso" && {
+          currentStats: {
+            pointsdevie: parseInt(card.pointsdevie || 0),
+            forceattaque: parseInt(card.forceattaque || 0),
+            tourattaque: parseInt(card.tourattaque || 0),
+            bonusActifs: [],
+          },
+        }),
       };
     } catch (error) {
       console.error(`Erreur chargement carte ${type}/${id}:`, error);
