@@ -23,6 +23,188 @@ let selectedBonusCards = [];
 let isMyTurn = false;
 let playerKey = null; // 'player1' ou 'player2'
 
+class GameUI {
+  constructor(container) {
+    this.container = container;
+    this.gameState = null;
+    this.playerId = null;
+    this.selectedBonus = null;
+    this.selectedPerso = null;
+    this.isMyTurn = false;
+  }
+
+  updateState(state) {
+    this.gameState = state;
+    this.isMyTurn = state.isYourTurn;
+    this.updateTurnIndicator();
+    this.displayCards();
+  }
+
+  displayCards() {
+    const { playerCards, opponentCards } = this.gameState;
+
+    // Afficher les cartes avec animation d'entrée
+    this.container.innerHTML = `
+      <div class="opponent-area">
+        <div class="bonus-cards drop-zone">
+          ${this.renderCards(opponentCards.bonus, false)}
+        </div>
+        <div class="perso-cards drop-zone">
+          ${this.renderCards(opponentCards.perso, false)}
+        </div>
+      </div>
+      <div class="player-area">
+        <div class="perso-cards drop-zone">
+          ${this.renderCards(playerCards.perso, this.isMyTurn)}
+        </div>
+        <div class="bonus-cards drop-zone">
+          ${this.renderCards(playerCards.bonus, this.isMyTurn)}
+        </div>
+      </div>
+    `;
+
+    this.attachCardListeners();
+  }
+
+  renderCards(cards, isPlayable) {
+    return cards
+      .map(
+        (card) => `
+      <div class="card ${isPlayable ? "playable" : ""} ${this.getSelectedClass(
+          card
+        )}"
+           data-card-id="${card.id}"
+           data-card-type="${card.type}">
+        ${card.svgContent}
+        <div class="card-stats">
+          ${this.renderCardStats(card)}
+        </div>
+      </div>
+    `
+      )
+      .join("");
+  }
+
+  getSelectedClass(card) {
+    if (this.selectedBonus && this.selectedBonus.id === card.id)
+      return "selected";
+    if (this.selectedPerso && this.selectedPerso.id === card.id)
+      return "selected";
+    return "";
+  }
+
+  renderCardStats(card) {
+    return `
+      <div>PV: ${card.currentStats.pointsdevie}</div>
+      <div>ATT: ${card.currentStats.forceattaque}</div>
+      ${
+        card.currentStats.tourattaque
+          ? `<div>Tour: ${card.currentStats.tourattaque}</div>`
+          : ""
+      }
+    `;
+  }
+
+  attachCardListeners() {
+    if (!this.isMyTurn) return;
+
+    const cards = this.container.querySelectorAll(".card.playable");
+    cards.forEach((card) => {
+      card.addEventListener("click", () => this.handleCardClick(card));
+    });
+  }
+
+  handleCardClick(cardElement) {
+    const cardId = cardElement.dataset.cardId;
+    const cardType = cardElement.dataset.cardType;
+
+    if (cardType === "bonus") {
+      this.handleBonusSelection(cardId);
+    } else {
+      this.handlePersoSelection(cardId);
+    }
+  }
+
+  handleBonusSelection(cardId) {
+    const bonusCard = this.findCard(cardId, "bonus");
+    if (!bonusCard) return;
+
+    // Désélectionner si déjà sélectionné
+    if (this.selectedBonus && this.selectedBonus.id === cardId) {
+      this.selectedBonus = null;
+      this.refreshCardSelections();
+      return;
+    }
+
+    this.selectedBonus = bonusCard;
+    this.refreshCardSelections();
+    this.showNotification("Sélectionnez un personnage pour appliquer le bonus");
+  }
+
+  handlePersoSelection(cardId) {
+    if (!this.selectedBonus) return;
+
+    const persoCard = this.findCard(cardId, "perso");
+    if (!persoCard) return;
+
+    // Appliquer le bonus
+    window.gameSocket.playBonus(
+      this.gameState.gameId,
+      this.playerId,
+      this.selectedBonus.id,
+      cardId
+    );
+
+    // Ajouter l'animation de carte jouée
+    const cardElement = this.container.querySelector(
+      `[data-card-id="${cardId}"]`
+    );
+    cardElement.classList.add("played");
+
+    this.selectedBonus = null;
+    this.refreshCardSelections();
+  }
+
+  refreshCardSelections() {
+    const cards = this.container.querySelectorAll(".card");
+    cards.forEach((card) => {
+      card.classList.remove("selected");
+      if (this.selectedBonus && card.dataset.cardId === this.selectedBonus.id) {
+        card.classList.add("selected");
+      }
+    });
+  }
+
+  showNotification(message) {
+    const notification = document.createElement("div");
+    notification.className = "turn-notification";
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
+  updateTurnIndicator() {
+    const indicator = document.getElementById("turn-indicator");
+    if (!indicator) return;
+
+    indicator.textContent = this.isMyTurn
+      ? "À votre tour"
+      : "Tour de l'adversaire";
+    indicator.className = this.isMyTurn ? "active" : "";
+  }
+
+  findCard(cardId, type) {
+    const cards =
+      type === "bonus"
+        ? this.gameState.playerCards.bonus
+        : this.gameState.playerCards.perso;
+    return cards.find((card) => card.id === cardId);
+  }
+}
+
 // Fonction pour créer une partie
 async function createGame() {
   try {
@@ -125,88 +307,6 @@ async function joinGame() {
   }
 }
 
-// Fonction pour mettre à jour l'indicateur de tour
-function updateTurnIndicator() {
-  if (turnIndicator) {
-    turnIndicator.textContent = isMyTurn
-      ? "C'est votre tour"
-      : "Tour de l'adversaire";
-    turnIndicator.className = isMyTurn ? "your-turn" : "opponent-turn";
-
-    // Activer/désactiver les boutons d'action
-    if (playBonusBtn) playBonusBtn.disabled = !isMyTurn;
-    if (attackBtn) attackBtn.disabled = !isMyTurn;
-    if (endTurnBtn) endTurnBtn.disabled = !isMyTurn;
-  }
-}
-
-// Fonction pour configurer les événements du jeu
-function setupGameEvents() {
-  // Événement de clic sur les cartes du joueur
-  player1CardsContainer.addEventListener("click", (event) => {
-    const cardElement = event.target.closest(".card");
-    if (!cardElement) return;
-
-    if (isMyTurn) {
-      // Si une carte est déjà sélectionnée, la désélectionner
-      const previousSelected =
-        player1CardsContainer.querySelector(".card.selected");
-      if (previousSelected) {
-        previousSelected.classList.remove("selected");
-      }
-
-      // Sélectionner la nouvelle carte
-      cardElement.classList.add("selected");
-      selectedCardId = cardElement.dataset.id;
-
-      // Déterminer si c'est une carte bonus ou personnage
-      const isBonus = cardElement.dataset.type === "bonus";
-
-      if (isBonus) {
-        // Si c'est une carte bonus, l'ajouter à la liste des bonus sélectionnés
-        if (!selectedBonusCards.includes(selectedCardId)) {
-          selectedBonusCards.push(selectedCardId);
-        }
-      } else {
-        // Si c'est une carte personnage, réinitialiser la liste des bonus
-        selectedBonusCards = [];
-      }
-    }
-  });
-
-  // Événement de clic sur les cartes de l'adversaire
-  player2CardsContainer.addEventListener("click", (event) => {
-    const cardElement = event.target.closest(".card");
-    if (!cardElement || !isMyTurn) return;
-
-    // Si une carte est déjà sélectionnée, la désélectionner
-    const previousSelected =
-      player2CardsContainer.querySelector(".card.selected");
-    if (previousSelected) {
-      previousSelected.classList.remove("selected-target");
-    }
-
-    // Sélectionner la nouvelle cible
-    cardElement.classList.add("selected-target");
-    selectedTargetId = cardElement.dataset.id;
-  });
-
-  // Événement de clic sur le bouton "Jouer Bonus"
-  if (playBonusBtn) {
-    playBonusBtn.addEventListener("click", playBonus);
-  }
-
-  // Événement de clic sur le bouton "Attaquer"
-  if (attackBtn) {
-    attackBtn.addEventListener("click", attack);
-  }
-
-  // Événement de clic sur le bouton "Terminer Tour"
-  if (endTurnBtn) {
-    endTurnBtn.addEventListener("click", endTurn);
-  }
-}
-
 // Fonction pour afficher les cartes du joueur
 function renderPlayerCards() {
   if (!player1CardsContainer) return;
@@ -284,6 +384,73 @@ function renderOpponentCards(cards) {
 
     player2CardsContainer.appendChild(cardElement);
   });
+}
+
+// Fonction pour configurer les événements du jeu
+function setupGameEvents() {
+  // Événement de clic sur les cartes du joueur
+  player1CardsContainer.addEventListener("click", (event) => {
+    const cardElement = event.target.closest(".card");
+    if (!cardElement) return;
+
+    if (isMyTurn) {
+      // Si une carte est déjà sélectionnée, la désélectionner
+      const previousSelected =
+        player1CardsContainer.querySelector(".card.selected");
+      if (previousSelected) {
+        previousSelected.classList.remove("selected");
+      }
+
+      // Sélectionner la nouvelle carte
+      cardElement.classList.add("selected");
+      selectedCardId = cardElement.dataset.id;
+
+      // Déterminer si c'est une carte bonus ou personnage
+      const isBonus = cardElement.dataset.type === "bonus";
+
+      if (isBonus) {
+        // Si c'est une carte bonus, l'ajouter à la liste des bonus sélectionnés
+        if (!selectedBonusCards.includes(selectedCardId)) {
+          selectedBonusCards.push(selectedCardId);
+        }
+      } else {
+        // Si c'est une carte personnage, réinitialiser la liste des bonus
+        selectedBonusCards = [];
+      }
+    }
+  });
+
+  // Événement de clic sur les cartes de l'adversaire
+  player2CardsContainer.addEventListener("click", (event) => {
+    const cardElement = event.target.closest(".card");
+    if (!cardElement || !isMyTurn) return;
+
+    // Si une carte est déjà sélectionnée, la désélectionner
+    const previousSelected =
+      player2CardsContainer.querySelector(".card.selected");
+    if (previousSelected) {
+      previousSelected.classList.remove("selected-target");
+    }
+
+    // Sélectionner la nouvelle cible
+    cardElement.classList.add("selected-target");
+    selectedTargetId = cardElement.dataset.id;
+  });
+
+  // Événement de clic sur le bouton "Jouer Bonus"
+  if (playBonusBtn) {
+    playBonusBtn.addEventListener("click", playBonus);
+  }
+
+  // Événement de clic sur le bouton "Attaquer"
+  if (attackBtn) {
+    attackBtn.addEventListener("click", attack);
+  }
+
+  // Événement de clic sur le bouton "Terminer Tour"
+  if (endTurnBtn) {
+    endTurnBtn.addEventListener("click", endTurn);
+  }
 }
 
 // Fonction pour jouer un bonus

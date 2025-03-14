@@ -3,83 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Victorryan - Jeu de Cartes</title>
-    <link rel="stylesheet" href="css/game.css" />
-    <link rel="stylesheet" href="css/responsive.css" />
-    <script src="/socket.io/socket.io.js"></script>
+    <title>Victor Ryan - Le Jeu</title>
+    <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>
-    <div class="container">
-      <!-- Menu principal -->
-      <section id="main-menu">
-        <h1>VICTORRYAN</h1>
-        <p>Jeu de cartes multijoueur</p>
-
-        <div class="menu-options">
-          <div class="menu-option">
-            <h2>Créer une partie</h2>
-            <button id="create-game-btn" class="btn">
-              Créer une nouvelle partie
-            </button>
-          </div>
-
-          <div class="menu-option">
-            <h2>Rejoindre une partie</h2>
-            <input
-              type="text"
-              id="game-id-input"
-              placeholder="Entrez l'ID de la partie"
-            />
-            <button id="join-game-btn" class="btn">Rejoindre</button>
-          </div>
+    <div id="main-menu">
+      <h1>Victor Ryan - Le Jeu</h1>
+      <div class="menu-options">
+        <button id="create-game-btn">Créer une partie</button>
+        <div class="join-game">
+          <input
+            type="text"
+            id="game-id-input"
+            placeholder="Code de la partie"
+          />
+          <button id="join-game-btn">Rejoindre</button>
         </div>
-      </section>
-
-      <!-- Plateau de jeu -->
-      <section id="game-board" style="display: none">
-        <div class="game-header">
-          <div class="game-info">
-            <div id="game-id-display">ID Partie: -</div>
-            <div id="turn-indicator">En attente...</div>
-          </div>
-          <div class="game-status">
-            <span id="status-display">En attente de connexion</span>
-            <span class="status-indicator waiting"></span>
-          </div>
-        </div>
-
-        <div class="cards-container">
-          <!-- Zone du joueur 2 (adversaire) -->
-          <div class="player-area opponent">
-            <h2>Adversaire</h2>
-            <div id="player2-cards" class="cards-grid"></div>
-          </div>
-
-          <!-- Zone du joueur 1 (vous) -->
-          <div class="player-area">
-            <h2>Vos Cartes</h2>
-            <div id="player1-cards" class="cards-grid"></div>
-          </div>
-        </div>
-
-        <div id="game-controls">
-          <button id="play-bonus-btn" class="action-btn" disabled>
-            Jouer Bonus
-          </button>
-          <button id="attack-btn" class="action-btn" disabled>Attaquer</button>
-          <button id="end-turn-btn" class="action-btn" disabled>
-            Terminer Tour
-          </button>
-        </div>
-      </section>
-
-      <!-- Zone de notification -->
-      <div id="notification-area"></div>
+      </div>
     </div>
 
-    <!-- Scripts JavaScript -->
-    <script src="js/utils.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/websocket.js"></script>
+    <div id="game-board" style="display: none">
+      <div id="game-info">
+        <span id="game-id-display"></span>
+        <span id="turn-indicator"></span>
+      </div>
+
+      <div class="game-area">
+        <div class="opponent-area">
+          <div class="bonus-cards"></div>
+          <div class="perso-cards"></div>
+        </div>
+        <div class="player-area">
+          <div class="perso-cards"></div>
+          <div class="bonus-cards"></div>
+        </div>
+      </div>
+
+      <div class="game-controls">
+        <button id="end-turn-btn" disabled>Fin du tour</button>
+      </div>
+    </div>
+
+    <!-- Charger Socket.IO en premier -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- Charger nos scripts dans le bon ordre -->
+    <script src="/js/websocket.js"></script>
+    <script src="/js/game.js"></script>
+
+    <script>
+      // Initialisation quand le DOM est chargé
+      document.addEventListener("DOMContentLoaded", () => {
+        // Créer l'interface de jeu
+        const gameUI = new GameUI(document.querySelector(".game-area"));
+
+        // Connecter l'interface au socket
+        window.gameSocket.setGameUI(gameUI);
+
+        // Gestionnaires d'événements pour les boutons
+        document
+          .getElementById("create-game-btn")
+          .addEventListener("click", async () => {
+            const response = await fetch("/api/games/create", {
+              method: "POST",
+            });
+            const data = await response.json();
+            if (data.gameId) {
+              document.getElementById(
+                "game-id-display"
+              ).textContent = `Code partie: ${data.gameId}`;
+              document.getElementById("main-menu").style.display = "none";
+              document.getElementById("game-board").style.display = "block";
+            }
+          });
+
+        document
+          .getElementById("join-game-btn")
+          .addEventListener("click", async () => {
+            const gameId = document.getElementById("game-id-input").value;
+            if (gameId) {
+              const response = await fetch("/api/games/join", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ gameId }),
+              });
+              const data = await response.json();
+              if (!data.error) {
+                document.getElementById("main-menu").style.display = "none";
+                document.getElementById("game-board").style.display = "block";
+              }
+            }
+          });
+
+        document
+          .getElementById("end-turn-btn")
+          .addEventListener("click", () => {
+            window.gameSocket.endTurn();
+          });
+      });
+    </script>
   </body>
 </html>

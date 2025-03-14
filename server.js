@@ -35,6 +35,32 @@ const gameManager = require("./backend/services/gameManager")(io);
 app.use("/games", require("./backend/routes/games"));
 app.use("/cards", require("./backend/routes/cards"));
 
+// Routes pour la gestion des parties
+app.post("/api/games/create", async (req, res) => {
+  const gameId = gameCache.createGame();
+  res.json({ gameId });
+});
+
+app.post("/api/games/join", async (req, res) => {
+  const { gameId, playerId } = req.body;
+  const game = gameCache.getGame(gameId);
+
+  if (!game) {
+    return res.status(404).json({ error: "Partie non trouvée" });
+  }
+
+  const playerRole = game.addPlayer(playerId);
+  if (!playerRole) {
+    return res.status(400).json({ error: "Partie complète" });
+  }
+
+  if (playerRole === "player2") {
+    await game.distributeCards(cardManager);
+  }
+
+  res.json(game.getState(playerId));
+});
+
 // Routes de base
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/index.html"));
@@ -96,26 +122,68 @@ app.get("/api/check-svg/:type/:id", async (req, res) => {
 io.on("connection", (socket) => {
   console.log("Un client s'est connecté:", socket.id);
 
-  socket.on("joinGame", ({ gameId, playerId }) => {
-    socket.join(gameId);
-    console.log(`Joueur ${playerId} a rejoint la partie ${gameId}`);
+  // Rejoindre une partie
+  socket.on("joinGame", async ({ gameId, playerId }) => {
+    try {
+      const game = gameCache.getGame(gameId);
+      if (!game) {
+        socket.emit("error", { message: "Partie non trouvée" });
+        return;
+      }
 
-    // Notifier les autres joueurs dans la salle
-    socket.to(gameId).emit("playerJoined", { playerId });
+      socket.join(gameId);
+      console.log(`Joueur ${playerId} a rejoint la partie ${gameId}`);
+
+      // Envoyer l'état actuel de la partie au joueur
+      socket.emit("gameState", game.getStateForPlayer(playerId));
+
+      // Notifier les autres joueurs
+      socket.to(gameId).emit("playerJoined", { playerId });
+    } catch (error) {
+      socket.emit("error", { message: error.message });
+    }
   });
 
-  socket.on("playCard", ({ gameId, playerId, cardData, targetId }) => {
-    console.log(
-      `Joueur ${playerId} joue la carte ${cardData.id} sur ${targetId}`
-    );
-    // Informer les autres joueurs de la carte jouée
-    socket.to(gameId).emit("cardPlayed", { playerId, cardData, targetId });
+  // Jouer un bonus
+  socket.on("playBonus", async ({ gameId, playerId, bonusId, targetId }) => {
+    try {
+      const game = gameCache.getGame(gameId);
+      if (!game) {
+        socket.emit("error", { message: "Partie non trouvée" });
+        return;
+      }
+
+      const newState = game.applyBonusToCard(bonusId, targetId, playerId);
+
+      // Envoyer le nouvel état à tous les joueurs
+      io.to(gameId).emit("gameStateUpdated", {
+        player1State: game.getStateForPlayer(game.players.player1),
+        player2State: game.getStateForPlayer(game.players.player2),
+      });
+    } catch (error) {
+      socket.emit("error", { message: error.message });
+    }
   });
 
+  // Fin de tour
   socket.on("endTurn", ({ gameId, playerId }) => {
-    console.log(`Joueur ${playerId} termine son tour`);
-    // Informer les autres joueurs de la fin du tour
-    socket.to(gameId).emit("turnEnded", { playerId });
+    try {
+      const game = gameCache.getGame(gameId);
+      if (!game) {
+        socket.emit("error", { message: "Partie non trouvée" });
+        return;
+      }
+
+      game.endTurn();
+
+      // Envoyer le nouvel état à tous les joueurs
+      io.to(gameId).emit("gameStateUpdated", {
+        player1State: game.getStateForPlayer(game.players.player1),
+        player2State: game.getStateForPlayer(game.players.player2),
+      });
+    } catch (error) {
+      socket.emit("error", { message: error.message });
+    }
   });
 
   socket.on("disconnect", () => {

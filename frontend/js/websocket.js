@@ -315,3 +315,74 @@ document.addEventListener("DOMContentLoaded", () => {
     isMyTurn: () => isMyTurn,
   };
 });
+
+class GameSocket {
+  constructor() {
+    this.socket = io();
+    this.gameUI = null;
+    this.setupListeners();
+  }
+
+  setGameUI(gameUI) {
+    this.gameUI = gameUI;
+  }
+
+  setupListeners() {
+    // Connexion établie
+    this.socket.on("connect", () => {
+      console.log("Connecté au serveur WebSocket");
+    });
+
+    // Réception de l'état du jeu initial
+    this.socket.on("gameState", (state) => {
+      if (this.gameUI) {
+        this.gameUI.updateState(state);
+      }
+    });
+
+    // Mise à jour de l'état du jeu
+    this.socket.on("gameStateUpdated", (states) => {
+      if (this.gameUI) {
+        const playerState =
+          states[
+            this.gameUI.playerId === states.player1State.playerId
+              ? "player1State"
+              : "player2State"
+          ];
+        this.gameUI.updateState(playerState);
+      }
+    });
+
+    // Notification qu'un joueur a rejoint
+    this.socket.on("playerJoined", ({ playerId }) => {
+      console.log(`Le joueur ${playerId} a rejoint la partie`);
+    });
+
+    // Gestion des erreurs
+    this.socket.on("error", ({ message }) => {
+      console.error("Erreur socket:", message);
+      alert(message);
+    });
+
+    // Déconnexion
+    this.socket.on("disconnect", () => {
+      console.log("Déconnecté du serveur WebSocket");
+    });
+  }
+
+  // Actions du jeu
+  joinGame(gameId, playerId) {
+    this.socket.emit("joinGame", { gameId, playerId });
+  }
+
+  playBonus(gameId, playerId, bonusId, targetId) {
+    this.socket.emit("playBonus", { gameId, playerId, bonusId, targetId });
+  }
+
+  endTurn(gameId, playerId) {
+    this.socket.emit("endTurn", { gameId, playerId });
+  }
+}
+
+// Créer une seule instance globale
+window.gameSocket = new GameSocket();

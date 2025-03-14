@@ -1,168 +1,80 @@
 const fs = require("fs");
 const path = require("path");
 
-// Variables pour stocker les données des cartes
-let persoData = [];
-let bonusData = [];
-
-// Fonction pour charger les données depuis les fichiers JSON
-function loadCardData() {
-  try {
-    const persoPath = path.join(__dirname, "../../stock/personnages.json");
-    const bonusPath = path.join(__dirname, "../../stock/bonus.json");
-
-    console.log("Tentative de chargement des personnages depuis:", persoPath);
-
-    if (fs.existsSync(persoPath)) {
-      persoData = JSON.parse(fs.readFileSync(persoPath, "utf8"));
-      console.log(`${persoData.length} personnages chargés avec succès`);
-    } else {
-      console.error("Fichier personnages.json introuvable à", persoPath);
-      // Générer des données fictives si le fichier n'existe pas
-      persoData = generateDummyData("perso", 10);
-    }
-
-    if (fs.existsSync(bonusPath)) {
-      bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
-      console.log(`${bonusData.length} bonus chargés avec succès`);
-    } else {
-      console.error("Fichier bonus.json introuvable à", bonusPath);
-      // Générer des données fictives si le fichier n'existe pas
-      bonusData = generateDummyData("bonus", 10);
-    }
-  } catch (error) {
-    console.error("Erreur lors du chargement des données des cartes:", error);
-    // Utiliser des données fictives en cas d'erreur
-    persoData = generateDummyData("perso", 10);
-    bonusData = generateDummyData("bonus", 10);
+class CardManager {
+  constructor() {
+    this.persoCards = new Map();
+    this.bonusCards = new Map();
+    this.loadCards();
   }
-}
 
-// Générer des données de test
-function generateDummyData(type, count) {
-  console.log(
-    `Génération de ${count} cartes ${type} factices pour le développement`
-  );
+  loadCards() {
+    try {
+      // Charger les cartes depuis les fichiers JSON
+      const persoPath = path.join(__dirname, "../../stock/personnages.json");
+      const bonusPath = path.join(__dirname, "../../stock/bonus.json");
 
-  const dummyCards = [];
+      const persoData = JSON.parse(fs.readFileSync(persoPath, "utf8"));
+      const bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
 
-  for (let i = 1; i <= count; i++) {
-    if (type === "perso") {
-      dummyCards.push({
-        id: `P${i}`,
-        nomcarteperso: `Personnage Test ${i}`,
-        pointsdevie: "100",
-        forceattaque: "30",
-        tourattaque: "2",
-        nomdupouvoir: `Pouvoir Test ${i}`,
-        description: "Description du pouvoir de test",
-        type: "perso",
-      });
-    } else {
-      dummyCards.push({
-        id: `B${i}`,
-        nomcartebonus: `Bonus Test ${i}`,
-        pourcentagebonus: "20",
-        tourbonus: "2",
-        nomdupouvoir: `Effet Test ${i}`,
-        description: "Description de l'effet de test",
-        type: "bonus",
-      });
+      // Stocker les cartes dans les Maps
+      persoData.forEach((card) => this.persoCards.set(card.id, card));
+      bonusData.forEach((card) => this.bonusCards.set(card.id, card));
+
+      console.log(
+        `Cartes chargées: ${this.persoCards.size} perso, ${this.bonusCards.size} bonus`
+      );
+    } catch (error) {
+      console.error("Erreur lors du chargement des cartes:", error);
     }
   }
 
-  return dummyCards;
-}
-
-// Charger les données au démarrage
-loadCardData();
-
-// Ajouter cette fonction pour charger les SVG
-async function loadCardSVG(type, cardId) {
-  try {
-    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
-    const svgPath = path.join(
-      __dirname,
-      `../../stock/${svgType}/${cardId}.svg`
+  async getRandomCards(type, count, excludeIds = []) {
+    const cards = type === "perso" ? this.persoCards : this.bonusCards;
+    const availableCards = [...cards.values()].filter(
+      (card) => !excludeIds.includes(card.id)
     );
 
-    console.log(`Tentative de chargement du SVG: ${svgPath}`);
-
-    if (fs.existsSync(svgPath)) {
-      const svgContent = fs.readFileSync(svgPath, "utf8");
-      console.log(
-        `SVG chargé avec succès pour ${cardId} (${svgContent.length} caractères)`
-      );
-      return svgContent;
-    } else {
-      console.error(`SVG non trouvé: ${svgPath}`);
-      // Retourner un SVG par défaut
-      return `<svg width="100" height="150" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#ddd"/>
-        <text x="50%" y="50%" text-anchor="middle">${cardId}</text>
-      </svg>`;
+    if (availableCards.length < count) {
+      throw new Error(`Pas assez de cartes ${type} disponibles`);
     }
-  } catch (error) {
-    console.error(`Erreur lors du chargement du SVG pour ${cardId}:`, error);
-    return null;
-  }
-}
 
-// Modifier la fonction getRandomCards pour inclure les SVG
-async function getRandomCards(type, count) {
-  const data = type === "perso" ? persoData : bonusData;
-  count = Math.min(count, data.length);
+    // Mélanger et sélectionner les cartes
+    const selectedCards = availableCards
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count);
 
-  if (data.length === 0) {
-    console.warn(`Aucune donnée disponible pour le type ${type}`);
-    return [];
-  }
-
-  const shuffled = [...data];
-  // Mélanger le tableau...
-
-  const selectedCards = shuffled.slice(0, count);
-
-  // Charger les SVG pour chaque carte
-  const cardsWithSVG = await Promise.all(
-    selectedCards.map(async (card) => {
-      const svg = await loadCardSVG(type, card.id);
-      return {
+    // Ajouter les SVG et les stats initiales
+    return Promise.all(
+      selectedCards.map(async (card) => ({
         ...card,
         type,
-        imageUrl: `/stock/${type === "perso" ? "svg_perso" : "svg_bonus"}/${
-          card.id
-        }.svg`,
-        svgContent: svg,
-      };
-    })
-  );
-
-  return cardsWithSVG;
-}
-
-// Méthode pour récupérer une carte spécifique par son ID
-function getCardById(type, id) {
-  const data = type === "perso" ? persoData : bonusData;
-  const card = data.find((card) => card.id === id);
-
-  if (card) {
-    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
-    card.imageUrl = `/stock/${svgType}/${card.id}.svg`;
-    card.type = type;
+        svgContent: await this.loadCardSVG(type, card.id),
+        currentStats: {
+          pointsdevie: parseInt(card.pointsdevie || 0),
+          forceattaque: parseInt(card.forceattaque || 0),
+          tourattaque: parseInt(card.tourattaque || 0),
+          bonusActifs: [],
+        },
+      }))
+    );
   }
 
-  return card;
+  async loadCardSVG(type, cardId) {
+    const svgPath = path.join(
+      __dirname,
+      `../../stock/${
+        type === "perso" ? "svg_perso" : "svg_bonus"
+      }/${cardId}.svg`
+    );
+
+    try {
+      return fs.readFileSync(svgPath, "utf8");
+    } catch (error) {
+      console.error(`Erreur de chargement du SVG pour ${cardId}:`, error);
+      return null;
+    }
+  }
 }
 
-// Recharger les données (utile pour les tests)
-function reloadCardData() {
-  loadCardData();
-  return { persoCount: persoData.length, bonusCount: bonusData.length };
-}
-
-module.exports = {
-  getRandomCards,
-  getCardById,
-  reloadCardData,
-};
+module.exports = new CardManager();
