@@ -34,6 +34,16 @@ app.use(express.static(frontendPath));
 // Servir les fichiers du dossier stock (pour les images des cartes)
 app.use("/stock", express.static(stockPath));
 
+// Servir les fichiers SVG
+app.use(
+  "/stock/svg_perso",
+  express.static(path.join(__dirname, "stock/svg_perso"))
+);
+app.use(
+  "/stock/svg_bonus",
+  express.static(path.join(__dirname, "stock/svg_bonus"))
+);
+
 // Initialiser le module de gestion des jeux avec Socket.io
 const gameManager = require("./backend/services/gameManager")(io);
 

@@ -61,6 +61,32 @@ class CardManager {
     );
   }
 
+  async loadCard(type, id) {
+    try {
+      // Charger les données de base de la carte
+      const cards = type === "perso" ? this.persoCards : this.bonusCards;
+      const card = cards.get(parseInt(id));
+
+      if (!card) {
+        throw new Error(`Carte ${type}/${id} non trouvée`);
+      }
+
+      // Charger le SVG
+      const svgContent = await this.loadCardSVG(type, id);
+
+      return {
+        ...card,
+        type,
+        svgContent,
+        // Construire l'URL pour le SVG
+        svgUrl: `/stock/svg_${type}/${type === "perso" ? "P" : "B"}${id}.svg`,
+      };
+    } catch (error) {
+      console.error(`Erreur chargement carte ${type}/${id}:`, error);
+      return null;
+    }
+  }
+
   async loadCardSVG(type, id) {
     try {
       const svgPath = path.join(
@@ -78,30 +104,6 @@ class CardManager {
       return svgContent;
     } catch (error) {
       console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);
-      return null;
-    }
-  }
-
-  async loadCard(type, id) {
-    try {
-      // Récupérer les données de la carte depuis Supabase
-      const { data, error } = await supabase
-        .from(type === "perso" ? "cartes_perso" : "cartes_bonus")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-
-      // Construire l'URL de l'image correctement
-      data.fond = getImageUrl(type, id);
-
-      // Charger le SVG si nécessaire
-      data.svgContent = await this.loadCardSVG(type, id);
-
-      return data;
-    } catch (error) {
-      console.error(`Erreur chargement carte ${type}/${id}:`, error);
       return null;
     }
   }

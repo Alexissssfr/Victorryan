@@ -223,7 +223,6 @@ class GameUI {
           return "";
         }
 
-        // Utiliser directement le contenu SVG
         return `
           <div class="card ${
             isPlayable ? "playable" : ""
@@ -231,7 +230,9 @@ class GameUI {
                data-card-id="${card.id}"
                data-card-type="${card.type}">
             <div class="card-content">
-              ${card.svgContent || this.getDefaultCardImage(card)}
+              <object type="image/svg+xml" data="${card.svgUrl}">
+                ${this.getDefaultCardImage(card)}
+              </object>
             </div>
           </div>
         `;
