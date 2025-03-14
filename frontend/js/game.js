@@ -223,36 +223,15 @@ class GameUI {
           return "";
         }
 
-        // Déboguer l'URL de l'image
-        console.log(`Carte ${card.id}:`, {
-          fond: card.fond,
-          type: card.type,
-          nom: card.nomcarteperso || card.nomcartebonus,
-        });
-
-        // Tester si l'image existe
-        fetch(card.fond)
-          .then((response) => {
-            if (!response.ok) {
-              console.error(`Image non trouvée pour ${card.id}:`, card.fond);
-            }
-          })
-          .catch((error) =>
-            console.error(`Erreur chargement image ${card.id}:`, error)
-          );
-
+        // Utiliser directement le contenu SVG
         return `
           <div class="card ${
             isPlayable ? "playable" : ""
           } ${this.getSelectedClass(card)}"
                data-card-id="${card.id}"
-               data-card-type="${card.type}"
-               style="background-image: url('${card.fond}');">
-            <div class="card-info">
-              <div class="card-name">${
-                card.nomcarteperso || card.nomcartebonus
-              }</div>
-              ${this.renderCardStats(card)}
+               data-card-type="${card.type}">
+            <div class="card-content">
+              ${card.svgContent || this.getDefaultCardImage(card)}
             </div>
           </div>
         `;
@@ -342,5 +321,25 @@ class GameUI {
     } else if (cardType === "perso") {
       this.handlePersoSelection(cardId);
     }
+  }
+
+  handleBonusSelection(cardId) {
+    if (!this.isMyTurn) return;
+
+    const card = this.gameState.playerCards.bonus.find((c) => c.id === cardId);
+    if (!card) return;
+
+    this.selectedBonus = this.selectedBonus?.id === cardId ? null : card;
+    this.displayCards(); // Rafraîchir l'affichage
+  }
+
+  handlePersoSelection(cardId) {
+    if (!this.isMyTurn) return;
+
+    const card = this.gameState.playerCards.perso.find((c) => c.id === cardId);
+    if (!card) return;
+
+    this.selectedPerso = this.selectedPerso?.id === cardId ? null : card;
+    this.displayCards(); // Rafraîchir l'affichage
   }
 }

@@ -69,7 +69,7 @@ class CardManager {
         "..",
         "stock",
         `svg_${type}`,
-        `${id}.svg`
+        `${type === "perso" ? "P" : "B"}${id}.svg`
       );
       console.log("Chargement SVG:", svgPath);
 
@@ -78,7 +78,7 @@ class CardManager {
       return svgContent;
     } catch (error) {
       console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);
-      return `<svg viewBox="0 0 100 100"><text x="50" y="50" text-anchor="middle">Erreur SVG</text></svg>`;
+      return null;
     }
   }
 

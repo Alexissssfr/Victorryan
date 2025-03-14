@@ -13,7 +13,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Fonction utilitaire pour construire l'URL correcte des images
 function getImageUrl(type, id) {
-  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.png`;
+  // Utiliser la clé publique anon pour les images publiques
+  const publicKey = process.env.SUPABASE_PUBLIC_KEY;
+  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.svg?apikey=${publicKey}`;
 }
 
 // Ajouter une fonction pour stocker les SVG
