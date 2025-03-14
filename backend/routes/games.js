@@ -30,6 +30,7 @@ async function createGame() {
     playerId = generatePlayerId();
 
     statusDisplay.textContent = "Création de la partie...";
+    console.log("Création d'une nouvelle partie...");
 
     const response = await fetch("/games/create", {
       method: "POST",
@@ -40,6 +41,7 @@ async function createGame() {
     });
 
     const data = await response.json();
+    console.log("Réponse création de partie:", data);
 
     if (data.success) {
       gameId = data.gameId;
@@ -220,8 +222,9 @@ function setupGameEvents() {
     if (!cardElement || !isMyTurn) return;
 
     // Si une carte est déjà sélectionnée, la désélectionner
-    const previousSelected =
-      player2CardsContainer.querySelector(".card.selected");
+    const previousSelected = player2CardsContainer.querySelector(
+      ".card.selected-target"
+    );
     if (previousSelected) {
       previousSelected.classList.remove("selected-target");
     }
@@ -249,80 +252,160 @@ function setupGameEvents() {
 
 // Fonction pour afficher les cartes du joueur
 function renderPlayerCards() {
-  if (!player1CardsContainer) return;
+  if (!player1CardsContainer) {
+    console.error("Container de cartes joueur non trouvé");
+    return;
+  }
 
   player1CardsContainer.innerHTML = "";
+  console.log(`Rendu de ${playerCards.length} cartes pour le joueur`);
 
-  playerCards.forEach((card) => {
-    const cardElement = document.createElement("div");
-    cardElement.classList.add("card");
-    cardElement.dataset.id = card.id;
-    cardElement.dataset.type = card.type;
+  if (playerCards.length === 0) {
+    console.warn("Aucune carte à afficher pour le joueur");
+    const noCardsMsg = document.createElement("div");
+    noCardsMsg.className = "no-cards-message";
+    noCardsMsg.textContent = "En attente de cartes...";
+    player1CardsContainer.appendChild(noCardsMsg);
+    return;
+  }
 
-    // Afficher la carte en fonction de son type
-    if (card.type === "perso") {
-      cardElement.innerHTML = `
-        <div class="card-header">${card.nomcarteperso}</div>
-        <img src="${card.imageUrl || `/stock/svg_perso/${card.id}.svg`}" alt="${
-        card.nomcarteperso
-      }">
-        <div class="card-stats">
-          <div class="stat">PV: ${card.pointsdevie}</div>
-          <div class="stat">ATT: ${card.forceattaque}</div>
-          <div class="stat">Tours: ${card.tourattaque}</div>
+  playerCards.forEach((card, index) => {
+    try {
+      console.log(`Rendu de la carte ${index}:`, card);
+
+      const cardElement = document.createElement("div");
+      cardElement.classList.add("card");
+      cardElement.dataset.id = card.id;
+      cardElement.dataset.type = card.type;
+
+      // Afficher la carte en fonction de son type
+      if (card.type === "perso") {
+        cardElement.innerHTML = `
+          <div class="card-header">${card.nomcarteperso || "Personnage"}</div>
+          <img src="${
+            card.imageUrl || `/stock/svg_perso/${card.id}.svg`
+          }" alt="${
+          card.nomcarteperso || card.id
+        }" onerror="this.src='/placeholder-card.png'">
+          <div class="card-stats">
+            <div class="stat">PV: ${card.pointsdevie || "100"}</div>
+            <div class="stat">ATT: ${card.forceattaque || "30"}</div>
+            <div class="stat">Tours: ${card.tourattaque || "2"}</div>
+          </div>
+          <div class="card-name">${card.nomdupouvoir || "Pouvoir"}</div>
+          <div class="card-id">${card.id}</div>
+        `;
+      } else if (card.type === "bonus") {
+        cardElement.innerHTML = `
+          <div class="card-header">${card.nomcartebonus || "Bonus"}</div>
+          <img src="${
+            card.imageUrl || `/stock/svg_bonus/${card.id}.svg`
+          }" alt="${
+          card.nomcartebonus || card.id
+        }" onerror="this.src='/placeholder-card.png'">
+          <div class="card-stats">
+            <div class="stat">Bonus: ${card.pourcentagebonus || "0"}%</div>
+            <div class="stat">Tours: ${card.tourbonus || "1"}</div>
+          </div>
+          <div class="card-name">${card.nomdupouvoir || "Effet"}</div>
+          <div class="card-id">${card.id}</div>
+        `;
+      } else {
+        // Type de carte inconnu ou non spécifié
+        cardElement.innerHTML = `
+          <div class="card-header">Carte #${index + 1}</div>
+          <div class="card-content">
+            <p>Type: ${card.type || "Inconnu"}</p>
+            <p>ID: ${card.id || "Non défini"}</p>
+          </div>
+        `;
+      }
+
+      player1CardsContainer.appendChild(cardElement);
+    } catch (error) {
+      console.error(`Erreur lors du rendu de la carte ${index}:`, error);
+      // Afficher une carte d'erreur à la place
+      const errorCard = document.createElement("div");
+      errorCard.classList.add("card", "error-card");
+      errorCard.innerHTML = `
+        <div class="card-header">Erreur</div>
+        <div class="card-content">
+          <p>Impossible d'afficher cette carte</p>
+          <p>ID: ${card?.id || "Inconnu"}</p>
         </div>
-        <div class="card-name">${card.nomdupouvoir}</div>
       `;
-    } else {
-      cardElement.innerHTML = `
-        <div class="card-header">${card.nomcartebonus}</div>
-        <img src="${card.imageUrl || `/stock/svg_bonus/${card.id}.svg`}" alt="${
-        card.nomcartebonus
-      }">
-        <div class="card-stats">
-          <div class="stat">Bonus: ${card.pourcentagebonus}%</div>
-          <div class="stat">Tours: ${card.tourbonus}</div>
-        </div>
-        <div class="card-name">${card.nomdupouvoir}</div>
-      `;
+      player1CardsContainer.appendChild(errorCard);
     }
-
-    player1CardsContainer.appendChild(cardElement);
   });
 }
 
 // Fonction pour afficher les cartes de l'adversaire
 function renderOpponentCards(cards) {
-  if (!player2CardsContainer) return;
+  if (!player2CardsContainer) {
+    console.error("Container de cartes adversaire non trouvé");
+    return;
+  }
 
   player2CardsContainer.innerHTML = "";
+  console.log(`Rendu de ${cards.length} cartes pour l'adversaire`);
 
-  cards.forEach((card) => {
-    const cardElement = document.createElement("div");
-    cardElement.classList.add("card", "opponent-card");
-    cardElement.dataset.id = card.id;
-    cardElement.dataset.type = card.type;
+  if (cards.length === 0) {
+    console.warn("Aucune carte à afficher pour l'adversaire");
+    const noCardsMsg = document.createElement("div");
+    noCardsMsg.className = "no-cards-message";
+    noCardsMsg.textContent = "En attente de l'adversaire...";
+    player2CardsContainer.appendChild(noCardsMsg);
+    return;
+  }
 
-    // Afficher la carte en fonction de son type
-    if (card.type === "perso") {
-      cardElement.innerHTML = `
-        <div class="card-header">${card.nomcarteperso}</div>
-        <img src="${card.imageUrl || `/stock/svg_perso/${card.id}.svg`}" alt="${
-        card.nomcarteperso
-      }">
-        <div class="card-stats">
-          <div class="stat">PV: ${card.pointsdevie}</div>
+  cards.forEach((card, index) => {
+    try {
+      const cardElement = document.createElement("div");
+      cardElement.classList.add("card", "opponent-card");
+      cardElement.dataset.id = card.id;
+      cardElement.dataset.type = card.type;
+
+      // Afficher la carte en fonction de son type
+      if (card.type === "perso") {
+        cardElement.innerHTML = `
+          <div class="card-header">${card.nomcarteperso || "Personnage"}</div>
+          <img src="${
+            card.imageUrl || `/stock/svg_perso/${card.id}.svg`
+          }" alt="${
+          card.nomcarteperso || card.id
+        }" onerror="this.src='/placeholder-card.png'">
+          <div class="card-stats">
+            <div class="stat">PV: ${card.pointsdevie || "100"}</div>
+          </div>
+          <div class="card-name">${card.nomdupouvoir || "Pouvoir"}</div>
+          <div class="card-id">${card.id}</div>
+        `;
+      } else {
+        // Pour les cartes bonus de l'adversaire, on affiche juste le dos
+        cardElement.innerHTML = `
+          <div class="card-back">Carte Bonus Adversaire</div>
+          <div class="card-id">${card.id}</div>
+        `;
+      }
+
+      player2CardsContainer.appendChild(cardElement);
+    } catch (error) {
+      console.error(
+        `Erreur lors du rendu de la carte adversaire ${index}:`,
+        error
+      );
+      // Afficher une carte d'erreur à la place
+      const errorCard = document.createElement("div");
+      errorCard.classList.add("card", "error-card");
+      errorCard.innerHTML = `
+        <div class="card-header">Erreur</div>
+        <div class="card-content">
+          <p>Impossible d'afficher cette carte</p>
+          <p>ID: ${card?.id || "Inconnu"}</p>
         </div>
-        <div class="card-name">${card.nomdupouvoir}</div>
       `;
-    } else {
-      // Pour les cartes bonus de l'adversaire, on affiche juste le dos
-      cardElement.innerHTML = `
-        <div class="card-back">Carte Bonus Adversaire</div>
-      `;
+      player2CardsContainer.appendChild(errorCard);
     }
-
-    player2CardsContainer.appendChild(cardElement);
   });
 }
 
@@ -336,6 +419,12 @@ async function playBonus() {
   }
 
   try {
+    console.log(
+      `Jouer bonus: ${selectedBonusCards.join(
+        ", "
+      )} sur la carte ${selectedCardId}`
+    );
+
     // Préparer les actions de bonus
     const bonusActions = selectedBonusCards.map((bonusId) => ({
       bonusId,
@@ -361,6 +450,8 @@ async function playBonus() {
     const data = await response.json();
 
     if (data.success) {
+      console.log("Bonus joué avec succès, nouvel état:", data.gameState);
+
       // Mettre à jour l'état du jeu
       updateGameState(data.gameState);
 
@@ -388,6 +479,8 @@ async function attack() {
   }
 
   try {
+    console.log(`Attaque: carte ${selectedCardId} → cible ${selectedTargetId}`);
+
     // Envoyer l'action au serveur
     const response = await fetch("/games/play", {
       method: "POST",
@@ -410,6 +503,8 @@ async function attack() {
     const data = await response.json();
 
     if (data.success) {
+      console.log("Attaque réussie, nouvel état:", data.gameState);
+
       // Mettre à jour l'état du jeu
       updateGameState(data.gameState);
 
@@ -442,6 +537,8 @@ async function endTurn() {
   }
 
   try {
+    console.log("Fin du tour");
+
     // Envoyer l'action au serveur
     const response = await fetch("/games/play", {
       method: "POST",
@@ -462,6 +559,8 @@ async function endTurn() {
     const data = await response.json();
 
     if (data.success) {
+      console.log("Tour terminé, nouvel état:", data.gameState);
+
       // Mettre à jour l'état du jeu
       updateGameState(data.gameState);
 
@@ -479,35 +578,75 @@ async function endTurn() {
 
 // Fonction pour mettre à jour l'état du jeu
 function updateGameState(gameState) {
-  if (!gameState) return;
+  if (!gameState) {
+    console.error("updateGameState appelé avec un état de jeu vide");
+    return;
+  }
+
+  console.log(`Mise à jour de l'état du jeu, je suis le joueur ${playerKey}`);
 
   // Mettre à jour les informations du joueur
   if (gameState[playerKey]) {
-    playerCards = gameState[playerKey].hand || [];
-    renderPlayerCards();
+    console.log(`Cartes du joueur ${playerKey}:`, gameState[playerKey].hand);
+
+    // Si je reçois des cartes, les enregistrer et les afficher
+    if (gameState[playerKey].hand && gameState[playerKey].hand.length > 0) {
+      playerCards = gameState[playerKey].hand;
+      console.log(`${playerCards.length} cartes récupérées pour le joueur`);
+      renderPlayerCards();
+    } else {
+      console.warn("Aucune carte trouvée pour ce joueur");
+    }
 
     // Mettre à jour les statistiques des cartes
     updateCardStats(gameState[playerKey], player1CardsContainer);
+  } else {
+    console.error(
+      `Aucune information pour le joueur ${playerKey} dans l'état du jeu`
+    );
   }
 
   // Mettre à jour les informations de l'adversaire
   const opponentKey = playerKey === "player1" ? "player2" : "player1";
+
   if (gameState[opponentKey]) {
-    const opponentCards = gameState[opponentKey].hand || [];
-    renderOpponentCards(opponentCards);
+    console.log(
+      `Cartes de l'adversaire ${opponentKey}:`,
+      gameState[opponentKey].hand
+    );
+
+    // Si l'adversaire a des cartes, les afficher
+    if (gameState[opponentKey].hand && gameState[opponentKey].hand.length > 0) {
+      renderOpponentCards(gameState[opponentKey].hand);
+      console.log(
+        `${gameState[opponentKey].hand.length} cartes affichées pour l'adversaire`
+      );
+    } else {
+      console.warn("Aucune carte trouvée pour l'adversaire");
+    }
 
     // Mettre à jour les statistiques des cartes
     updateCardStats(gameState[opponentKey], player2CardsContainer);
+  } else {
+    console.log(
+      `L'adversaire (${opponentKey}) n'a pas encore rejoint la partie`
+    );
   }
 
   // Mettre à jour l'indicateur de tour
   isMyTurn = gameState.currentPlayer === playerKey;
+  console.log(
+    `Tour actuel: ${gameState.currentPlayer}, c'est ${
+      isMyTurn ? "mon tour" : "le tour de l'adversaire"
+    }`
+  );
   updateTurnIndicator();
 
   // Vérifier si la partie est terminée
   if (gameState.gameOver) {
     const hasWon = gameState.winner === playerKey;
     alert(hasWon ? "Félicitations ! Vous avez gagné !" : "Vous avez perdu !");
+    console.log(`Partie terminée, gagnant: ${gameState.winner}`);
 
     // Désactiver les boutons d'action
     isMyTurn = false;
@@ -633,4 +772,43 @@ window.gameController = {
   playBonus,
   attack,
   endTurn,
+  fetchGameState,
 };
+
+// CSS pour les messages d'attente de cartes
+document.head.insertAdjacentHTML(
+  "beforeend",
+  `
+<style>
+  .no-cards-message {
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .card-id {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 8px;
+    color: #999;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 1px 3px;
+    border-radius: 2px;
+  }
+  
+  .error-card {
+    background-color: #ffeeee;
+    border: 1px solid #ffcccc;
+  }
+  
+  .error-card .card-header {
+    background-color: #f44336;
+  }
+</style>
+`
+);
