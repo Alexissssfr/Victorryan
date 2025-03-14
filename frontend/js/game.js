@@ -42,6 +42,9 @@ class GameUI {
 
   displayCards() {
     const { playerCards, opponentCards } = this.gameState;
+    console.log("État du jeu reçu:", this.gameState);
+    console.log("Cartes du joueur:", playerCards);
+    console.log("Cartes de l'adversaire:", opponentCards);
 
     // Afficher les cartes avec animation d'entrée
     this.container.innerHTML = `
@@ -67,21 +70,31 @@ class GameUI {
   }
 
   renderCards(cards, isPlayable) {
+    if (!Array.isArray(cards)) {
+      console.error("cards n'est pas un tableau:", cards);
+      return "";
+    }
+
     return cards
-      .map(
-        (card) => `
-      <div class="card ${isPlayable ? "playable" : ""} ${this.getSelectedClass(
-          card
-        )}"
-           data-card-id="${card.id}"
-           data-card-type="${card.type}">
-        ${card.svgContent}
-        <div class="card-stats">
-          ${this.renderCardStats(card)}
-        </div>
-      </div>
-    `
-      )
+      .map((card) => {
+        if (!card || !card.svgContent) {
+          console.error("Carte invalide:", card);
+          return "";
+        }
+
+        return `
+          <div class="card ${
+            isPlayable ? "playable" : ""
+          } ${this.getSelectedClass(card)}"
+               data-card-id="${card.id}"
+               data-card-type="${card.type}">
+            ${card.svgContent}
+            <div class="card-stats">
+              ${this.renderCardStats(card)}
+            </div>
+          </div>
+        `;
+      })
       .join("");
   }
 

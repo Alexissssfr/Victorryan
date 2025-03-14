@@ -51,10 +51,18 @@ class Game {
       const usedPersoIds = persoCards1.map((c) => c.id);
       const usedBonusIds = bonusCards1.map((c) => c.id);
 
-      // Distribuer les cartes au joueur 2 (en excluant les cartes du joueur 1)
+      // Distribuer les cartes au joueur 2
       const [persoCards2, bonusCards2] = await Promise.all([
         cardManager.getRandomCards("perso", 5, usedPersoIds),
         cardManager.getRandomCards("bonus", 5, usedBonusIds),
+      ]);
+
+      // S'assurer que les SVG sont chargés pour toutes les cartes
+      await Promise.all([
+        ...persoCards1.map((c) => this.loadCardSVG(c, "perso")),
+        ...bonusCards1.map((c) => this.loadCardSVG(c, "bonus")),
+        ...persoCards2.map((c) => this.loadCardSVG(c, "perso")),
+        ...bonusCards2.map((c) => this.loadCardSVG(c, "bonus")),
       ]);
 
       // Assigner les cartes aux joueurs
@@ -69,7 +77,7 @@ class Game {
       };
 
       console.log(
-        `Cartes distribuées - Joueur 1: ${
+        `Cartes distribuées et chargées - Joueur 1: ${
           persoCards1.length + bonusCards1.length
         }, Joueur 2: ${persoCards2.length + bonusCards2.length}`
       );
@@ -77,6 +85,13 @@ class Game {
       console.error("Erreur lors de la distribution des cartes:", error);
       throw error;
     }
+  }
+
+  async loadCardSVG(card, type) {
+    if (!card.svgContent) {
+      card.svgContent = await cardManager.loadCardSVG(type, card.id);
+    }
+    return card;
   }
 
   // Obtenir l'état de la partie pour un joueur spécifique

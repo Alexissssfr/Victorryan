@@ -76,6 +76,8 @@ h1 {
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid red;
+  min-height: 200px;
 }
 
 .bonus-cards, .perso-cards {
@@ -86,6 +88,7 @@ h1 {
   min-height: 150px;
   background: rgba(0, 0, 0, 0.05);
   border-radius: 5px;
+  border: 1px solid blue;
 }
 
 /* Cartes */
@@ -101,6 +104,10 @@ h1 {
   overflow: hidden;
   animation: cardEnter 0.3s ease-out;
   transition: all 0.3s ease;
+  border: 1px solid green;
+  margin: 5px;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .card.selected {
@@ -119,8 +126,9 @@ h1 {
 
 .card svg {
   width: 100%;
-  height: 100%;
+  height: 80%;
   object-fit: contain;
+  display: block;
 }
 
 .card-stats {
