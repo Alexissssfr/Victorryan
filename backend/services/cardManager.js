@@ -60,19 +60,24 @@ class CardManager {
     );
   }
 
-  async loadCardSVG(type, cardId) {
-    const svgPath = path.join(
-      __dirname,
-      `../../stock/${
-        type === "perso" ? "svg_perso" : "svg_bonus"
-      }/${cardId}.svg`
-    );
-
+  async loadCardSVG(type, id) {
     try {
-      return fs.readFileSync(svgPath, "utf8");
+      const svgPath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "stock",
+        `svg_${type}`,
+        `${id}.svg`
+      );
+      console.log("Chargement SVG:", svgPath);
+
+      const svgContent = await fs.promises.readFile(svgPath, "utf8");
+      console.log(`SVG chargé pour ${type}/${id}`);
+      return svgContent;
     } catch (error) {
-      console.error(`Erreur de chargement du SVG pour ${cardId}:`, error);
-      return null;
+      console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);
+      return `<svg viewBox="0 0 100 100"><text x="50" y="50" text-anchor="middle">Erreur SVG</text></svg>`;
     }
   }
 }

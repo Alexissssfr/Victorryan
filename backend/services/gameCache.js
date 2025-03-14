@@ -58,12 +58,23 @@ class Game {
       ]);
 
       // S'assurer que les SVG sont chargés pour toutes les cartes
-      await Promise.all([
-        ...persoCards1.map((c) => this.loadCardSVG(c, "perso")),
-        ...bonusCards1.map((c) => this.loadCardSVG(c, "bonus")),
-        ...persoCards2.map((c) => this.loadCardSVG(c, "perso")),
-        ...bonusCards2.map((c) => this.loadCardSVG(c, "bonus")),
-      ]);
+      for (const card of [
+        ...persoCards1,
+        ...bonusCards1,
+        ...persoCards2,
+        ...bonusCards2,
+      ]) {
+        try {
+          const type = card.id.startsWith("P") ? "perso" : "bonus";
+          card.svgContent = await cardManager.loadCardSVG(type, card.id);
+          console.log(`SVG chargé pour la carte ${card.id}`);
+        } catch (error) {
+          console.error(
+            `Erreur chargement SVG pour la carte ${card.id}:`,
+            error
+          );
+        }
+      }
 
       // Assigner les cartes aux joueurs
       this.cards.player1 = {

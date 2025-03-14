@@ -94,10 +94,22 @@ class GameUI {
 
     return cards
       .map((card) => {
-        if (!card || !card.svgContent) {
+        if (!card) {
           console.error("Carte invalide:", card);
           return "";
         }
+
+        // Si pas de SVG, utiliser une image de remplacement
+        const svgContent =
+          card.svgContent ||
+          `
+          <svg viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#ddd"/>
+            <text x="50" y="50" text-anchor="middle" fill="#666">
+              ${card.id}
+            </text>
+          </svg>
+        `;
 
         return `
           <div class="card ${
@@ -105,7 +117,9 @@ class GameUI {
           } ${this.getSelectedClass(card)}"
                data-card-id="${card.id}"
                data-card-type="${card.type}">
-            ${card.svgContent}
+            <div class="card-image">
+              ${svgContent}
+            </div>
             <div class="card-stats">
               ${this.renderCardStats(card)}
             </div>

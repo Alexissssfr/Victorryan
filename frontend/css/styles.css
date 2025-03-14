@@ -124,11 +124,36 @@ h1 {
   animation: pulse 0.5s ease-in-out;
 }
 
-.card svg {
+.card-image {
   width: 100%;
   height: 80%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 8px 8px 0 0;
+}
+
+.card-image svg {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  display: block;
+}
+
+/* Styles pour les cartes de l'adversaire */
+.opponent-area .card-image {
+  filter: brightness(0.7); /* Assombrir légèrement les cartes adverses */
+}
+
+/* Animation lors du chargement des SVG */
+@keyframes svgFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.card-image svg {
+  animation: svgFadeIn 0.3s ease-in;
 }
 
 .card-stats {
