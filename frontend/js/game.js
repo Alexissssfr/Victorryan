@@ -208,17 +208,23 @@ class GameUI {
 // Fonction pour créer une partie
 async function createGame() {
   try {
+    const playerId = crypto.randomUUID();
+
+    console.log("Création d'une partie...");
     const response = await fetch("/api/games/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        playerId: crypto.randomUUID(), // Générer un ID unique pour le joueur
-      }),
+      body: JSON.stringify({ playerId }),
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log("Réponse reçue:", data);
 
     if (data.success) {
       // Sauvegarder les IDs
@@ -233,27 +239,39 @@ async function createGame() {
       document.getElementById("game-board").style.display = "block";
 
       // Connecter au WebSocket
-      window.gameSocket.joinGame(data.gameId, data.playerId);
+      if (window.gameSocket) {
+        console.log("Connexion WebSocket...");
+        window.gameSocket.joinGame(data.gameId, data.playerId);
+      } else {
+        console.error("gameSocket non initialisé");
+      }
 
       // Initialiser l'état du jeu
       if (window.gameUI) {
         window.gameUI.updateState(data.state);
       }
     } else {
-      alert("Erreur lors de la création de la partie: " + data.error);
+      throw new Error(data.error || "Erreur inconnue");
     }
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
-    alert("Erreur de connexion au serveur. Veuillez réessayer.");
+    alert(`Erreur: ${error.message}`);
   }
 }
 
 // Fonction pour rejoindre une partie
 async function joinGame() {
   try {
-    statusDisplay.textContent = "Connexion à la partie...";
+    const gameId = document.getElementById("game-id-input").value.trim();
+    const playerId = crypto.randomUUID();
 
-    const response = await fetch("/games/join", {
+    if (!gameId) {
+      alert("Veuillez entrer un code de partie");
+      return;
+    }
+
+    console.log("Tentative de connexion à la partie:", gameId);
+    const response = await fetch("/api/games/join", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -261,46 +279,38 @@ async function joinGame() {
       body: JSON.stringify({ gameId, playerId }),
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log("Réponse reçue:", data);
 
-    if (data.success && data.joined) {
-      // La partie a été rejointe avec succès
-      mainMenu.style.display = "none";
-      gameBoard.style.display = "block";
+    if (data.success) {
+      // Sauvegarder les IDs
+      window.gameId = gameId;
+      window.playerId = playerId;
 
-      // Si c'est le joueur 2 qui rejoint
-      if (!playerKey) {
-        playerKey = "player2";
-      }
+      // Mettre à jour l'interface
+      document.getElementById("main-menu").style.display = "none";
+      document.getElementById("game-board").style.display = "block";
 
-      // Déterminer si c'est le tour du joueur
-      isMyTurn = data.gameState.currentPlayer === playerKey;
-      updateTurnIndicator();
-
-      // Récupérer les cartes du joueur
-      if (data.gameState[playerKey]) {
-        playerCards = data.gameState[playerKey].hand || [];
-        renderPlayerCards();
-      }
-
-      // Connecter via WebSocket si ce n'est pas déjà fait
+      // Connecter au WebSocket
       if (window.gameSocket) {
+        console.log("Connexion WebSocket...");
         window.gameSocket.joinGame(gameId, playerId);
       }
 
-      // Configurer les événements pour les actions du joueur
-      setupGameEvents();
-
-      statusDisplay.textContent = "Partie en cours";
+      // Initialiser l'état du jeu
+      if (window.gameUI) {
+        window.gameUI.updateState(data.state);
+      }
     } else {
-      alert(
-        "Impossible de rejoindre la partie: " +
-          (data.message || "La partie est peut-être complète ou n'existe pas.")
-      );
+      throw new Error(data.error || "Impossible de rejoindre la partie");
     }
   } catch (error) {
     console.error("Erreur lors de la connexion à la partie:", error);
-    alert("Erreur de connexion au serveur.");
+    alert(`Erreur: ${error.message}`);
   }
 }
 
