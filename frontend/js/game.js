@@ -33,6 +33,11 @@ async function createGame() {
         gameIdDisplay.textContent = `Code partie: ${data.gameId}`;
       }
 
+      // Indiquer que c'est le créateur
+      if (window.gameUI) {
+        window.gameUI.setAsCreator();
+      }
+
       // Connecter au WebSocket
       if (window.gameSocket) {
         window.gameSocket.joinGame(data.gameId, playerId);
@@ -94,16 +99,56 @@ class GameUI {
     this.selectedBonus = null;
     this.selectedPerso = null;
     this.isMyTurn = false;
+    this.isCreator = false;
 
-    // Initialiser les conteneurs
     this.initializeUI();
   }
 
   initializeUI() {
-    // Récupérer les éléments du DOM
     this.turnIndicator = document.getElementById("turn-indicator");
     this.gameStatus = document.getElementById("game-status");
     this.endTurnBtn = document.getElementById("end-turn-btn");
+    this.drawCardsBtn = document.getElementById("draw-cards-btn");
+
+    // Gestionnaire pour le bouton de tirage
+    if (this.drawCardsBtn) {
+      this.drawCardsBtn.addEventListener("click", () => this.handleDrawCards());
+    }
+  }
+
+  setAsCreator() {
+    this.isCreator = true;
+    if (this.drawCardsBtn) {
+      this.drawCardsBtn.style.display = "block";
+    }
+  }
+
+  async handleDrawCards() {
+    try {
+      const response = await fetch("/api/games/draw-cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gameId: window.gameId,
+          playerId: window.playerId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors du tirage des cartes");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        this.updateState(data.state);
+        this.drawCardsBtn.style.display = "none";
+      }
+    } catch (error) {
+      console.error("Erreur tirage cartes:", error);
+      alert("Erreur lors du tirage des cartes");
+    }
   }
 
   updateState(state) {

@@ -102,6 +102,51 @@ app.post("/api/games/join", async (req, res) => {
   }
 });
 
+// Route pour le tirage des cartes
+app.post("/api/games/draw-cards", async (req, res) => {
+  try {
+    const { gameId, playerId } = req.body;
+    const game = gameCache.getGame(gameId);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: "Partie non trouvée",
+      });
+    }
+
+    // Vérifier que c'est bien le créateur
+    if (game.players.player1 !== playerId) {
+      return res.status(403).json({
+        success: false,
+        error: "Seul le créateur peut tirer les cartes",
+      });
+    }
+
+    // Distribuer les cartes
+    await game.distributeInitialCards(cardManager);
+
+    res.json({
+      success: true,
+      state: game.getStateForPlayer(playerId),
+    });
+
+    // Notifier l'autre joueur si présent
+    if (game.players.player2) {
+      io.to(gameId).emit(
+        "gameState",
+        game.getStateForPlayer(game.players.player2)
+      );
+    }
+  } catch (error) {
+    console.error("Erreur tirage cartes:", error);
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors du tirage des cartes",
+    });
+  }
+});
+
 // Routes de base
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/index.html"));
