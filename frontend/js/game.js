@@ -223,6 +223,7 @@ class GameUI {
           return "";
         }
 
+        // Afficher directement le SVG complet
         return `
           <div class="card ${
             isPlayable ? "playable" : ""
@@ -230,23 +231,7 @@ class GameUI {
                data-card-id="${card.id}"
                data-card-type="${card.type}">
             <div class="card-content">
-              ${
-                card.svgContent ||
-                `
-                <svg viewBox="0 0 100 140">
-                  <rect width="100" height="140" fill="#ddd"/>
-                  <text x="50" y="70" text-anchor="middle" fill="#666">
-                    ${card.id}
-                  </text>
-                </svg>
-              `
-              }
-            </div>
-            <div class="card-info">
-              <div class="card-name">${
-                card.nomcarteperso || card.nomcartebonus
-              }</div>
-              ${this.renderCardStats(card)}
+              ${card.svgContent || this.getDefaultCardImage(card)}
             </div>
           </div>
         `;

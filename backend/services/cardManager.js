@@ -71,24 +71,14 @@ class CardManager {
         throw new Error(`Carte ${type}/${id} non trouvée`);
       }
 
-      // Charger le SVG
+      // Charger le SVG complet
       const svgContent = await this.loadCardSVG(type, id);
 
       return {
         ...card,
         type,
         svgContent,
-        // Construire l'URL pour le SVG statique
-        svgUrl: `/stock/svg_${type}/${type === "perso" ? "P" : "B"}${id}.svg`,
-        // Ajouter les stats actuelles si c'est une carte perso
-        ...(type === "perso" && {
-          currentStats: {
-            pointsdevie: parseInt(card.pointsdevie || 0),
-            forceattaque: parseInt(card.forceattaque || 0),
-            tourattaque: parseInt(card.tourattaque || 0),
-            bonusActifs: [],
-          },
-        }),
+        // Pas besoin de svgUrl car on utilise directement le contenu SVG
       };
     } catch (error) {
       console.error(`Erreur chargement carte ${type}/${id}:`, error);
