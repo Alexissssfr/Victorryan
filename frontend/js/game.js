@@ -32,7 +32,7 @@ class GameUI {
     this.selectedPerso = null;
     this.isMyTurn = false;
 
-    // Créer les conteneurs s'ils n'existent pas
+    // S'assurer que les conteneurs existent
     this.createContainers();
   }
 
@@ -92,6 +92,27 @@ class GameUI {
     }
   }
 
+  renderCardStats(card) {
+    if (card.type === "perso") {
+      return `
+        <div class="stats">
+          <div>PV: ${card.currentStats?.pointsdevie || card.pointsdevie}</div>
+          <div>ATT: ${
+            card.currentStats?.forceattaque || card.forceattaque
+          }</div>
+          <div>TOUR: ${card.currentStats?.tourattaque || card.tourattaque}</div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="stats">
+          <div>BONUS: ${card.pourcentagebonus}%</div>
+          <div>TOUR: ${card.tourbonus}</div>
+        </div>
+      `;
+    }
+  }
+
   renderCards(cards, isPlayable) {
     if (!Array.isArray(cards)) {
       console.error("cards n'est pas un tableau:", cards);
@@ -105,18 +126,6 @@ class GameUI {
           return "";
         }
 
-        // Si pas de SVG, utiliser une image de remplacement
-        const svgContent =
-          card.svgContent ||
-          `
-          <svg viewBox="0 0 100 100">
-            <rect width="100" height="100" fill="#ddd"/>
-            <text x="50" y="50" text-anchor="middle" fill="#666">
-              ${card.id}
-            </text>
-          </svg>
-        `;
-
         return `
           <div class="card ${
             isPlayable ? "playable" : ""
@@ -124,9 +133,12 @@ class GameUI {
                data-card-id="${card.id}"
                data-card-type="${card.type}">
             <div class="card-image">
-              ${svgContent}
+              ${card.svgContent || this.getDefaultCardImage(card)}
             </div>
-            <div class="card-stats">
+            <div class="card-info">
+              <div class="card-name">${
+                card.nomcarteperso || card.nomcartebonus
+              }</div>
               ${this.renderCardStats(card)}
             </div>
           </div>
@@ -135,24 +147,23 @@ class GameUI {
       .join("");
   }
 
+  getDefaultCardImage(card) {
+    return `
+      <svg viewBox="0 0 100 140">
+        <rect width="100" height="140" fill="#ddd"/>
+        <text x="50" y="70" text-anchor="middle" fill="#666">
+          ${card.id}
+        </text>
+      </svg>
+    `;
+  }
+
   getSelectedClass(card) {
     if (this.selectedBonus && this.selectedBonus.id === card.id)
       return "selected";
     if (this.selectedPerso && this.selectedPerso.id === card.id)
       return "selected";
     return "";
-  }
-
-  renderCardStats(card) {
-    return `
-      <div>PV: ${card.currentStats.pointsdevie}</div>
-      <div>ATT: ${card.currentStats.forceattaque}</div>
-      ${
-        card.currentStats.tourattaque
-          ? `<div>Tour: ${card.currentStats.tourattaque}</div>`
-          : ""
-      }
-    `;
   }
 
   attachCardListeners() {
@@ -259,8 +270,8 @@ class GameUI {
 async function createGame() {
   try {
     const playerId = crypto.randomUUID();
-
     console.log("Création d'une partie...");
+
     const response = await fetch("/api/games/create", {
       method: "POST",
       headers: {
@@ -277,35 +288,27 @@ async function createGame() {
     console.log("Réponse reçue:", data);
 
     if (data.success) {
-      // Sauvegarder les IDs
-      window.gameId = data.gameId;
-      window.playerId = data.playerId;
-
-      // Mettre à jour l'interface
-      document.getElementById(
-        "game-id-display"
-      ).textContent = `Code partie: ${data.gameId}`;
+      // Cacher le menu et afficher le plateau
       document.getElementById("main-menu").style.display = "none";
       document.getElementById("game-board").style.display = "block";
 
-      // Connecter au WebSocket
-      if (window.gameSocket) {
-        console.log("Connexion WebSocket...");
-        window.gameSocket.joinGame(data.gameId, data.playerId);
-      } else {
-        console.error("gameSocket non initialisé");
+      // Mettre à jour l'affichage du code de partie
+      const gameIdDisplay = document.getElementById("game-id-display");
+      if (gameIdDisplay) {
+        gameIdDisplay.textContent = `Code partie: ${data.state.gameId}`;
       }
 
-      // Initialiser l'état du jeu
+      // Stocker l'ID de partie et l'ID joueur
+      window.gameId = data.state.gameId;
+      window.playerId = playerId;
+
+      // Mettre à jour l'état du jeu
       if (window.gameUI) {
         window.gameUI.updateState(data.state);
       }
-    } else {
-      throw new Error(data.error || "Erreur inconnue");
     }
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
-    alert(`Erreur: ${error.message}`);
   }
 }
 

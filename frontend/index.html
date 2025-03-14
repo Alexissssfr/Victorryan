@@ -11,6 +11,10 @@
     </script>
   </head>
   <body>
+    <!-- Ajouter ces divs au début du body -->
+    <div id="notification-container"></div>
+    <div id="status-container"></div>
+
     <div id="main-menu">
       <h1>Victor Ryan - Le Jeu</h1>
       <div class="menu-options">
@@ -28,8 +32,9 @@
 
     <div id="game-board" style="display: none">
       <div id="game-info">
-        <span id="game-id-display"></span>
-        <span id="turn-indicator"></span>
+        <div id="game-id-display"></div>
+        <div id="turn-indicator"></div>
+        <div id="game-status"></div>
       </div>
 
       <div class="game-area">
