@@ -223,15 +223,31 @@ class GameUI {
           return "";
         }
 
+        // Déboguer l'URL de l'image
+        console.log(`Carte ${card.id}:`, {
+          fond: card.fond,
+          type: card.type,
+          nom: card.nomcarteperso || card.nomcartebonus,
+        });
+
+        // Tester si l'image existe
+        fetch(card.fond)
+          .then((response) => {
+            if (!response.ok) {
+              console.error(`Image non trouvée pour ${card.id}:`, card.fond);
+            }
+          })
+          .catch((error) =>
+            console.error(`Erreur chargement image ${card.id}:`, error)
+          );
+
         return `
           <div class="card ${
             isPlayable ? "playable" : ""
           } ${this.getSelectedClass(card)}"
                data-card-id="${card.id}"
-               data-card-type="${card.type}">
-            <div class="card-image">
-              ${card.svgContent || this.getDefaultCardImage(card)}
-            </div>
+               data-card-type="${card.type}"
+               style="background-image: url('${card.fond}');">
             <div class="card-info">
               <div class="card-name">${
                 card.nomcarteperso || card.nomcartebonus
@@ -245,14 +261,18 @@ class GameUI {
   }
 
   getDefaultCardImage(card) {
-    return `
-      <svg viewBox="0 0 100 140">
-        <rect width="100" height="140" fill="#ddd"/>
-        <text x="50" y="70" text-anchor="middle" fill="#666">
-          ${card.id}
-        </text>
-      </svg>
-    `;
+    // Ne retourner le SVG que si pas d'image de fond
+    if (!card.fond) {
+      return `
+        <svg viewBox="0 0 100 140">
+          <rect width="100" height="140" fill="#ddd"/>
+          <text x="50" y="70" text-anchor="middle" fill="#666">
+            ${card.id}
+          </text>
+        </svg>
+      `;
+    }
+    return "";
   }
 
   getSelectedClass(card) {

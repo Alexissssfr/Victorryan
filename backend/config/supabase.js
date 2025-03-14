@@ -1,4 +1,4 @@
-require("dotenv").config({ path: "../.env" });
+require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -10,6 +10,11 @@ if (!supabaseUrl || !supabaseKey) {
 
 // Création du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Fonction utilitaire pour construire l'URL correcte des images
+function getImageUrl(type, id) {
+  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.png`;
+}
 
 // Ajouter une fonction pour stocker les SVG
 async function storeCardSVG(gameId, playerId, cardId, svgContent) {
@@ -30,6 +35,7 @@ async function storeCardSVG(gameId, playerId, cardId, svgContent) {
 }
 
 module.exports = {
-  ...supabase,
+  supabase,
+  getImageUrl,
   storeCardSVG,
 };

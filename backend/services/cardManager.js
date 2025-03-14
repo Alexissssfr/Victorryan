@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const { supabase, getImageUrl } = require("../config/supabase");
 
 class CardManager {
   constructor() {
@@ -78,6 +79,30 @@ class CardManager {
     } catch (error) {
       console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);
       return `<svg viewBox="0 0 100 100"><text x="50" y="50" text-anchor="middle">Erreur SVG</text></svg>`;
+    }
+  }
+
+  async loadCard(type, id) {
+    try {
+      // Récupérer les données de la carte depuis Supabase
+      const { data, error } = await supabase
+        .from(type === "perso" ? "cartes_perso" : "cartes_bonus")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      // Construire l'URL de l'image correctement
+      data.fond = getImageUrl(type, id);
+
+      // Charger le SVG si nécessaire
+      data.svgContent = await this.loadCardSVG(type, id);
+
+      return data;
+    } catch (error) {
+      console.error(`Erreur chargement carte ${type}/${id}:`, error);
+      return null;
     }
   }
 }

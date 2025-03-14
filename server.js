@@ -85,7 +85,8 @@ app.post("/api/games/join", async (req, res) => {
       });
     }
 
-    if (playerRole === "player2") {
+    // S'assurer que les cartes sont distribuées
+    if (!game.cards.player1.perso.length) {
       await game.distributeInitialCards(cardManager);
     }
 
@@ -93,6 +94,13 @@ app.post("/api/games/join", async (req, res) => {
       success: true,
       state: game.getStateForPlayer(playerId),
     });
+
+    // Notifier l'autre joueur de la mise à jour
+    const otherPlayerId =
+      playerRole === "player1" ? game.players.player2 : game.players.player1;
+    if (otherPlayerId) {
+      io.to(gameId).emit("gameState", game.getStateForPlayer(otherPlayerId));
+    }
   } catch (error) {
     console.error("Erreur join partie:", error);
     res.status(500).json({
@@ -202,6 +210,44 @@ app.get("/api/check-svg/:type/:id", async (req, res) => {
       error: error.message,
     });
   }
+});
+
+// Route de diagnostic pour les images
+app.get("/api/check-image/:type/:id", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const card = await cardManager.getCard(type, id);
+
+    res.json({
+      success: true,
+      card: {
+        id: card.id,
+        type: card.type,
+        fond: card.fond,
+        svgContent: card.svgContent ? "présent" : "absent",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Route de test pour les URLs des images
+app.get("/api/test-image-url/:type/:id", (req, res) => {
+  const { type, id } = req.params;
+  const { getImageUrl } = require("./backend/config/supabase");
+
+  const imageUrl = getImageUrl(type, id);
+
+  res.json({
+    url: imageUrl,
+    testUrl: `${process.env.SUPABASE_URL}/storage/v1/object/public/images/${type}/${id}.png`,
+    type,
+    id,
+  });
 });
 
 // Gestion des WebSockets

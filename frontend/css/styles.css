@@ -100,6 +100,10 @@ h1 {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .card.selected {
@@ -126,20 +130,24 @@ h1 {
 }
 
 .card-info {
-  padding: 10px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px;
 }
 
 .card-name {
   font-size: 12px;
   font-weight: bold;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   text-align: center;
 }
 
 .stats {
   display: flex;
   justify-content: space-around;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .playable {
