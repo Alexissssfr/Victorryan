@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Victor Ryan - Le Jeu</title>
     <link rel="stylesheet" href="/css/styles.css" />
+    <script>
+      // Variable globale pour stocker l'interface
+      window.gameUI = null;
+    </script>
   </head>
   <body>
     <div id="main-menu">
@@ -52,32 +56,33 @@
     <script src="/js/game.js"></script>
 
     <script>
-      // Initialisation quand le DOM est chargé
-      document.addEventListener("DOMContentLoaded", () => {
-        // Créer l'interface de jeu
-        const gameUI = new GameUI(document.querySelector(".game-area"));
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          // Attendre que le socket soit initialisé
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
-        // Connecter l'interface au socket
-        if (window.gameSocket) {
-          window.gameSocket.setGameUI(gameUI);
-        } else {
-          console.error("gameSocket n'est pas initialisé");
+          // Créer l'interface de jeu
+          window.gameUI = new GameUI(document.querySelector(".game-area"));
+
+          // Initialiser les gestionnaires d'événements
+          document
+            .getElementById("create-game-btn")
+            .addEventListener("click", createGame);
+          document
+            .getElementById("join-game-btn")
+            .addEventListener("click", joinGame);
+          document
+            .getElementById("end-turn-btn")
+            .addEventListener("click", () => {
+              if (window.gameSocket) {
+                window.gameSocket.endTurn(window.gameId, window.playerId);
+              }
+            });
+
+          console.log("Interface initialisée");
+        } catch (error) {
+          console.error("Erreur d'initialisation:", error);
         }
-
-        // Gestionnaires d'événements pour les boutons
-        document
-          .getElementById("create-game-btn")
-          .addEventListener("click", createGame);
-        document
-          .getElementById("join-game-btn")
-          .addEventListener("click", joinGame);
-        document
-          .getElementById("end-turn-btn")
-          .addEventListener("click", () => {
-            if (window.gameSocket) {
-              window.gameSocket.endTurn(window.gameId, window.playerId);
-            }
-          });
       });
     </script>
 

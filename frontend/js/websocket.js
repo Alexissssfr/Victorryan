@@ -319,27 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
 class GameSocket {
   constructor() {
     this.socket = io();
-    this.gameUI = null;
-    this.notificationContainer = null;
     this.setupListeners();
-    this.createNotificationContainer();
-  }
-
-  createNotificationContainer() {
-    this.notificationContainer = document.createElement("div");
-    this.notificationContainer.id = "notification-container";
-    this.notificationContainer.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 1000;
-    `;
-    document.body.appendChild(this.notificationContainer);
-  }
-
-  setGameUI(gameUI) {
-    this.gameUI = gameUI;
   }
 
   setupListeners() {
@@ -348,21 +328,21 @@ class GameSocket {
     });
 
     this.socket.on("gameState", (state) => {
-      if (this.gameUI) {
+      if (window.gameUI) {
         console.log("État du jeu reçu:", state);
-        this.gameUI.updateState(state);
+        window.gameUI.updateState(state);
       }
     });
 
     this.socket.on("gameStateUpdated", (states) => {
-      if (this.gameUI) {
+      if (window.gameUI) {
         const playerState =
           states[
-            this.gameUI.playerId === states.player1State.playerId
+            window.gameUI.playerId === states.player1State.playerId
               ? "player1State"
               : "player2State"
           ];
-        this.gameUI.updateState(playerState);
+        window.gameUI.updateState(playerState);
       }
     });
 
@@ -375,31 +355,15 @@ class GameSocket {
       console.error("Erreur socket:", message);
       this.showNotification(message, "error");
     });
-
-    this.socket.on("disconnect", () => {
-      console.log("Déconnecté du serveur WebSocket");
-      this.showNotification("Déconnexion du serveur", "error");
-    });
   }
 
   showNotification(message, type = "info") {
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
-    notification.style.cssText = `
-      padding: 1rem 2rem;
-      margin: 0.5rem;
-      border-radius: 5px;
-      background: ${type === "error" ? "#e74c3c" : "#3498db"};
-      color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    `;
     notification.textContent = message;
+    document.body.appendChild(notification);
 
-    this.notificationContainer.appendChild(notification);
-
-    setTimeout(() => {
-      notification.remove();
-    }, 3000);
+    setTimeout(() => notification.remove(), 3000);
   }
 
   joinGame(gameId, playerId) {
@@ -409,14 +373,10 @@ class GameSocket {
     this.socket.emit("joinGame", { gameId, playerId });
   }
 
-  playBonus(gameId, playerId, bonusId, targetId) {
-    this.socket.emit("playBonus", { gameId, playerId, bonusId, targetId });
-  }
-
   endTurn(gameId, playerId) {
     this.socket.emit("endTurn", { gameId, playerId });
   }
 }
 
-// Créer une seule instance globale
+// Créer l'instance globale
 window.gameSocket = new GameSocket();

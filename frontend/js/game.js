@@ -58,32 +58,38 @@ class GameUI {
   }
 
   displayCards() {
-    const { playerCards, opponentCards } = this.gameState;
-    console.log("État du jeu reçu:", this.gameState);
-    console.log("Cartes du joueur:", playerCards);
-    console.log("Cartes de l'adversaire:", opponentCards);
+    try {
+      const { playerCards, opponentCards } = this.gameState;
+      console.log("Affichage des cartes:", { playerCards, opponentCards });
 
-    // Afficher les cartes avec animation d'entrée
-    this.container.innerHTML = `
-      <div class="opponent-area">
-        <div class="bonus-cards drop-zone">
-          ${this.renderCards(opponentCards.bonus, false)}
-        </div>
-        <div class="perso-cards drop-zone">
-          ${this.renderCards(opponentCards.perso, false)}
-        </div>
-      </div>
-      <div class="player-area">
-        <div class="perso-cards drop-zone">
-          ${this.renderCards(playerCards.perso, this.isMyTurn)}
-        </div>
-        <div class="bonus-cards drop-zone">
-          ${this.renderCards(playerCards.bonus, this.isMyTurn)}
-        </div>
-      </div>
-    `;
+      if (!playerCards || !opponentCards) {
+        console.error("Données de cartes invalides");
+        return;
+      }
 
-    this.attachCardListeners();
+      this.container.innerHTML = `
+        <div class="opponent-area">
+          <div class="bonus-cards drop-zone">
+            ${this.renderCards(opponentCards.bonus || [], false)}
+          </div>
+          <div class="perso-cards drop-zone">
+            ${this.renderCards(opponentCards.perso || [], false)}
+          </div>
+        </div>
+        <div class="player-area">
+          <div class="perso-cards drop-zone">
+            ${this.renderCards(playerCards.perso || [], this.isMyTurn)}
+          </div>
+          <div class="bonus-cards drop-zone">
+            ${this.renderCards(playerCards.bonus || [], this.isMyTurn)}
+          </div>
+        </div>
+      `;
+
+      this.attachCardListeners();
+    } catch (error) {
+      console.error("Erreur lors de l'affichage des cartes:", error);
+    }
   }
 
   renderCards(cards, isPlayable) {
