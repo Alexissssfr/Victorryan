@@ -6,11 +6,17 @@ let persoData;
 let bonusData;
 
 try {
-  persoData = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "../stock/personnages.json"), "utf8")
-  );
-  bonusData = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "../stock/bonus.json"), "utf8")
+  const personnagesPath = path.join(__dirname, "../../stock/personnages.json");
+  const bonusPath = path.join(__dirname, "../../stock/bonus.json");
+
+  console.log("Chargement des cartes depuis:", personnagesPath);
+  console.log("Chargement des bonus depuis:", bonusPath);
+
+  persoData = JSON.parse(fs.readFileSync(personnagesPath, "utf8"));
+  bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
+
+  console.log(
+    `Chargé ${persoData.length} cartes personnages et ${bonusData.length} cartes bonus`
   );
 } catch (error) {
   console.error("Erreur lors du chargement des données des cartes:", error);
@@ -26,6 +32,12 @@ function getRandomCards(type, count) {
 
   // S'assurer que count ne dépasse pas le nombre de cartes disponibles
   count = Math.min(count, data.length);
+
+  // Vérifier si les données sont disponibles
+  if (data.length === 0) {
+    console.warn(`Aucune donnée disponible pour le type ${type}`);
+    return [];
+  }
 
   // Copier le tableau pour ne pas modifier l'original
   const shuffled = [...data];
@@ -72,35 +84,72 @@ function preloadSVGData() {
     bonus: {},
   };
 
-  // Charger les SVG des personnages
-  persoData.forEach((card) => {
-    try {
-      const svgPath = path.join(__dirname, `../stock/svg_perso/${card.id}.svg`);
-      if (fs.existsSync(svgPath)) {
-        svgData.perso[card.id] = fs.readFileSync(svgPath, "utf8");
+  try {
+    // Charger les SVG des personnages
+    persoData.forEach((card) => {
+      try {
+        const svgPath = path.join(
+          __dirname,
+          `../../stock/svg_perso/${card.id}.svg`
+        );
+        if (fs.existsSync(svgPath)) {
+          svgData.perso[card.id] = fs.readFileSync(svgPath, "utf8");
+        } else {
+          console.warn(`SVG non trouvé pour ${card.id} à ${svgPath}`);
+        }
+      } catch (err) {
+        console.error(`Erreur lors du chargement du SVG pour ${card.id}:`, err);
       }
-    } catch (err) {
-      console.error(`Erreur lors du chargement du SVG pour ${card.id}:`, err);
-    }
-  });
+    });
 
-  // Charger les SVG des bonus
-  bonusData.forEach((card) => {
-    try {
-      const svgPath = path.join(__dirname, `../stock/svg_bonus/${card.id}.svg`);
-      if (fs.existsSync(svgPath)) {
-        svgData.bonus[card.id] = fs.readFileSync(svgPath, "utf8");
+    // Charger les SVG des bonus
+    bonusData.forEach((card) => {
+      try {
+        const svgPath = path.join(
+          __dirname,
+          `../../stock/svg_bonus/${card.id}.svg`
+        );
+        if (fs.existsSync(svgPath)) {
+          svgData.bonus[card.id] = fs.readFileSync(svgPath, "utf8");
+        } else {
+          console.warn(`SVG non trouvé pour ${card.id} à ${svgPath}`);
+        }
+      } catch (err) {
+        console.error(`Erreur lors du chargement du SVG pour ${card.id}:`, err);
       }
-    } catch (err) {
-      console.error(`Erreur lors du chargement du SVG pour ${card.id}:`, err);
-    }
-  });
+    });
+  } catch (err) {
+    console.error("Erreur lors du préchargement des SVG:", err);
+  }
 
   return svgData;
+}
+
+// Fonction pour recharger les données (utile pour les tests ou mises à jour)
+function reloadCardData() {
+  try {
+    persoData = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, "../../stock/personnages.json"),
+        "utf8"
+      )
+    );
+    bonusData = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "../../stock/bonus.json"), "utf8")
+    );
+    console.log(
+      `Rechargé ${persoData.length} cartes personnages et ${bonusData.length} cartes bonus`
+    );
+  } catch (error) {
+    console.error("Erreur lors du rechargement des données des cartes:", error);
+  }
+
+  return { persoCount: persoData.length, bonusCount: bonusData.length };
 }
 
 module.exports = {
   getRandomCards,
   getCardById,
   preloadSVGData,
+  reloadCardData,
 };

@@ -9,14 +9,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let isMyTurn = false;
 
   // Éléments du DOM
-  const statusElement = document.getElementById("status");
+  const statusElement = document.getElementById("status-display");
+  const statusIndicator = document.querySelector(".status-indicator");
   const gameIdDisplay = document.getElementById("game-id-display");
   const player1CardsContainer = document.getElementById("player1-cards");
   const player2CardsContainer = document.getElementById("player2-cards");
   const notificationArea = document.getElementById("notification-area");
+  const turnIndicator = document.getElementById("turn-indicator");
 
   // Fonction pour afficher des notifications
   function showNotification(message, type = "info") {
+    console.log(`Notification (${type}): ${message}`);
+
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
     notification.textContent = message;
@@ -31,67 +35,128 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Événement lorsque la connexion est établie
   socket.on("connect", () => {
-    console.log("Connecté au serveur WebSocket");
+    console.log("Connecté au serveur WebSocket", socket.id);
     statusElement.textContent = "Connecté";
-    statusElement.className = "connected";
+    statusIndicator.className = "status-indicator connected";
+    showNotification("Connexion au serveur établie", "success");
   });
 
   // Événement lorsque la connexion est perdue
   socket.on("disconnect", () => {
     console.log("Déconnecté du serveur WebSocket");
     statusElement.textContent = "Déconnecté";
-    statusElement.className = "disconnected";
+    statusIndicator.className = "status-indicator disconnected";
     showNotification(
       "La connexion au serveur a été perdue. Tentative de reconnexion...",
       "error"
     );
   });
 
+  // Événement lorsqu'un joueur rejoint la partie
+  socket.on("playerJoined", (data) => {
+    console.log("Un joueur a rejoint la partie:", data);
+    showNotification(`Le joueur ${data.playerId} a rejoint la partie`, "info");
+  });
+
   // Événement lorsqu'une partie commence
   socket.on("gameStarted", (data) => {
     console.log("Partie commencée:", data);
     gameIdDisplay.textContent = `Partie #${data.gameId}`;
+    statusElement.textContent = "Partie en cours";
+    statusIndicator.className = "status-indicator connected";
 
     showNotification("La partie a commencé!", "success");
 
     // Mettre à jour l'interface en fonction du joueur actuel
-    isMyTurn =
-      data.currentPlayer ===
-      (playerId === data.player1Id ? "player1" : "player2");
+    const currentPlayer = playerId === data.player1Id ? "player1" : "player2";
+    isMyTurn = data.currentPlayer === currentPlayer;
     updateTurnIndicator();
+
+    // Rafraîchir l'état du jeu
+    if (window.gameController && window.gameController.updateGameState) {
+      fetch(`/games/${gameId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            window.gameController.updateGameState(data.gameState);
+          }
+        })
+        .catch((error) =>
+          console.error(
+            "Erreur lors de la récupération de l'état du jeu:",
+            error
+          )
+        );
+    }
   });
 
   // Événement lorsqu'une carte est jouée par l'adversaire
   socket.on("cardPlayed", (data) => {
     console.log("Carte jouée par l'adversaire:", data);
     showNotification(
-      `Votre adversaire a joué une carte: ${data.cardData.name}`
+      `Votre adversaire a joué une carte: ${
+        data.cardData.name || data.cardData.id
+      }`
     );
     // Mettre à jour l'affichage des cartes
-    updateGameBoard();
+    if (window.gameController && window.gameController.updateGameState) {
+      // Récupérer le nouvel état du jeu
+      fetch(`/games/${gameId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            window.gameController.updateGameState(data.gameState);
+          }
+        })
+        .catch((error) =>
+          console.error(
+            "Erreur lors de la récupération de l'état du jeu:",
+            error
+          )
+        );
+    }
   });
 
   // Événement lorsque le tour change
   socket.on("turnChanged", (data) => {
     console.log("Tour changé:", data);
 
-    // Mettre à jour l'interface
-    const playerKey = playerId === data.player1Id ? "player1" : "player2";
-    isMyTurn = data.currentPlayer === playerKey;
+    // Déterminer si c'est notre tour
+    const myPlayerKey = playerId === data.player1Id ? "player1" : "player2";
+    isMyTurn = data.currentPlayer === myPlayerKey;
 
     showNotification(
-      isMyTurn ? "C'est votre tour!" : "C'est le tour de votre adversaire"
+      isMyTurn ? "C'est votre tour!" : "C'est le tour de votre adversaire",
+      isMyTurn ? "success" : "info"
     );
+
     updateTurnIndicator();
-    updateGameBoard();
+
+    // Mettre à jour l'état du jeu
+    if (window.gameController && window.gameController.updateGameState) {
+      const gameState = {
+        currentPlayer: data.currentPlayer,
+      };
+
+      // Si nous avons reçu des informations de santé, les inclure
+      if (data.player1Health) {
+        gameState.player1 = { health: data.player1Health };
+      }
+
+      if (data.player2Health) {
+        gameState.player2 = { health: data.player2Health };
+      }
+
+      window.gameController.updateGameState(gameState);
+    }
   });
 
   // Événement lorsque la partie se termine
   socket.on("gameOver", (data) => {
     console.log("Partie terminée:", data);
 
-    const playerKey = playerId === data.player1Id ? "player1" : "player2";
-    const hasWon = data.winner === playerKey;
+    const myPlayerKey = playerId === data.player1Id ? "player1" : "player2";
+    const hasWon = data.winner === myPlayerKey;
 
     showNotification(
       hasWon
@@ -100,10 +165,38 @@ document.addEventListener("DOMContentLoaded", () => {
       hasWon ? "success" : "error"
     );
 
+    // Mettre à jour l'interface
+    statusElement.textContent = "Partie terminée";
+    turnIndicator.textContent = hasWon ? "Victoire!" : "Défaite!";
+    turnIndicator.className = hasWon ? "your-turn" : "opponent-turn";
+
     // Désactiver les contrôles de jeu
     isMyTurn = false;
     updateTurnIndicator();
-    updateGameBoard();
+
+    // Mettre à jour l'affichage si nécessaire
+    if (window.gameController && window.gameController.updateGameState) {
+      // Récupérer l'état final du jeu
+      fetch(`/games/${gameId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Ajouter les informations de fin de partie
+            const finalState = {
+              ...data.gameState,
+              gameOver: true,
+              winner: data.winner,
+            };
+            window.gameController.updateGameState(finalState);
+          }
+        })
+        .catch((error) =>
+          console.error(
+            "Erreur lors de la récupération de l'état du jeu:",
+            error
+          )
+        );
+    }
 
     // Afficher un bouton pour revenir au menu principal
     const backToMenuBtn = document.createElement("button");
@@ -114,7 +207,14 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.reload();
     });
 
-    document.getElementById("game-controls").appendChild(backToMenuBtn);
+    const gameControls = document.getElementById("game-controls");
+    if (gameControls) {
+      // Supprimer les contrôles existants
+      while (gameControls.firstChild) {
+        gameControls.removeChild(gameControls.firstChild);
+      }
+      gameControls.appendChild(backToMenuBtn);
+    }
   });
 
   // Fonction pour rejoindre une partie
@@ -122,13 +222,17 @@ document.addEventListener("DOMContentLoaded", () => {
     gameId = gameIdToJoin;
     playerId = playerIdToUse;
 
+    console.log(
+      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
+    );
+
     // Rejoindre la salle Socket.io pour cette partie
     socket.emit("joinGame", { gameId, playerId });
 
     // Mettre à jour l'interface
     gameIdDisplay.textContent = `Partie #${gameId}`;
     statusElement.textContent = "En attente d'un adversaire...";
-    statusElement.className = "waiting";
+    statusIndicator.className = "status-indicator waiting";
 
     showNotification("Connexion à la partie en cours...");
   }
@@ -142,16 +246,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Récupérer les détails de la carte à partir du DOM
     const cardElement = document.querySelector(`[data-id="${cardId}"]`);
+    if (!cardElement) {
+      showNotification("Carte introuvable dans le DOM", "error");
+      return;
+    }
+
+    const cardType = cardElement.dataset.type;
+    const cardName =
+      cardElement.querySelector(".card-name")?.textContent || cardId;
+
     const cardData = {
       id: cardId,
-      name: cardElement.querySelector(".card-name").textContent,
-      type: cardElement.dataset.type,
+      name: cardName,
+      type: cardType,
     };
+
+    console.log(
+      `Joueur ${playerId} joue la carte ${cardId} (${cardType}) sur ${targetId}`
+    );
 
     // Envoyer l'action au serveur
     socket.emit("playCard", { gameId, playerId, cardData, targetId });
 
-    showNotification(`Vous avez joué la carte ${cardData.name}`);
+    showNotification(`Vous avez joué la carte ${cardName}`);
   }
 
   // Fonction pour terminer son tour
@@ -161,17 +278,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    console.log(`Joueur ${playerId} termine son tour`);
     socket.emit("endTurn", { gameId, playerId });
     showNotification("Vous avez terminé votre tour");
 
-    // Désactiver temporairement les contrôles de jeu
+    // Désactiver temporairement les contrôles de jeu en attendant la confirmation
     isMyTurn = false;
     updateTurnIndicator();
   }
 
   // Fonction pour mettre à jour l'indicateur de tour
   function updateTurnIndicator() {
-    const turnIndicator = document.getElementById("turn-indicator");
     if (!turnIndicator) return;
 
     turnIndicator.textContent = isMyTurn
@@ -186,19 +303,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Fonction pour mettre à jour l'affichage du plateau de jeu
-  function updateGameBoard() {
-    // Cette fonction devrait être implémentée pour mettre à jour l'affichage
-    // des cartes et de l'état du jeu en fonction des données reçues du serveur
-
-    // Pour l'instant, c'est juste un espace réservé
-    console.log("Mise à jour du plateau de jeu");
-  }
-
   // Exposer les fonctions utiles globalement
   window.gameSocket = {
     joinGame,
     playCard,
     endTurn,
+    showNotification,
+    updateTurnIndicator,
+    getPlayerId: () => playerId,
+    getGameId: () => gameId,
+    isMyTurn: () => isMyTurn,
   };
 });
