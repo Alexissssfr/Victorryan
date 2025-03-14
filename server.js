@@ -4,6 +4,9 @@ const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
 require("dotenv").config();
+const crypto = require("crypto");
+const gameCache = require("./backend/services/gameCache");
+const cardManager = require("./backend/services/cardManager");
 
 const app = express();
 const server = http.createServer(app);
@@ -37,28 +40,63 @@ app.use("/cards", require("./backend/routes/cards"));
 
 // Routes pour la gestion des parties
 app.post("/api/games/create", async (req, res) => {
-  const gameId = gameCache.createGame();
-  res.json({ gameId });
+  try {
+    const gameId = gameCache.createGame();
+    const playerId = req.body.playerId || crypto.randomUUID();
+
+    const game = gameCache.getGame(gameId);
+    game.addPlayer(playerId); // Le créateur est player1
+
+    res.json({
+      success: true,
+      gameId,
+      playerId,
+      state: game.getStateForPlayer(playerId),
+    });
+  } catch (error) {
+    console.error("Erreur création partie:", error);
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors de la création de la partie",
+    });
+  }
 });
 
 app.post("/api/games/join", async (req, res) => {
-  const { gameId, playerId } = req.body;
-  const game = gameCache.getGame(gameId);
+  try {
+    const { gameId, playerId } = req.body;
+    const game = gameCache.getGame(gameId);
 
-  if (!game) {
-    return res.status(404).json({ error: "Partie non trouvée" });
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: "Partie non trouvée",
+      });
+    }
+
+    const playerRole = game.addPlayer(playerId);
+    if (!playerRole) {
+      return res.status(400).json({
+        success: false,
+        error: "Partie complète",
+      });
+    }
+
+    if (playerRole === "player2") {
+      await game.distributeInitialCards(cardManager);
+    }
+
+    res.json({
+      success: true,
+      state: game.getStateForPlayer(playerId),
+    });
+  } catch (error) {
+    console.error("Erreur join partie:", error);
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors de la connexion à la partie",
+    });
   }
-
-  const playerRole = game.addPlayer(playerId);
-  if (!playerRole) {
-    return res.status(400).json({ error: "Partie complète" });
-  }
-
-  if (playerRole === "player2") {
-    await game.distributeCards(cardManager);
-  }
-
-  res.json(game.getState(playerId));
 });
 
 // Routes de base

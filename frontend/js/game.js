@@ -208,46 +208,43 @@ class GameUI {
 // Fonction pour créer une partie
 async function createGame() {
   try {
-    // Générer un ID de joueur unique
-    playerId = generatePlayerId();
-
-    statusDisplay.textContent = "Création de la partie...";
-
-    const response = await fetch("/games/create", {
+    const response = await fetch("/api/games/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ playerId }),
+      body: JSON.stringify({
+        playerId: crypto.randomUUID(), // Générer un ID unique pour le joueur
+      }),
     });
 
     const data = await response.json();
 
     if (data.success) {
-      gameId = data.gameId;
-      playerKey = "player1"; // Le créateur est toujours le joueur 1
+      // Sauvegarder les IDs
+      window.gameId = data.gameId;
+      window.playerId = data.playerId;
 
-      // Afficher l'ID de la partie pour que le joueur 2 puisse le rejoindre
-      gameIdDisplay.textContent = `ID de la partie: ${gameId}`;
-      statusDisplay.textContent = "En attente d'un adversaire...";
+      // Mettre à jour l'interface
+      document.getElementById(
+        "game-id-display"
+      ).textContent = `Code partie: ${data.gameId}`;
+      document.getElementById("main-menu").style.display = "none";
+      document.getElementById("game-board").style.display = "block";
 
-      // Connecter via WebSocket
-      if (window.gameSocket) {
-        window.gameSocket.joinGame(gameId, playerId);
+      // Connecter au WebSocket
+      window.gameSocket.joinGame(data.gameId, data.playerId);
+
+      // Initialiser l'état du jeu
+      if (window.gameUI) {
+        window.gameUI.updateState(data.state);
       }
-
-      // Passer à l'écran de jeu
-      mainMenu.style.display = "none";
-      gameBoard.style.display = "block";
-
-      // Initialiser le plateau de jeu
-      await joinGame();
     } else {
-      alert("Erreur lors de la création de la partie: " + data.message);
+      alert("Erreur lors de la création de la partie: " + data.error);
     }
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
-    alert("Erreur de connexion au serveur.");
+    alert("Erreur de connexion au serveur. Veuillez réessayer.");
   }
 }
 
