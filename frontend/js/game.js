@@ -51,7 +51,16 @@ class GameUI {
     this.selectedBonus = null;
     this.selectedPerso = null;
     this.isMyTurn = false;
-    this.createContainers();
+
+    // Initialiser les conteneurs
+    this.initializeUI();
+  }
+
+  initializeUI() {
+    // Récupérer les éléments du DOM
+    this.turnIndicator = document.getElementById("turn-indicator");
+    this.gameStatus = document.getElementById("game-status");
+    this.endTurnBtn = document.getElementById("end-turn-btn");
   }
 
   updateState(state) {
@@ -63,6 +72,105 @@ class GameUI {
     this.displayCards();
     this.updateTurnIndicator();
     this.updateGameStatus();
+  }
+
+  updateTurnIndicator() {
+    if (this.turnIndicator) {
+      this.turnIndicator.textContent = this.isMyTurn
+        ? "C'est votre tour"
+        : "Tour de l'adversaire";
+      this.turnIndicator.className = this.isMyTurn
+        ? "your-turn"
+        : "opponent-turn";
+    }
+
+    if (this.endTurnBtn) {
+      this.endTurnBtn.disabled = !this.isMyTurn;
+    }
+  }
+
+  updateGameStatus() {
+    if (this.gameStatus) {
+      const status = this.gameState.status;
+      this.gameStatus.textContent =
+        status === "waiting"
+          ? "En attente d'un autre joueur..."
+          : status === "playing"
+          ? "Partie en cours"
+          : "Partie terminée";
+    }
+  }
+
+  renderCardStats(card) {
+    if (card.type === "perso") {
+      return `
+        <div class="stats">
+          <div>PV: ${card.currentStats?.pointsdevie || card.pointsdevie}</div>
+          <div>ATT: ${
+            card.currentStats?.forceattaque || card.forceattaque
+          }</div>
+          <div>TOUR: ${card.currentStats?.tourattaque || card.tourattaque}</div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="stats">
+          <div>BONUS: ${card.pourcentagebonus}%</div>
+          <div>TOUR: ${card.tourbonus}</div>
+        </div>
+      `;
+    }
+  }
+
+  renderCards(cards, isPlayable) {
+    if (!Array.isArray(cards)) {
+      console.error("cards n'est pas un tableau:", cards);
+      return "";
+    }
+
+    return cards
+      .map((card) => {
+        if (!card) {
+          console.error("Carte invalide:", card);
+          return "";
+        }
+
+        return `
+          <div class="card ${
+            isPlayable ? "playable" : ""
+          } ${this.getSelectedClass(card)}"
+               data-card-id="${card.id}"
+               data-card-type="${card.type}">
+            <div class="card-image">
+              ${card.svgContent || this.getDefaultCardImage(card)}
+            </div>
+            <div class="card-info">
+              <div class="card-name">${
+                card.nomcarteperso || card.nomcartebonus
+              }</div>
+              ${this.renderCardStats(card)}
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  getDefaultCardImage(card) {
+    return `
+      <svg viewBox="0 0 100 140">
+        <rect width="100" height="140" fill="#ddd"/>
+        <text x="50" y="70" text-anchor="middle" fill="#666">
+          ${card.id}
+        </text>
+      </svg>
+    `;
+  }
+
+  getSelectedClass(card) {
+    if (card.id === this.selectedBonus?.id) return "selected bonus-selected";
+    if (card.id === this.selectedPerso?.id) return "selected perso-selected";
+    return "";
   }
 
   displayCards() {
@@ -79,7 +187,6 @@ class GameUI {
         opponent: opponentCards,
       });
 
-      // Afficher les cartes
       this.container.innerHTML = `
         <div class="opponent-area">
           <div class="bonus-cards">${this.renderCards(
@@ -106,6 +213,26 @@ class GameUI {
       this.attachCardListeners();
     } catch (error) {
       console.error("Erreur affichage cartes:", error);
+    }
+  }
+
+  attachCardListeners() {
+    const cards = this.container.querySelectorAll(".card.playable");
+    cards.forEach((card) => {
+      card.addEventListener("click", () => this.handleCardClick(card));
+    });
+  }
+
+  handleCardClick(cardElement) {
+    const cardId = cardElement.dataset.cardId;
+    const cardType = cardElement.dataset.cardType;
+
+    if (!this.isMyTurn) return;
+
+    if (cardType === "bonus") {
+      this.handleBonusSelection(cardId);
+    } else if (cardType === "perso") {
+      this.handlePersoSelection(cardId);
     }
   }
 }
