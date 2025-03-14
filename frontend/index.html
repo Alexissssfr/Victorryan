@@ -58,47 +58,25 @@
         const gameUI = new GameUI(document.querySelector(".game-area"));
 
         // Connecter l'interface au socket
-        window.gameSocket.setGameUI(gameUI);
+        if (window.gameSocket) {
+          window.gameSocket.setGameUI(gameUI);
+        } else {
+          console.error("gameSocket n'est pas initialisé");
+        }
 
         // Gestionnaires d'événements pour les boutons
         document
           .getElementById("create-game-btn")
-          .addEventListener("click", async () => {
-            const response = await fetch("/api/games/create", {
-              method: "POST",
-            });
-            const data = await response.json();
-            if (data.gameId) {
-              document.getElementById(
-                "game-id-display"
-              ).textContent = `Code partie: ${data.gameId}`;
-              document.getElementById("main-menu").style.display = "none";
-              document.getElementById("game-board").style.display = "block";
-            }
-          });
-
+          .addEventListener("click", createGame);
         document
           .getElementById("join-game-btn")
-          .addEventListener("click", async () => {
-            const gameId = document.getElementById("game-id-input").value;
-            if (gameId) {
-              const response = await fetch("/api/games/join", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ gameId }),
-              });
-              const data = await response.json();
-              if (!data.error) {
-                document.getElementById("main-menu").style.display = "none";
-                document.getElementById("game-board").style.display = "block";
-              }
-            }
-          });
-
+          .addEventListener("click", joinGame);
         document
           .getElementById("end-turn-btn")
           .addEventListener("click", () => {
-            window.gameSocket.endTurn();
+            if (window.gameSocket) {
+              window.gameSocket.endTurn(window.gameId, window.playerId);
+            }
           });
       });
     </script>

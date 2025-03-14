@@ -320,7 +320,22 @@ class GameSocket {
   constructor() {
     this.socket = io();
     this.gameUI = null;
+    this.notificationContainer = null;
     this.setupListeners();
+    this.createNotificationContainer();
+  }
+
+  createNotificationContainer() {
+    this.notificationContainer = document.createElement("div");
+    this.notificationContainer.id = "notification-container";
+    this.notificationContainer.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    `;
+    document.body.appendChild(this.notificationContainer);
   }
 
   setGameUI(gameUI) {
@@ -328,19 +343,17 @@ class GameSocket {
   }
 
   setupListeners() {
-    // Connexion établie
     this.socket.on("connect", () => {
       console.log("Connecté au serveur WebSocket");
     });
 
-    // Réception de l'état du jeu initial
     this.socket.on("gameState", (state) => {
       if (this.gameUI) {
+        console.log("État du jeu reçu:", state);
         this.gameUI.updateState(state);
       }
     });
 
-    // Mise à jour de l'état du jeu
     this.socket.on("gameStateUpdated", (states) => {
       if (this.gameUI) {
         const playerState =
@@ -353,25 +366,46 @@ class GameSocket {
       }
     });
 
-    // Notification qu'un joueur a rejoint
     this.socket.on("playerJoined", ({ playerId }) => {
-      console.log(`Le joueur ${playerId} a rejoint la partie`);
+      console.log("Un joueur a rejoint la partie:", playerId);
+      this.showNotification(`Un joueur a rejoint la partie`, "info");
     });
 
-    // Gestion des erreurs
     this.socket.on("error", ({ message }) => {
       console.error("Erreur socket:", message);
-      alert(message);
+      this.showNotification(message, "error");
     });
 
-    // Déconnexion
     this.socket.on("disconnect", () => {
       console.log("Déconnecté du serveur WebSocket");
+      this.showNotification("Déconnexion du serveur", "error");
     });
   }
 
-  // Actions du jeu
+  showNotification(message, type = "info") {
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+      padding: 1rem 2rem;
+      margin: 0.5rem;
+      border-radius: 5px;
+      background: ${type === "error" ? "#e74c3c" : "#3498db"};
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    `;
+    notification.textContent = message;
+
+    this.notificationContainer.appendChild(notification);
+
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
   joinGame(gameId, playerId) {
+    console.log(
+      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
+    );
     this.socket.emit("joinGame", { gameId, playerId });
   }
 

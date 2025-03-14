@@ -31,6 +31,23 @@ class GameUI {
     this.selectedBonus = null;
     this.selectedPerso = null;
     this.isMyTurn = false;
+
+    // Créer les conteneurs s'ils n'existent pas
+    this.createContainers();
+  }
+
+  createContainers() {
+    if (!document.getElementById("game-id-display")) {
+      const display = document.createElement("div");
+      display.id = "game-id-display";
+      document.getElementById("game-info").appendChild(display);
+    }
+
+    if (!document.getElementById("turn-indicator")) {
+      const indicator = document.createElement("div");
+      indicator.id = "turn-indicator";
+      document.getElementById("game-info").appendChild(indicator);
+    }
   }
 
   updateState(state) {
