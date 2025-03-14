@@ -1,29 +1,81 @@
 const fs = require("fs");
 const path = require("path");
 
-// Charger les données des cartes depuis les fichiers JSON
-let persoData;
-let bonusData;
+// Variables pour stocker les données des cartes
+let persoData = [];
+let bonusData = [];
 
-try {
-  const personnagesPath = path.join(__dirname, "../../stock/personnages.json");
-  const bonusPath = path.join(__dirname, "../../stock/bonus.json");
+// Fonction pour charger les données depuis les fichiers JSON
+function loadCardData() {
+  try {
+    const persoPath = path.join(__dirname, "../../stock/personnages.json");
+    const bonusPath = path.join(__dirname, "../../stock/bonus.json");
 
-  console.log("Chargement des cartes depuis:", personnagesPath);
-  console.log("Chargement des bonus depuis:", bonusPath);
+    console.log("Tentative de chargement des personnages depuis:", persoPath);
 
-  persoData = JSON.parse(fs.readFileSync(personnagesPath, "utf8"));
-  bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
+    if (fs.existsSync(persoPath)) {
+      persoData = JSON.parse(fs.readFileSync(persoPath, "utf8"));
+      console.log(`${persoData.length} personnages chargés avec succès`);
+    } else {
+      console.error("Fichier personnages.json introuvable à", persoPath);
+      // Générer des données fictives si le fichier n'existe pas
+      persoData = generateDummyData("perso", 10);
+    }
 
-  console.log(
-    `Chargé ${persoData.length} cartes personnages et ${bonusData.length} cartes bonus`
-  );
-} catch (error) {
-  console.error("Erreur lors du chargement des données des cartes:", error);
-  // Initialiser avec des tableaux vides en cas d'erreur
-  persoData = [];
-  bonusData = [];
+    if (fs.existsSync(bonusPath)) {
+      bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
+      console.log(`${bonusData.length} bonus chargés avec succès`);
+    } else {
+      console.error("Fichier bonus.json introuvable à", bonusPath);
+      // Générer des données fictives si le fichier n'existe pas
+      bonusData = generateDummyData("bonus", 10);
+    }
+  } catch (error) {
+    console.error("Erreur lors du chargement des données des cartes:", error);
+    // Utiliser des données fictives en cas d'erreur
+    persoData = generateDummyData("perso", 10);
+    bonusData = generateDummyData("bonus", 10);
+  }
 }
+
+// Générer des données de test
+function generateDummyData(type, count) {
+  console.log(
+    `Génération de ${count} cartes ${type} factices pour le développement`
+  );
+
+  const dummyCards = [];
+
+  for (let i = 1; i <= count; i++) {
+    if (type === "perso") {
+      dummyCards.push({
+        id: `P${i}`,
+        nomcarteperso: `Personnage Test ${i}`,
+        pointsdevie: "100",
+        forceattaque: "30",
+        tourattaque: "2",
+        nomdupouvoir: `Pouvoir Test ${i}`,
+        description: "Description du pouvoir de test",
+        type: "perso",
+      });
+    } else {
+      dummyCards.push({
+        id: `B${i}`,
+        nomcartebonus: `Bonus Test ${i}`,
+        pourcentagebonus: "20",
+        tourbonus: "2",
+        nomdupouvoir: `Effet Test ${i}`,
+        description: "Description de l'effet de test",
+        type: "bonus",
+      });
+    }
+  }
+
+  return dummyCards;
+}
+
+// Charger les données au démarrage
+loadCardData();
 
 // Méthode pour récupérer des cartes aléatoires d'un type spécifique
 function getRandomCards(type, count) {
@@ -33,7 +85,6 @@ function getRandomCards(type, count) {
   // S'assurer que count ne dépasse pas le nombre de cartes disponibles
   count = Math.min(count, data.length);
 
-  // Vérifier si les données sont disponibles
   if (data.length === 0) {
     console.warn(`Aucune donnée disponible pour le type ${type}`);
     return [];
@@ -50,15 +101,10 @@ function getRandomCards(type, count) {
 
   // Ajouter l'URL de l'image pour chaque carte
   return shuffled.slice(0, count).map((card) => {
-    // Détermine quel type de SVG utiliser
-    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
-
     // Construire l'URL du SVG
+    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
     card.imageUrl = `/stock/${svgType}/${card.id}.svg`;
-
-    // Ajouter le type pour faciliter la gestion côté client
     card.type = type;
-
     return card;
   });
 }
@@ -77,79 +123,14 @@ function getCardById(type, id) {
   return card;
 }
 
-// Méthode pour précharger toutes les données SVG
-function preloadSVGData() {
-  const svgData = {
-    perso: {},
-    bonus: {},
-  };
-
-  try {
-    // Charger les SVG des personnages
-    persoData.forEach((card) => {
-      try {
-        const svgPath = path.join(
-          __dirname,
-          `../../stock/svg_perso/${card.id}.svg`
-        );
-        if (fs.existsSync(svgPath)) {
-          svgData.perso[card.id] = fs.readFileSync(svgPath, "utf8");
-        } else {
-          console.warn(`SVG non trouvé pour ${card.id} à ${svgPath}`);
-        }
-      } catch (err) {
-        console.error(`Erreur lors du chargement du SVG pour ${card.id}:`, err);
-      }
-    });
-
-    // Charger les SVG des bonus
-    bonusData.forEach((card) => {
-      try {
-        const svgPath = path.join(
-          __dirname,
-          `../../stock/svg_bonus/${card.id}.svg`
-        );
-        if (fs.existsSync(svgPath)) {
-          svgData.bonus[card.id] = fs.readFileSync(svgPath, "utf8");
-        } else {
-          console.warn(`SVG non trouvé pour ${card.id} à ${svgPath}`);
-        }
-      } catch (err) {
-        console.error(`Erreur lors du chargement du SVG pour ${card.id}:`, err);
-      }
-    });
-  } catch (err) {
-    console.error("Erreur lors du préchargement des SVG:", err);
-  }
-
-  return svgData;
-}
-
-// Fonction pour recharger les données (utile pour les tests ou mises à jour)
+// Recharger les données (utile pour les tests)
 function reloadCardData() {
-  try {
-    persoData = JSON.parse(
-      fs.readFileSync(
-        path.join(__dirname, "../../stock/personnages.json"),
-        "utf8"
-      )
-    );
-    bonusData = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "../../stock/bonus.json"), "utf8")
-    );
-    console.log(
-      `Rechargé ${persoData.length} cartes personnages et ${bonusData.length} cartes bonus`
-    );
-  } catch (error) {
-    console.error("Erreur lors du rechargement des données des cartes:", error);
-  }
-
+  loadCardData();
   return { persoCount: persoData.length, bonusCount: bonusData.length };
 }
 
 module.exports = {
   getRandomCards,
   getCardById,
-  preloadSVGData,
   reloadCardData,
 };
