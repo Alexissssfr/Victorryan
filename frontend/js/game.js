@@ -105,18 +105,7 @@ class GameUI {
     this.isMyTurn = false;
     this.isCreator = false;
 
-    // Initialiser l'interface
-    this.initializeUI();
-    console.log("Interface initialisée avec succès");
-  }
-
-  initializeUI() {
-    // Attendre que le DOM soit chargé
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => this.setupUI());
-    } else {
-      this.setupUI();
-    }
+    this.setupUI();
   }
 
   setupUI() {
@@ -185,28 +174,32 @@ class GameUI {
   }
 
   updateState(state) {
-    if (!this.container) {
-      console.error("Container non initialisé");
+    if (!state) {
+      console.error("État invalide reçu");
       return;
     }
 
+    console.log("Mise à jour de l'état:", state);
     this.gameState = state;
     this.isMyTurn = state.isYourTurn;
 
-    // Toujours afficher les cartes, même en attente
+    // Toujours afficher les cartes
     this.displayCards();
 
-    // Mettre à jour l'indicateur de tour
+    // Mettre à jour l'interface
+    this.updateInterface();
+  }
+
+  updateInterface() {
     if (this.turnIndicator) {
       this.turnIndicator.textContent = this.isMyTurn
         ? "C'est votre tour"
         : "Tour de l'adversaire";
     }
 
-    // Mettre à jour le statut du jeu
     if (this.gameStatus) {
       this.gameStatus.textContent =
-        state.status === "waiting"
+        this.gameState.status === "waiting"
           ? "En attente d'un autre joueur..."
           : "Partie en cours";
     }
@@ -388,11 +381,12 @@ class GameUI {
   }
 }
 
-// Initialiser l'interface quand le DOM est chargé
+// Initialiser l'interface une seule fois au chargement de la page
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("game-board");
   if (container) {
     window.gameUI = new GameUI(container);
+    console.log("Interface initialisée avec succès");
   } else {
     console.error("Container du jeu non trouvé");
   }

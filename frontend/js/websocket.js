@@ -358,10 +358,6 @@ class GameSocket {
       console.log(
         `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
       );
-
-      // Attendre que l'interface soit initialisée
-      await this.waitForUI();
-
       this.socket.emit("joinGame", { gameId, playerId });
     } catch (error) {
       console.error("Erreur lors de la connexion:", error);
@@ -370,30 +366,9 @@ class GameSocket {
       }
     }
   }
-
-  waitForUI(timeout = 5000) {
-    return new Promise((resolve, reject) => {
-      if (window.gameUI) {
-        resolve();
-        return;
-      }
-
-      const startTime = Date.now();
-      const checkUI = () => {
-        if (window.gameUI) {
-          resolve();
-        } else if (Date.now() - startTime > timeout) {
-          reject(
-            new Error("Timeout en attendant l'initialisation de l'interface")
-          );
-        } else {
-          setTimeout(checkUI, 100);
-        }
-      };
-      checkUI();
-    });
-  }
 }
 
-// Créer l'instance globale
-window.gameSocket = new GameSocket();
+// Attendre que le DOM soit chargé avant d'initialiser le socket
+document.addEventListener("DOMContentLoaded", () => {
+  window.gameSocket = new GameSocket();
+});
