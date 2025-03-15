@@ -27,6 +27,15 @@ class Game {
   }
 
   addPlayer(playerId) {
+    // Vérifier si le joueur n'est pas déjà dans la partie
+    if (
+      this.players.player1 === playerId ||
+      this.players.player2 === playerId
+    ) {
+      return this.players.player1 === playerId ? "player1" : "player2";
+    }
+
+    // Vérifier si la partie n'est pas pleine
     if (this.players.player2 === null) {
       this.players.player2 = playerId;
       this.status = "playing";
@@ -101,6 +110,14 @@ class Game {
   }
 
   getStateForPlayer(playerId) {
+    // Vérifier si le joueur est dans la partie
+    if (
+      playerId !== this.players.player1 &&
+      playerId !== this.players.player2
+    ) {
+      throw new Error("Joueur non trouvé dans la partie");
+    }
+
     const isPlayer1 = playerId === this.players.player1;
     const playerRole = isPlayer1 ? "player1" : "player2";
 
@@ -196,7 +213,12 @@ class GameCache {
   }
 
   getGame(gameId) {
-    return this.games.get(gameId);
+    const game = this.games.get(gameId);
+    if (!game) {
+      console.log(`Partie ${gameId} non trouvée`);
+      console.log("Parties existantes:", Array.from(this.games.keys()));
+    }
+    return game;
   }
 
   deleteGame(gameId) {

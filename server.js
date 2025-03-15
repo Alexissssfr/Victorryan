@@ -271,17 +271,28 @@ io.on("connection", (socket) => {
 
   socket.on("joinGame", async ({ gameId, playerId }) => {
     try {
+      console.log(`Tentative de rejoindre la partie ${gameId} par ${playerId}`);
+      console.log("Parties existantes:", Array.from(gameCache.games.keys()));
+
       const game = gameCache.getGame(gameId);
       if (!game) {
+        console.log(`Partie ${gameId} non trouvée`);
         throw new Error("Partie non trouvée");
       }
 
+      console.log("État actuel de la partie:", {
+        players: game.players,
+        status: game.status,
+      });
+
       const playerRole = game.addPlayer(playerId);
       if (!playerRole) {
+        console.log("Impossible d'ajouter le joueur, partie pleine");
         throw new Error("Impossible de rejoindre la partie");
       }
 
       socket.join(gameId);
+      console.log(`Joueur ${playerId} ajouté comme ${playerRole}`);
 
       // Si c'est le second joueur, distribuer les cartes
       if (playerRole === "player2") {
@@ -303,6 +314,7 @@ io.on("connection", (socket) => {
 
       socket.to(gameId).emit("playerJoined", { playerId });
     } catch (error) {
+      console.error("Erreur joinGame:", error);
       socket.emit("error", { message: error.message });
     }
   });
