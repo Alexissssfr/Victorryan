@@ -1,38 +1,35 @@
 const crypto = require("crypto");
 
 class Game {
-  constructor(gameId) {
-    this.id = gameId;
+  constructor(gameId, creatorId) {
+    this.gameId = gameId;
     this.players = {
-      player1: null,
+      player1: creatorId,
       player2: null,
     };
-    this.cards = {
-      player1: {
-        perso: [],
-        bonus: [],
+    this.state = {
+      status: "waiting",
+      currentTurn: {
+        player: "player1",
+        selectedBonus: null,
+        targetPerso: null,
       },
-      player2: {
+      playerCards: {
+        [creatorId]: { perso: [], bonus: [] },
+      },
+      opponentCards: {
         perso: [],
         bonus: [],
       },
     };
-    this.currentTurn = {
-      player: "player1", // Le joueur 1 commence toujours
-      selectedBonus: null,
-      targetPerso: null,
-    };
-    this.status = "waiting"; // waiting, playing, finished
   }
 
-  // Ajouter un joueur à la partie
   addPlayer(playerId) {
-    if (!this.players.player1) {
-      this.players.player1 = playerId;
-      return "player1";
-    } else if (!this.players.player2) {
+    if (this.players.player2 === null) {
       this.players.player2 = playerId;
-      this.status = "playing";
+      // Initialiser les cartes du second joueur
+      this.state.playerCards[playerId] = { perso: [], bonus: [] };
+      this.state.status = "playing";
       return "player2";
     }
     return null;
@@ -77,12 +74,12 @@ class Game {
       }
 
       // Assigner les cartes aux joueurs
-      this.cards.player1 = {
+      this.state.playerCards[this.players.player1] = {
         perso: persoCards1,
         bonus: bonusCards1,
       };
 
-      this.cards.player2 = {
+      this.state.playerCards[this.players.player2] = {
         perso: persoCards2,
         bonus: bonusCards2,
       };
@@ -105,24 +102,18 @@ class Game {
     return card;
   }
 
-  // Obtenir l'état de la partie pour un joueur spécifique
   getStateForPlayer(playerId) {
-    const isPlayer1 = this.players.player1 === playerId;
-    const playerRole = isPlayer1 ? "player1" : "player2";
-
+    const isPlayer1 = playerId === this.players.player1;
     return {
-      gameId: this.id,
-      status: this.status,
-      currentTurn: this.currentTurn,
-      isYourTurn: this.currentTurn.player === playerRole,
-      playerCards: {
-        perso: this.cards[playerRole].perso,
-        bonus: this.cards[playerRole].bonus,
-      },
-      opponentCards: {
-        perso: this.cards[isPlayer1 ? "player2" : "player1"].perso,
-        bonus: this.cards[isPlayer1 ? "player2" : "player1"].bonus,
-      },
+      gameId: this.gameId,
+      status: this.state.status,
+      currentTurn: this.state.currentTurn,
+      isYourTurn:
+        this.state.currentTurn.player === (isPlayer1 ? "player1" : "player2"),
+      playerCards: this.state.playerCards[playerId],
+      opponentCards: this.state.playerCards[
+        isPlayer1 ? this.players.player2 : this.players.player1
+      ] || { perso: [], bonus: [] },
     };
   }
 
@@ -142,15 +133,15 @@ class Game {
     const playerRole =
       this.players.player1 === playerId ? "player1" : "player2";
 
-    if (this.currentTurn.player !== playerRole) {
+    if (this.state.currentTurn.player !== playerRole) {
       throw new Error("Ce n'est pas votre tour");
     }
 
     // Trouver les cartes concernées
-    const bonusCard = this.cards[playerRole].bonus.find(
+    const bonusCard = this.state.playerCards[playerRole].bonus.find(
       (c) => c.id === bonusCardId
     );
-    const targetCard = this.cards[playerRole].perso.find(
+    const targetCard = this.state.playerCards[playerRole].perso.find(
       (c) => c.id === targetCardId
     );
 
@@ -160,8 +151,8 @@ class Game {
 
     // Si un autre personnage a déjà reçu un bonus ce tour-ci
     if (
-      this.currentTurn.targetPerso &&
-      this.currentTurn.targetPerso !== targetCardId
+      this.state.currentTurn.targetPerso &&
+      this.state.currentTurn.targetPerso !== targetCardId
     ) {
       throw new Error(
         "Vous ne pouvez donner des bonus qu'à un seul personnage par tour"
@@ -170,15 +161,16 @@ class Game {
 
     // Appliquer le bonus
     this.applyBonus(bonusCard, targetCard);
-    this.currentTurn.targetPerso = targetCardId;
+    this.state.currentTurn.targetPerso = targetCardId;
 
     return this.getStateForPlayer(playerId);
   }
 
   // Passer au tour suivant
   endTurn() {
-    this.currentTurn = {
-      player: this.currentTurn.player === "player1" ? "player2" : "player1",
+    this.state.currentTurn = {
+      player:
+        this.state.currentTurn.player === "player1" ? "player2" : "player1",
       selectedBonus: null,
       targetPerso: null,
     };
@@ -194,7 +186,7 @@ class GameCache {
   async createGame(playerId) {
     try {
       const gameId = crypto.randomUUID().slice(0, 6).toUpperCase();
-      const game = new Game(gameId);
+      const game = new Game(gameId, playerId);
 
       // Ajouter le premier joueur
       game.addPlayer(playerId);
@@ -204,7 +196,7 @@ class GameCache {
       const persoCards = await cardManager.getRandomCards("perso", 5);
       const bonusCards = await cardManager.getRandomCards("bonus", 5);
 
-      game.cards.player1 = {
+      game.state.playerCards[playerId] = {
         perso: persoCards,
         bonus: bonusCards,
       };

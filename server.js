@@ -277,7 +277,18 @@ io.on("connection", (socket) => {
       }
 
       socket.join(gameId);
-      socket.emit("gameState", game.getStateForPlayer(playerId));
+
+      // Envoyer l'état à tous les joueurs
+      io.to(gameId).emit(
+        "gameState",
+        game.getStateForPlayer(game.players.player1)
+      );
+      io.to(gameId).emit(
+        "gameState",
+        game.getStateForPlayer(game.players.player2)
+      );
+
+      // Notifier que le joueur a rejoint
       socket.to(gameId).emit("playerJoined", { playerId });
     } catch (error) {
       socket.emit("error", { message: error.message });
