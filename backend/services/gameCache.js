@@ -47,20 +47,15 @@ class Game {
 
       console.log("Distribution des cartes initiales...");
 
-      // Distribuer les cartes au joueur 1
+      // Distribuer les cartes aux deux joueurs
       const [persoCards1, bonusCards1] = await Promise.all([
         cardManager.getRandomCards("perso", 5),
         cardManager.getRandomCards("bonus", 5),
       ]);
 
-      // Stocker les IDs des cartes déjà distribuées
-      const usedPersoIds = persoCards1.map((c) => c.id);
-      const usedBonusIds = bonusCards1.map((c) => c.id);
-
-      // Distribuer des cartes différentes au joueur 2
       const [persoCards2, bonusCards2] = await Promise.all([
-        cardManager.getRandomCards("perso", 5, usedPersoIds),
-        cardManager.getRandomCards("bonus", 5, usedBonusIds),
+        cardManager.getRandomCards("perso", 5),
+        cardManager.getRandomCards("bonus", 5),
       ]);
 
       // Assigner les cartes aux joueurs
@@ -80,9 +75,7 @@ class Game {
       return true;
     } catch (error) {
       console.error("Erreur distribution cartes:", error);
-      throw new Error(
-        "Erreur lors de la distribution des cartes: " + error.message
-      );
+      throw error;
     }
   }
 

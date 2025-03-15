@@ -278,6 +278,12 @@ io.on("connection", (socket) => {
 
       socket.join(gameId);
 
+      // Si c'est le second joueur, distribuer les cartes
+      if (playerRole === "player2") {
+        const cardManager = require("./backend/services/cardManager");
+        await game.distributeInitialCards(cardManager);
+      }
+
       // Envoyer l'état actuel au joueur qui rejoint
       socket.emit("gameState", game.getStateForPlayer(playerId));
 
