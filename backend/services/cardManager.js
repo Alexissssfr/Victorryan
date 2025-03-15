@@ -63,7 +63,6 @@ class CardManager {
 
   async loadCard(type, id) {
     try {
-      // Charger les données de base de la carte
       const cards = type === "perso" ? this.persoCards : this.bonusCards;
       const card = cards.get(parseInt(id));
 
@@ -71,14 +70,18 @@ class CardManager {
         throw new Error(`Carte ${type}/${id} non trouvée`);
       }
 
-      // Charger le SVG complet
       const svgContent = await this.loadCardSVG(type, id);
+
+      console.log(`Chargement carte ${type}/${id}:`, {
+        hasCard: !!card,
+        hasSvg: !!svgContent,
+        imageUrl: getImageUrl(type, id),
+      });
 
       return {
         ...card,
         type,
         svgContent,
-        // Pas besoin de svgUrl car on utilise directement le contenu SVG
       };
     } catch (error) {
       console.error(`Erreur chargement carte ${type}/${id}:`, error);
@@ -88,7 +91,6 @@ class CardManager {
 
   async loadCardSVG(type, id) {
     try {
-      // Enlever le "data/images" du chemin
       const svgPath = path.join(
         __dirname,
         "..",
@@ -98,25 +100,21 @@ class CardManager {
         `${type === "perso" ? "P" : "B"}${id.replace(/[PB]/, "")}.svg`
       );
 
-      console.log("Tentative de chargement SVG:", {
-        path: svgPath,
-        type,
-        id,
-        exists: fs.existsSync(svgPath),
-        __dirname,
-        fullPath: path.resolve(svgPath),
-      });
-
       if (!fs.existsSync(svgPath)) {
         console.error(`Fichier SVG non trouvé: ${svgPath}`);
         return null;
       }
 
-      const svgContent = await fs.promises.readFile(svgPath, "utf8");
-      if (!svgContent) {
-        console.error(`SVG vide pour ${type}/${id}`);
-        return null;
-      }
+      let svgContent = await fs.promises.readFile(svgPath, "utf8");
+
+      // Corriger l'URL de l'image de fond
+      svgContent = svgContent.replace(
+        /xlink:href="[^"]*\/images\/(bonus|perso)\/data\/images\/(bonus|perso)\/([^"]+)"/g,
+        (match, type1, type2, filename) => {
+          const correctUrl = getImageUrl(type, filename.replace(".png", ""));
+          return `xlink:href="${correctUrl}"`;
+        }
+      );
 
       return svgContent;
     } catch (error) {
