@@ -106,6 +106,7 @@ class GameUI {
     this.isCreator = false;
 
     this.setupUI();
+    console.log("Interface initialisée avec succès");
   }
 
   setupUI() {
@@ -380,14 +381,3 @@ class GameUI {
     this.displayCards(); // Rafraîchir l'affichage
   }
 }
-
-// Initialiser l'interface une seule fois au chargement de la page
-document.addEventListener("DOMContentLoaded", () => {
-  const container = document.getElementById("game-board");
-  if (container) {
-    window.gameUI = new GameUI(container);
-    console.log("Interface initialisée avec succès");
-  } else {
-    console.error("Container du jeu non trouvé");
-  }
-});

@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Victor Ryan - Le Jeu</title>
     <link rel="stylesheet" href="/css/styles.css" />
-    <script>
-      // Variable globale pour stocker l'interface
-      window.gameUI = null;
-    </script>
   </head>
   <body>
     <!-- Ajouter ces divs au début du body -->
@@ -64,14 +60,8 @@
     <script src="/js/websocket.js"></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", async () => {
+      document.addEventListener("DOMContentLoaded", () => {
         try {
-          // Attendre que le socket soit initialisé
-          await new Promise((resolve) => setTimeout(resolve, 100));
-
-          // Créer l'interface de jeu
-          window.gameUI = new GameUI(document.querySelector(".game-area"));
-
           // Initialiser les gestionnaires d'événements
           document
             .getElementById("create-game-btn")
@@ -86,6 +76,12 @@
                 window.gameSocket.endTurn(window.gameId, window.playerId);
               }
             });
+
+          // Initialiser l'interface une seule fois
+          const container = document.querySelector(".game-area");
+          if (container) {
+            window.gameUI = new GameUI(container);
+          }
 
           console.log("Interface initialisée");
         } catch (error) {

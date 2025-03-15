@@ -327,10 +327,6 @@ class GameSocket {
       console.log("Connecté au serveur WebSocket", this.socket.id);
     });
 
-    this.socket.on("disconnect", () => {
-      console.log("Déconnecté du serveur WebSocket");
-    });
-
     this.socket.on("gameState", (state) => {
       console.log("État reçu:", state);
       if (window.gameUI) {
@@ -353,22 +349,15 @@ class GameSocket {
     });
   }
 
-  async joinGame(gameId, playerId) {
-    try {
-      console.log(
-        `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
-      );
-      this.socket.emit("joinGame", { gameId, playerId });
-    } catch (error) {
-      console.error("Erreur lors de la connexion:", error);
-      if (window.gameUI) {
-        window.gameUI.showNotification(error.message, "error");
-      }
-    }
+  joinGame(gameId, playerId) {
+    console.log(
+      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
+    );
+    this.socket.emit("joinGame", { gameId, playerId });
   }
 }
 
-// Attendre que le DOM soit chargé avant d'initialiser le socket
+// Initialiser le socket après le chargement du DOM
 document.addEventListener("DOMContentLoaded", () => {
   window.gameSocket = new GameSocket();
 });
