@@ -144,18 +144,23 @@ app.post("/api/games/draw-cards", async (req, res) => {
     // Distribuer les cartes
     await game.distributeInitialCards(cardManager);
 
-    res.json({
-      success: true,
-      state: game.getStateForPlayer(playerId),
-    });
-
-    // Notifier l'autre joueur si présent
+    // Envoyer l'état mis à jour aux deux joueurs via WebSocket
+    io.to(gameId).emit(
+      "gameState",
+      game.getStateForPlayer(game.players.player1)
+    );
     if (game.players.player2) {
       io.to(gameId).emit(
         "gameState",
         game.getStateForPlayer(game.players.player2)
       );
     }
+
+    // Répondre au créateur
+    res.json({
+      success: true,
+      state: game.getStateForPlayer(playerId),
+    });
   } catch (error) {
     console.error("Erreur tirage cartes:", error);
     res.status(500).json({
