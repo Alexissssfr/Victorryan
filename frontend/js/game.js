@@ -136,18 +136,23 @@ class GameUI {
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Erreur lors du tirage des cartes");
+        throw new Error(data.error || "Erreur lors du tirage des cartes");
       }
 
-      const data = await response.json();
       if (data.success) {
         this.updateState(data.state);
-        this.drawCardsBtn.style.display = "none";
+        if (this.drawCardsBtn) {
+          this.drawCardsBtn.style.display = "none";
+        }
+      } else {
+        throw new Error(data.error || "Erreur lors du tirage des cartes");
       }
     } catch (error) {
       console.error("Erreur tirage cartes:", error);
-      alert("Erreur lors du tirage des cartes");
+      this.showNotification(error.message, "error");
     }
   }
 

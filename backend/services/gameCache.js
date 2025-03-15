@@ -7,20 +7,22 @@ class Game {
       player1: creatorId,
       player2: null,
     };
-    this.state = {
-      status: "waiting",
-      currentTurn: {
-        player: "player1",
-        selectedBonus: null,
-        targetPerso: null,
-      },
-      playerCards: {
-        [creatorId]: { perso: [], bonus: [] },
-      },
-      opponentCards: {
+    this.cards = {
+      // Structure pour stocker les cartes
+      player1: {
         perso: [],
         bonus: [],
       },
+      player2: {
+        perso: [],
+        bonus: [],
+      },
+    };
+    this.status = "waiting";
+    this.currentTurn = {
+      player: "player1",
+      selectedBonus: null,
+      targetPerso: null,
     };
   }
 
@@ -28,16 +30,23 @@ class Game {
     if (this.players.player2 === null) {
       this.players.player2 = playerId;
       // Initialiser les cartes du second joueur
-      this.state.playerCards[playerId] = { perso: [], bonus: [] };
-      this.state.status = "playing";
+      this.cards.player2 = { perso: [], bonus: [] };
+      this.status = "playing";
       return "player2";
     }
     return null;
   }
 
-  // Distribuer les cartes initiales aux joueurs
   async distributeInitialCards(cardManager) {
     try {
+      // Vérifier si les cartes ont déjà été distribuées
+      if (this.cards.player1.perso.length > 0) {
+        console.log("Les cartes ont déjà été distribuées");
+        return true;
+      }
+
+      console.log("Distribution des cartes initiales...");
+
       // Distribuer les cartes au joueur 1
       const [persoCards1, bonusCards1] = await Promise.all([
         cardManager.getRandomCards("perso", 5),
@@ -48,50 +57,32 @@ class Game {
       const usedPersoIds = persoCards1.map((c) => c.id);
       const usedBonusIds = bonusCards1.map((c) => c.id);
 
-      // Distribuer les cartes au joueur 2
+      // Distribuer des cartes différentes au joueur 2
       const [persoCards2, bonusCards2] = await Promise.all([
         cardManager.getRandomCards("perso", 5, usedPersoIds),
         cardManager.getRandomCards("bonus", 5, usedBonusIds),
       ]);
 
-      // S'assurer que les SVG sont chargés pour toutes les cartes
-      for (const card of [
-        ...persoCards1,
-        ...bonusCards1,
-        ...persoCards2,
-        ...bonusCards2,
-      ]) {
-        try {
-          const type = card.id.startsWith("P") ? "perso" : "bonus";
-          card.svgContent = await cardManager.loadCardSVG(type, card.id);
-          console.log(`SVG chargé pour la carte ${card.id}`);
-        } catch (error) {
-          console.error(
-            `Erreur chargement SVG pour la carte ${card.id}:`,
-            error
-          );
-        }
-      }
-
       // Assigner les cartes aux joueurs
-      this.state.playerCards[this.players.player1] = {
-        perso: persoCards1,
-        bonus: bonusCards1,
+      this.cards = {
+        player1: {
+          perso: persoCards1,
+          bonus: bonusCards1,
+        },
+        player2: {
+          perso: persoCards2,
+          bonus: bonusCards2,
+        },
       };
 
-      this.state.playerCards[this.players.player2] = {
-        perso: persoCards2,
-        bonus: bonusCards2,
-      };
-
-      console.log(
-        `Cartes distribuées et chargées - Joueur 1: ${
-          persoCards1.length + bonusCards1.length
-        }, Joueur 2: ${persoCards2.length + bonusCards2.length}`
-      );
+      this.status = "playing";
+      console.log("Cartes distribuées avec succès");
+      return true;
     } catch (error) {
-      console.error("Erreur lors de la distribution des cartes:", error);
-      throw error;
+      console.error("Erreur distribution cartes:", error);
+      throw new Error(
+        "Erreur lors de la distribution des cartes: " + error.message
+      );
     }
   }
 
@@ -104,16 +95,15 @@ class Game {
 
   getStateForPlayer(playerId) {
     const isPlayer1 = playerId === this.players.player1;
+    const playerRole = isPlayer1 ? "player1" : "player2";
+
     return {
       gameId: this.gameId,
-      status: this.state.status,
-      currentTurn: this.state.currentTurn,
-      isYourTurn:
-        this.state.currentTurn.player === (isPlayer1 ? "player1" : "player2"),
-      playerCards: this.state.playerCards[playerId],
-      opponentCards: this.state.playerCards[
-        isPlayer1 ? this.players.player2 : this.players.player1
-      ] || { perso: [], bonus: [] },
+      status: this.status,
+      currentTurn: this.currentTurn,
+      isYourTurn: this.currentTurn.player === playerRole,
+      playerCards: this.cards[playerRole],
+      opponentCards: this.cards[isPlayer1 ? "player2" : "player1"],
     };
   }
 
@@ -133,15 +123,15 @@ class Game {
     const playerRole =
       this.players.player1 === playerId ? "player1" : "player2";
 
-    if (this.state.currentTurn.player !== playerRole) {
+    if (this.currentTurn.player !== playerRole) {
       throw new Error("Ce n'est pas votre tour");
     }
 
     // Trouver les cartes concernées
-    const bonusCard = this.state.playerCards[playerRole].bonus.find(
+    const bonusCard = this.cards[playerRole].bonus.find(
       (c) => c.id === bonusCardId
     );
-    const targetCard = this.state.playerCards[playerRole].perso.find(
+    const targetCard = this.cards[playerRole].perso.find(
       (c) => c.id === targetCardId
     );
 
@@ -151,8 +141,8 @@ class Game {
 
     // Si un autre personnage a déjà reçu un bonus ce tour-ci
     if (
-      this.state.currentTurn.targetPerso &&
-      this.state.currentTurn.targetPerso !== targetCardId
+      this.currentTurn.targetPerso &&
+      this.currentTurn.targetPerso !== targetCardId
     ) {
       throw new Error(
         "Vous ne pouvez donner des bonus qu'à un seul personnage par tour"
@@ -161,16 +151,15 @@ class Game {
 
     // Appliquer le bonus
     this.applyBonus(bonusCard, targetCard);
-    this.state.currentTurn.targetPerso = targetCardId;
+    this.currentTurn.targetPerso = targetCardId;
 
     return this.getStateForPlayer(playerId);
   }
 
   // Passer au tour suivant
   endTurn() {
-    this.state.currentTurn = {
-      player:
-        this.state.currentTurn.player === "player1" ? "player2" : "player1",
+    this.currentTurn = {
+      player: this.currentTurn.player === "player1" ? "player2" : "player1",
       selectedBonus: null,
       targetPerso: null,
     };
@@ -186,44 +175,7 @@ class GameCache {
   async createGame(playerId) {
     try {
       const gameId = crypto.randomUUID().slice(0, 6).toUpperCase();
-      const game = new Game(gameId);
-
-      // Ajouter le premier joueur
-      game.addPlayer(playerId);
-
-      // Distribuer les cartes initiales au premier joueur
-      const cardManager = require("./cardManager");
-      const persoCards = await cardManager.getRandomCards("perso", 5);
-      const bonusCards = await cardManager.getRandomCards("bonus", 5);
-
-      // Stocker les IDs des cartes distribuées
-      const usedPersoIds = persoCards.map((c) => c.id);
-      const usedBonusIds = bonusCards.map((c) => c.id);
-
-      // Distribuer des cartes différentes au deuxième joueur
-      const persoCards2 = await cardManager.getRandomCards(
-        "perso",
-        5,
-        usedPersoIds
-      );
-      const bonusCards2 = await cardManager.getRandomCards(
-        "bonus",
-        5,
-        usedBonusIds
-      );
-
-      // Assigner les cartes aux joueurs
-      game.cards = {
-        player1: {
-          perso: persoCards,
-          bonus: bonusCards,
-        },
-        player2: {
-          perso: persoCards2,
-          bonus: bonusCards2,
-        },
-      };
-
+      const game = new Game(gameId, playerId);
       this.games.set(gameId, game);
 
       return {

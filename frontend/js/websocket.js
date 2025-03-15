@@ -339,26 +339,17 @@ class GameSocket {
 
     this.socket.on("playerJoined", ({ playerId }) => {
       console.log("Joueur rejoint:", playerId);
-      this.showNotification("Un joueur a rejoint la partie");
+      if (window.gameUI) {
+        window.gameUI.showNotification("Un joueur a rejoint la partie");
+      }
     });
 
     this.socket.on("error", (error) => {
       console.error("Erreur socket:", error);
-      this.showNotification(error.message, "error");
+      if (window.gameUI) {
+        window.gameUI.showNotification(error.message, "error");
+      }
     });
-  }
-
-  showNotification(message, type = "info") {
-    const container = document.getElementById("notification-container");
-    if (container) {
-      const notification = document.createElement("div");
-      notification.className = `notification ${type}`;
-      notification.textContent = message;
-      container.appendChild(notification);
-      setTimeout(() => notification.remove(), 3000);
-    } else {
-      console.log("Notification:", message);
-    }
   }
 
   joinGame(gameId, playerId) {
