@@ -186,19 +186,42 @@ class GameCache {
   async createGame(playerId) {
     try {
       const gameId = crypto.randomUUID().slice(0, 6).toUpperCase();
-      const game = new Game(gameId, playerId);
+      const game = new Game(gameId);
 
       // Ajouter le premier joueur
       game.addPlayer(playerId);
 
-      // Distribuer les cartes initiales
+      // Distribuer les cartes initiales au premier joueur
       const cardManager = require("./cardManager");
       const persoCards = await cardManager.getRandomCards("perso", 5);
       const bonusCards = await cardManager.getRandomCards("bonus", 5);
 
-      game.state.playerCards[playerId] = {
-        perso: persoCards,
-        bonus: bonusCards,
+      // Stocker les IDs des cartes distribuées
+      const usedPersoIds = persoCards.map((c) => c.id);
+      const usedBonusIds = bonusCards.map((c) => c.id);
+
+      // Distribuer des cartes différentes au deuxième joueur
+      const persoCards2 = await cardManager.getRandomCards(
+        "perso",
+        5,
+        usedPersoIds
+      );
+      const bonusCards2 = await cardManager.getRandomCards(
+        "bonus",
+        5,
+        usedBonusIds
+      );
+
+      // Assigner les cartes aux joueurs
+      game.cards = {
+        player1: {
+          perso: persoCards,
+          bonus: bonusCards,
+        },
+        player2: {
+          perso: persoCards2,
+          bonus: bonusCards2,
+        },
       };
 
       this.games.set(gameId, game);

@@ -278,17 +278,18 @@ io.on("connection", (socket) => {
 
       socket.join(gameId);
 
-      // Envoyer l'état à tous les joueurs
-      io.to(gameId).emit(
-        "gameState",
-        game.getStateForPlayer(game.players.player1)
-      );
-      io.to(gameId).emit(
-        "gameState",
-        game.getStateForPlayer(game.players.player2)
-      );
+      // Envoyer l'état actuel au joueur qui rejoint
+      socket.emit("gameState", game.getStateForPlayer(playerId));
 
-      // Notifier que le joueur a rejoint
+      // Notifier l'autre joueur
+      const otherPlayerId =
+        game.players[playerRole === "player1" ? "player2" : "player1"];
+      if (otherPlayerId) {
+        socket
+          .to(gameId)
+          .emit("gameState", game.getStateForPlayer(otherPlayerId));
+      }
+
       socket.to(gameId).emit("playerJoined", { playerId });
     } catch (error) {
       socket.emit("error", { message: error.message });
