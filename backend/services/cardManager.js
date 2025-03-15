@@ -96,10 +96,27 @@ class CardManager {
         `svg_${type}`,
         `${type === "perso" ? "P" : "B"}${id}.svg`
       );
-      console.log("Chargement SVG:", svgPath);
+      console.log("Tentative de chargement SVG:", {
+        path: svgPath,
+        type,
+        id,
+        exists: fs.existsSync(svgPath),
+      });
+
+      if (!fs.existsSync(svgPath)) {
+        console.error(`Fichier SVG non trouvé: ${svgPath}`);
+        return null;
+      }
 
       const svgContent = await fs.promises.readFile(svgPath, "utf8");
-      console.log(`SVG chargé pour ${type}/${id}`);
+      if (!svgContent) {
+        console.error(`SVG vide pour ${type}/${id}`);
+        return null;
+      }
+
+      console.log(
+        `SVG chargé avec succès pour ${type}/${id} (${svgContent.length} caractères)`
+      );
       return svgContent;
     } catch (error) {
       console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);

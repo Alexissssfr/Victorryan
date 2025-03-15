@@ -324,12 +324,11 @@ class GameSocket {
 
   setupListeners() {
     this.socket.on("connect", () => {
-      console.log("Connecté au serveur WebSocket");
-      // Ne pas essayer d'accéder au DOM ici
+      console.log("Connecté au serveur WebSocket", this.socket.id);
+      // Ne pas essayer d'accéder à des éléments DOM ici
     });
 
     this.socket.on("gameState", (state) => {
-      console.log("État du jeu reçu:", state);
       if (window.gameUI) {
         window.gameUI.updateState(state);
       }
@@ -347,7 +346,9 @@ class GameSocket {
   }
 
   joinGame(gameId, playerId) {
-    console.log(`Tentative de rejoindre ${gameId} en tant que ${playerId}`);
+    console.log(
+      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
+    );
     this.socket.emit("joinGame", { gameId, playerId });
   }
 }

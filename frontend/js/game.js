@@ -223,7 +223,12 @@ class GameUI {
           return "";
         }
 
-        // Afficher directement le SVG complet
+        console.log(`Rendu carte ${card.id}:`, {
+          svgContent: card.svgContent ? "présent" : "absent",
+          type: card.type,
+          isPlayable,
+        });
+
         return `
           <div class="card ${
             isPlayable ? "playable" : ""
@@ -231,7 +236,18 @@ class GameUI {
                data-card-id="${card.id}"
                data-card-type="${card.type}">
             <div class="card-content">
-              ${card.svgContent || this.getDefaultCardImage(card)}
+              ${
+                card.svgContent ||
+                `
+                <!-- SVG par défaut -->
+                <svg viewBox="0 0 100 140">
+                  <rect width="100" height="140" fill="#ddd"/>
+                  <text x="50" y="70" text-anchor="middle" fill="#666">
+                    ${card.id} (SVG manquant)
+                  </text>
+                </svg>
+              `
+              }
             </div>
           </div>
         `;
