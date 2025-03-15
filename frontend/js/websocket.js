@@ -332,6 +332,7 @@ class GameSocket {
     });
 
     this.socket.on("gameState", (state) => {
+      console.log("État reçu:", state);
       if (window.gameUI) {
         window.gameUI.updateState(state);
       }
@@ -352,11 +353,45 @@ class GameSocket {
     });
   }
 
-  joinGame(gameId, playerId) {
-    console.log(
-      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
-    );
-    this.socket.emit("joinGame", { gameId, playerId });
+  async joinGame(gameId, playerId) {
+    try {
+      console.log(
+        `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
+      );
+
+      // Attendre que l'interface soit initialisée
+      await this.waitForUI();
+
+      this.socket.emit("joinGame", { gameId, playerId });
+    } catch (error) {
+      console.error("Erreur lors de la connexion:", error);
+      if (window.gameUI) {
+        window.gameUI.showNotification(error.message, "error");
+      }
+    }
+  }
+
+  waitForUI(timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      if (window.gameUI) {
+        resolve();
+        return;
+      }
+
+      const startTime = Date.now();
+      const checkUI = () => {
+        if (window.gameUI) {
+          resolve();
+        } else if (Date.now() - startTime > timeout) {
+          reject(
+            new Error("Timeout en attendant l'initialisation de l'interface")
+          );
+        } else {
+          setTimeout(checkUI, 100);
+        }
+      };
+      checkUI();
+    });
   }
 }
 

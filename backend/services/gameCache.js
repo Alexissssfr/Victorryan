@@ -29,9 +29,20 @@ class Game {
   addPlayer(playerId) {
     if (this.players.player2 === null) {
       this.players.player2 = playerId;
-      // Initialiser les cartes du second joueur
-      this.cards.player2 = { perso: [], bonus: [] };
       this.status = "playing";
+
+      // S'assurer que les structures de cartes sont initialisées
+      this.cards = {
+        player1: {
+          perso: this.cards.player1.perso || [],
+          bonus: this.cards.player1.bonus || [],
+        },
+        player2: {
+          perso: [],
+          bonus: [],
+        },
+      };
+
       return "player2";
     }
     return null;
@@ -70,8 +81,11 @@ class Game {
         },
       };
 
-      this.status = "playing";
-      console.log("Cartes distribuées avec succès");
+      console.log("Cartes distribuées:", {
+        player1Cards: this.cards.player1,
+        player2Cards: this.cards.player2,
+      });
+
       return true;
     } catch (error) {
       console.error("Erreur distribution cartes:", error);

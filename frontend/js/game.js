@@ -93,6 +93,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 class GameUI {
   constructor(container) {
+    if (!container) {
+      throw new Error("Container non trouvé");
+    }
+
     this.container = container;
     this.gameState = null;
     this.playerId = null;
@@ -101,16 +105,26 @@ class GameUI {
     this.isMyTurn = false;
     this.isCreator = false;
 
+    // Initialiser l'interface
     this.initializeUI();
+    console.log("Interface initialisée avec succès");
   }
 
   initializeUI() {
+    // Attendre que le DOM soit chargé
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => this.setupUI());
+    } else {
+      this.setupUI();
+    }
+  }
+
+  setupUI() {
     this.turnIndicator = document.getElementById("turn-indicator");
     this.gameStatus = document.getElementById("game-status");
     this.endTurnBtn = document.getElementById("end-turn-btn");
     this.drawCardsBtn = document.getElementById("draw-cards-btn");
 
-    // Gestionnaire pour le bouton de tirage
     if (this.drawCardsBtn) {
       this.drawCardsBtn.addEventListener("click", () => this.handleDrawCards());
     }
@@ -373,3 +387,13 @@ class GameUI {
     this.displayCards(); // Rafraîchir l'affichage
   }
 }
+
+// Initialiser l'interface quand le DOM est chargé
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("game-board");
+  if (container) {
+    window.gameUI = new GameUI(container);
+  } else {
+    console.error("Container du jeu non trouvé");
+  }
+});
