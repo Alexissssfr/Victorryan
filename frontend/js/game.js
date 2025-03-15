@@ -156,7 +156,26 @@ class GameUI {
     }
   }
 
+  showNotification(message, type = "info") {
+    const container = document.getElementById("notification-container");
+    if (!container) {
+      console.log("Notification:", message);
+      return;
+    }
+
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    container.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  }
+
   updateState(state) {
+    if (!this.container) {
+      console.error("Container non initialisé");
+      return;
+    }
+
     this.gameState = state;
     this.isMyTurn = state.isYourTurn;
 
@@ -172,13 +191,10 @@ class GameUI {
 
     // Mettre à jour le statut du jeu
     if (this.gameStatus) {
-      const status = this.gameState.status;
       this.gameStatus.textContent =
-        status === "waiting"
+        state.status === "waiting"
           ? "En attente d'un autre joueur..."
-          : status === "playing"
-          ? "Partie en cours"
-          : "Partie terminée";
+          : "Partie en cours";
     }
   }
 
@@ -270,6 +286,11 @@ class GameUI {
   }
 
   displayCards() {
+    if (!this.gameState?.playerCards) {
+      console.log("Pas de cartes à afficher");
+      return;
+    }
+
     try {
       const { playerCards, opponentCards } = this.gameState;
 
