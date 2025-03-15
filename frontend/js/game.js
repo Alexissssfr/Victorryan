@@ -155,12 +155,8 @@ class GameUI {
     this.gameState = state;
     this.isMyTurn = state.isYourTurn;
 
-    // Mettre à jour l'interface en fonction du statut
-    if (state.status === "waiting") {
-      this.showWaitingState();
-    } else {
-      this.displayCards();
-    }
+    // Toujours afficher les cartes, même en attente
+    this.displayCards();
 
     // Mettre à jour l'indicateur de tour
     if (this.turnIndicator) {
@@ -168,18 +164,8 @@ class GameUI {
         ? "C'est votre tour"
         : "Tour de l'adversaire";
     }
-  }
 
-  showWaitingState() {
-    this.container.innerHTML = `
-      <div class="waiting-message">
-        <h2>En attente d'un adversaire...</h2>
-        <p>Code de la partie: ${this.gameState.gameId}</p>
-      </div>
-    `;
-  }
-
-  updateGameStatus() {
+    // Mettre à jour le statut du jeu
     if (this.gameStatus) {
       const status = this.gameState.status;
       this.gameStatus.textContent =
