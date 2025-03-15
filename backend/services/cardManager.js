@@ -88,19 +88,23 @@ class CardManager {
 
   async loadCardSVG(type, id) {
     try {
+      // Enlever le "data/images" du chemin
       const svgPath = path.join(
         __dirname,
         "..",
         "..",
         "stock",
         `svg_${type}`,
-        `${type === "perso" ? "P" : "B"}${id}.svg`
+        `${type === "perso" ? "P" : "B"}${id.replace(/[PB]/, "")}.svg`
       );
+
       console.log("Tentative de chargement SVG:", {
         path: svgPath,
         type,
         id,
         exists: fs.existsSync(svgPath),
+        __dirname,
+        fullPath: path.resolve(svgPath),
       });
 
       if (!fs.existsSync(svgPath)) {
@@ -114,9 +118,6 @@ class CardManager {
         return null;
       }
 
-      console.log(
-        `SVG chargé avec succès pour ${type}/${id} (${svgContent.length} caractères)`
-      );
       return svgContent;
     } catch (error) {
       console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);

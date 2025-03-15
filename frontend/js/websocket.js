@@ -325,7 +325,10 @@ class GameSocket {
   setupListeners() {
     this.socket.on("connect", () => {
       console.log("Connecté au serveur WebSocket", this.socket.id);
-      // Ne pas essayer d'accéder à des éléments DOM ici
+    });
+
+    this.socket.on("disconnect", () => {
+      console.log("Déconnecté du serveur WebSocket");
     });
 
     this.socket.on("gameState", (state) => {
@@ -343,6 +346,19 @@ class GameSocket {
       console.error("Erreur socket:", error);
       this.showNotification(error.message, "error");
     });
+  }
+
+  showNotification(message, type = "info") {
+    const container = document.getElementById("notification-container");
+    if (container) {
+      const notification = document.createElement("div");
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      container.appendChild(notification);
+      setTimeout(() => notification.remove(), 3000);
+    } else {
+      console.log("Notification:", message);
+    }
   }
 
   joinGame(gameId, playerId) {
