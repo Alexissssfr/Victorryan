@@ -289,7 +289,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Fonction pour mettre à jour l'indicateur de tour
   function updateTurnIndicator() {
-    if (!turnIndicator) return;
+    const turnIndicator = document.getElementById("turn-indicator");
+    if (!turnIndicator) {
+      console.log("Indicateur de tour non trouvé");
+      return;
+    }
 
     turnIndicator.textContent = isMyTurn
       ? "C'est votre tour"

@@ -230,19 +230,25 @@ class GameUI {
   }
 
   renderCards(cards, container, type, isPlayer, isAttackable = false) {
-    if (!cards || !Array.isArray(cards)) return;
+    if (!cards || !Array.isArray(cards) || !container) {
+      console.error("Paramètres invalides:", { cards, container, type });
+      return;
+    }
 
     cards.forEach((card) => {
       const cardElement = document.createElement("div");
-      cardElement.className = `card ${type}-card ${
-        isAttackable ? "attackable" : ""
-      }`;
+      cardElement.className = `card ${type}-card`;
       cardElement.dataset.id = card.id;
       cardElement.dataset.type = type;
 
       // Ajouter la classe "playable" si c'est le tour du joueur et que la carte est jouable
       if (isPlayer && this.gameState.isYourTurn && !card.hasAttacked) {
         cardElement.classList.add("playable");
+      }
+
+      // Ajouter la classe "attackable" si c'est une carte adverse qui peut être attaquée
+      if (isAttackable && this.gameState.isYourTurn) {
+        cardElement.classList.add("attackable");
       }
 
       // Créer le contenu de la carte
@@ -266,13 +272,15 @@ class GameUI {
 
       // Ajouter les gestionnaires d'événements
       if (isPlayer && this.gameState.isYourTurn) {
-        cardElement.addEventListener("click", () =>
-          this.handleCardClick(card, cardElement)
-        );
+        cardElement.addEventListener("click", () => {
+          console.log("Carte joueur cliquée:", card.id);
+          this.handleCardClick(card, cardElement);
+        });
       } else if (isAttackable && this.gameState.isYourTurn) {
-        cardElement.addEventListener("click", () =>
-          this.handleTargetClick(card, cardElement)
-        );
+        cardElement.addEventListener("click", () => {
+          console.log("Carte adverse cliquée:", card.id);
+          this.handleTargetClick(card, cardElement);
+        });
       }
 
       container.appendChild(cardElement);
@@ -319,38 +327,73 @@ class GameUI {
         opponent: opponentCards,
       });
 
-      this.container.innerHTML = `
-        <div class="opponent-area">
-          <div class="bonus-cards">${this.renderCards(
-            opponentCards.bonus || [],
-            this.container.querySelector(".opponent-area .bonus-cards"),
-            "bonus",
-            false
-          )}</div>
-          <div class="perso-cards">${this.renderCards(
-            opponentCards.perso || [],
-            this.container.querySelector(".opponent-area .perso-cards"),
-            "perso",
-            false
-          )}</div>
-        </div>
-        <div class="player-area">
-          <div class="perso-cards">${this.renderCards(
-            playerCards.perso || [],
-            this.container.querySelector(".player-area .perso-cards"),
-            "perso",
-            true
-          )}</div>
-          <div class="bonus-cards">${this.renderCards(
-            playerCards.bonus || [],
-            this.container.querySelector(".player-area .bonus-cards"),
-            "bonus",
-            true
-          )}</div>
-        </div>
-      `;
+      // Vider les conteneurs existants
+      const playerPersoContainer = this.container.querySelector(
+        ".player-area .perso-cards"
+      );
+      const playerBonusContainer = this.container.querySelector(
+        ".player-area .bonus-cards"
+      );
+      const opponentPersoContainer = this.container.querySelector(
+        ".opponent-area .perso-cards"
+      );
+      const opponentBonusContainer = this.container.querySelector(
+        ".opponent-area .bonus-cards"
+      );
 
-      this.attachCardListeners();
+      // S'assurer que les conteneurs existent
+      if (
+        !playerPersoContainer ||
+        !playerBonusContainer ||
+        !opponentPersoContainer ||
+        !opponentBonusContainer
+      ) {
+        // Créer la structure si elle n'existe pas
+        this.container.innerHTML = `
+          <div class="opponent-area">
+            <div class="bonus-cards"></div>
+            <div class="perso-cards"></div>
+          </div>
+          <div class="player-area">
+            <div class="perso-cards"></div>
+            <div class="bonus-cards"></div>
+          </div>
+        `;
+      }
+
+      // Récupérer les conteneurs à nouveau (au cas où ils viennent d'être créés)
+      const playerPerso = this.container.querySelector(
+        ".player-area .perso-cards"
+      );
+      const playerBonus = this.container.querySelector(
+        ".player-area .bonus-cards"
+      );
+      const opponentPerso = this.container.querySelector(
+        ".opponent-area .perso-cards"
+      );
+      const opponentBonus = this.container.querySelector(
+        ".opponent-area .bonus-cards"
+      );
+
+      // Vider les conteneurs
+      playerPerso.innerHTML = "";
+      playerBonus.innerHTML = "";
+      opponentPerso.innerHTML = "";
+      opponentBonus.innerHTML = "";
+
+      // Rendre les cartes dans chaque conteneur
+      this.renderCards(playerCards.perso, playerPerso, "perso", true);
+      this.renderCards(playerCards.bonus, playerBonus, "bonus", true);
+      this.renderCards(
+        opponentCards.perso,
+        opponentPerso,
+        "perso",
+        false,
+        true
+      ); // Marquer comme attaquable
+      this.renderCards(opponentCards.bonus, opponentBonus, "bonus", false);
+
+      this.fixAttackableCards();
     } catch (error) {
       console.error("Erreur affichage cartes:", error);
     }
@@ -364,7 +407,12 @@ class GameUI {
   }
 
   handleCardClick(card, element) {
-    if (!this.gameState.isYourTurn) return;
+    console.log("handleCardClick appelé avec:", card, element);
+
+    if (!this.gameState.isYourTurn) {
+      console.log("Ce n'est pas votre tour");
+      return;
+    }
 
     // Si une carte était déjà sélectionnée, la désélectionner
     if (this.selectedCard) {
@@ -379,7 +427,7 @@ class GameUI {
     element.classList.add("selected");
 
     // Si c'est une carte personnage, activer les cibles potentielles
-    if (element.dataset.type === "perso") {
+    if (card.type === "perso" || element.dataset.type === "perso") {
       this.activateTargets();
     }
 
@@ -428,12 +476,158 @@ class GameUI {
   }
 
   activateTargets() {
+    console.log("Activation des cibles potentielles");
+
+    // Sélectionner toutes les cartes personnage de l'adversaire
     const opponentCards = document.querySelectorAll(
       ".opponent-area .perso-card"
     );
+    console.log("Cartes adverses trouvées:", opponentCards.length);
+
     opponentCards.forEach((card) => {
       card.classList.add("attackable");
+      console.log("Carte rendue attaquable:", card.dataset.id);
     });
+  }
+
+  debug() {
+    console.log("=== DÉBOGAGE ===");
+    console.log("État du jeu:", this.gameState);
+    console.log("Carte sélectionnée:", this.selectedCard);
+    console.log("Est mon tour:", this.gameState.isYourTurn);
+
+    const playerCards = document.querySelectorAll(".player-area .card");
+    console.log("Cartes joueur:", playerCards.length);
+
+    const opponentCards = document.querySelectorAll(".opponent-area .card");
+    console.log("Cartes adverses:", opponentCards.length);
+
+    const attackableCards = document.querySelectorAll(".card.attackable");
+    console.log("Cartes attaquables:", attackableCards.length);
+
+    // Ajouter un bouton de test pour rendre toutes les cartes adverses attaquables
+    const testButton = document.createElement("button");
+    testButton.textContent = "Rendre attaquables";
+    testButton.style.position = "fixed";
+    testButton.style.top = "10px";
+    testButton.style.right = "10px";
+    testButton.style.zIndex = "1000";
+
+    testButton.addEventListener("click", () => {
+      document.querySelectorAll(".opponent-area .card").forEach((card) => {
+        card.classList.add("attackable");
+        card.style.boxShadow = "0 0 10px red";
+        card.addEventListener("click", () => {
+          alert("Carte adverse cliquée: " + card.dataset.id);
+        });
+      });
+    });
+
+    document.body.appendChild(testButton);
+  }
+
+  fixAttackableCards() {
+    console.log("Correction des cartes attaquables");
+
+    // Sélectionner toutes les cartes personnage de l'adversaire
+    const opponentCards = document.querySelectorAll(
+      ".opponent-area .perso-card"
+    );
+    console.log(`Trouvé ${opponentCards.length} cartes adverses`);
+
+    if (opponentCards.length === 0) {
+      // Essayer avec un sélecteur plus général
+      const allOpponentCards = document.querySelectorAll(
+        ".opponent-area .card"
+      );
+      console.log(
+        `Trouvé ${allOpponentCards.length} cartes adverses (général)`
+      );
+
+      allOpponentCards.forEach((card) => {
+        if (card.classList.contains("bonus-card")) return;
+
+        card.classList.add("attackable");
+        card.style.boxShadow = "0 0 10px red";
+
+        // Ajouter un gestionnaire d'événement pour le clic
+        card.addEventListener("click", () => {
+          console.log("Carte adverse cliquée:", card.dataset.id);
+
+          // Si une carte du joueur est sélectionnée, attaquer
+          const selectedCard = document.querySelector(
+            ".player-area .card.selected"
+          );
+          if (selectedCard) {
+            console.log(
+              "Attaque de",
+              selectedCard.dataset.id,
+              "vers",
+              card.dataset.id
+            );
+
+            // Appeler la fonction d'attaque
+            window.gameSocket.attackCard(
+              selectedCard.dataset.id,
+              card.dataset.id,
+              window.gameId,
+              window.playerId
+            );
+
+            // Animation d'attaque
+            selectedCard.classList.add("attacking");
+            card.classList.add("receiving-damage");
+
+            setTimeout(() => {
+              selectedCard.classList.remove("attacking");
+              card.classList.remove("receiving-damage");
+              selectedCard.classList.remove("selected");
+            }, 1000);
+          }
+        });
+      });
+    } else {
+      opponentCards.forEach((card) => {
+        card.classList.add("attackable");
+        card.style.boxShadow = "0 0 10px red";
+
+        // Ajouter un gestionnaire d'événement pour le clic
+        card.addEventListener("click", () => {
+          console.log("Carte adverse cliquée:", card.dataset.id);
+
+          // Si une carte du joueur est sélectionnée, attaquer
+          const selectedCard = document.querySelector(
+            ".player-area .card.selected"
+          );
+          if (selectedCard) {
+            console.log(
+              "Attaque de",
+              selectedCard.dataset.id,
+              "vers",
+              card.dataset.id
+            );
+
+            // Appeler la fonction d'attaque
+            window.gameSocket.attackCard(
+              selectedCard.dataset.id,
+              card.dataset.id,
+              window.gameId,
+              window.playerId
+            );
+
+            // Animation d'attaque
+            selectedCard.classList.add("attacking");
+            card.classList.add("receiving-damage");
+
+            setTimeout(() => {
+              selectedCard.classList.remove("attacking");
+              card.classList.remove("receiving-damage");
+              selectedCard.classList.remove("selected");
+            }, 1000);
+          }
+        });
+      });
+    }
   }
 }
 
