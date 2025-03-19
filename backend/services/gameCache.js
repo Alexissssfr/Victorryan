@@ -188,6 +188,53 @@ class Game {
       targetPerso: null,
     };
   }
+
+  attackCard(attackerId, targetId, playerId) {
+    // Déterminer le rôle du joueur
+    const playerRole =
+      this.players.player1 === playerId ? "player1" : "player2";
+    const opponentRole = playerRole === "player1" ? "player2" : "player1";
+
+    // Vérifier si c'est le tour du joueur
+    if (this.currentTurn.player !== playerRole) {
+      throw new Error("Ce n'est pas votre tour");
+    }
+
+    // Trouver les cartes concernées
+    const attackerCard = this.cards[playerRole].perso.find(
+      (c) => c.id === attackerId
+    );
+    const targetCard = this.cards[opponentRole].perso.find(
+      (c) => c.id === targetId
+    );
+
+    if (!attackerCard || !targetCard) {
+      throw new Error("Carte non trouvée");
+    }
+
+    // Vérifier si l'attaquant a déjà attaqué ce tour
+    if (attackerCard.hasAttacked) {
+      throw new Error("Cette carte a déjà attaqué ce tour");
+    }
+
+    // Calculer les dégâts
+    const damage = parseInt(attackerCard.forceattaque);
+
+    // Appliquer les dégâts
+    targetCard.pointsdevie = Math.max(
+      0,
+      parseInt(targetCard.pointsdevie) - damage
+    );
+
+    // Marquer l'attaquant comme ayant attaqué
+    attackerCard.hasAttacked = true;
+
+    // Retourner les informations sur l'attaque
+    return {
+      damage,
+      remainingHP: targetCard.pointsdevie,
+    };
+  }
 }
 
 // Gestionnaire de cache pour les parties

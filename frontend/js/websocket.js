@@ -303,6 +303,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Fonction pour attaquer une carte
+  function attackCard(attackerId, targetId, gameId, playerId) {
+    console.log(`Attaque de ${attackerId} vers ${targetId}`);
+
+    // Envoyer l'action au serveur
+    socket.emit("attackCard", {
+      gameId,
+      playerId,
+      attackerId,
+      targetId,
+    });
+
+    // Afficher une notification
+    showNotification("Attaque en cours...");
+  }
+
   // Exposer les fonctions utiles globalement
   window.gameSocket = {
     joinGame,
@@ -310,6 +326,7 @@ document.addEventListener("DOMContentLoaded", () => {
     endTurn,
     showNotification,
     updateTurnIndicator,
+    attackCard,
     getPlayerId: () => playerId,
     getGameId: () => gameId,
     isMyTurn: () => isMyTurn,

@@ -322,6 +322,48 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Un client s'est déconnecté:", socket.id);
   });
+
+  socket.on(
+    "attackCard",
+    async ({ gameId, playerId, attackerId, targetId }) => {
+      try {
+        console.log(
+          `Attaque de ${attackerId} vers ${targetId} par ${playerId}`
+        );
+
+        const game = gameCache.getGame(gameId);
+        if (!game) {
+          throw new Error("Partie non trouvée");
+        }
+
+        // Effectuer l'attaque
+        const result = game.attackCard(attackerId, targetId, playerId);
+
+        // Envoyer le nouvel état aux deux joueurs
+        io.to(gameId).emit(
+          "gameState",
+          game.getStateForPlayer(game.players.player1)
+        );
+        if (game.players.player2) {
+          io.to(gameId).emit(
+            "gameState",
+            game.getStateForPlayer(game.players.player2)
+          );
+        }
+
+        // Envoyer une notification d'attaque
+        io.to(gameId).emit("attackPerformed", {
+          attackerId,
+          targetId,
+          damage: result.damage,
+          remainingHP: result.remainingHP,
+        });
+      } catch (error) {
+        console.error("Erreur lors de l'attaque:", error);
+        socket.emit("error", { message: error.message });
+      }
+    }
+  );
 });
 
 // Port d'écoute

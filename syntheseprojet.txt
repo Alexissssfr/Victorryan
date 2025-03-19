@@ -1,5 +1,5 @@
 ===== /Users/robert/Victorryan/backend/config/supabase.js =====
-require("dotenv").config({ path: "../.env" });
+require("dotenv").config();
 const { createClient } = require("@supabase/supabase-js");
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -12,7 +12,36 @@ if (!supabaseUrl || !supabaseKey) {
 // Création du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-module.exports = supabase;
+// Fonction utilitaire pour construire l'URL correcte des images
+function getImageUrl(type, id) {
+  // Enlever le "data/images" du chemin
+  const publicKey = process.env.SUPABASE_ANON_KEY;
+  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.png?apikey=${publicKey}`;
+}
+
+// Ajouter une fonction pour stocker les SVG
+async function storeCardSVG(gameId, playerId, cardId, svgContent) {
+  try {
+    const { error } = await supabase
+      .from("game_cards")
+      .update({
+        svg_content: svgContent,
+      })
+      .match({ game_id: gameId, player_name: playerId, card_id: cardId });
+
+    if (error) {
+      console.error("Erreur lors du stockage du SVG:", error);
+    }
+  } catch (err) {
+    console.error("Exception lors du stockage du SVG:", err);
+  }
+}
+
+module.exports = {
+  supabase,
+  getImageUrl,
+  storeCardSVG,
+};
 
 
 ===== /Users/robert/Victorryan/backend/routes/cards.js =====
@@ -350,149 +379,163 @@ module.exports = router;
 ===== /Users/robert/Victorryan/backend/services/cardManager.js =====
 const fs = require("fs");
 const path = require("path");
+const { supabase, getImageUrl } = require("../config/supabase");
 
-// Variables pour stocker les données des cartes
-let persoData = [];
-let bonusData = [];
-
-// Fonction pour charger les données depuis les fichiers JSON
-function loadCardData() {
-  try {
-    const persoPath = path.join(__dirname, "../../stock/personnages.json");
-    const bonusPath = path.join(__dirname, "../../stock/bonus.json");
-
-    console.log("Tentative de chargement des personnages depuis:", persoPath);
-
-    if (fs.existsSync(persoPath)) {
-      persoData = JSON.parse(fs.readFileSync(persoPath, "utf8"));
-      console.log(`${persoData.length} personnages chargés avec succès`);
-    } else {
-      console.error("Fichier personnages.json introuvable à", persoPath);
-      // Générer des données fictives si le fichier n'existe pas
-      persoData = generateDummyData("perso", 10);
-    }
-
-    if (fs.existsSync(bonusPath)) {
-      bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
-      console.log(`${bonusData.length} bonus chargés avec succès`);
-    } else {
-      console.error("Fichier bonus.json introuvable à", bonusPath);
-      // Générer des données fictives si le fichier n'existe pas
-      bonusData = generateDummyData("bonus", 10);
-    }
-  } catch (error) {
-    console.error("Erreur lors du chargement des données des cartes:", error);
-    // Utiliser des données fictives en cas d'erreur
-    persoData = generateDummyData("perso", 10);
-    bonusData = generateDummyData("bonus", 10);
+class CardManager {
+  constructor() {
+    this.persoCards = new Map();
+    this.bonusCards = new Map();
+    this.loadCards();
   }
-}
 
-// Générer des données de test
-function generateDummyData(type, count) {
-  console.log(
-    `Génération de ${count} cartes ${type} factices pour le développement`
-  );
+  loadCards() {
+    try {
+      // Charger les cartes depuis les fichiers JSON
+      const persoPath = path.join(__dirname, "../../stock/personnages.json");
+      const bonusPath = path.join(__dirname, "../../stock/bonus.json");
 
-  const dummyCards = [];
+      const persoData = JSON.parse(fs.readFileSync(persoPath, "utf8"));
+      const bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
 
-  for (let i = 1; i <= count; i++) {
-    if (type === "perso") {
-      dummyCards.push({
-        id: `P${i}`,
-        nomcarteperso: `Personnage Test ${i}`,
-        pointsdevie: "100",
-        forceattaque: "30",
-        tourattaque: "2",
-        nomdupouvoir: `Pouvoir Test ${i}`,
-        description: "Description du pouvoir de test",
-        type: "perso",
+      // Stocker les cartes dans les Maps
+      persoData.forEach((card) => this.persoCards.set(card.id, card));
+      bonusData.forEach((card) => this.bonusCards.set(card.id, card));
+
+      console.log(
+        `Cartes chargées: ${this.persoCards.size} perso, ${this.bonusCards.size} bonus`
+      );
+    } catch (error) {
+      console.error("Erreur lors du chargement des cartes:", error);
+    }
+  }
+
+  async getRandomCards(type, count, excludeIds = []) {
+    const cards = type === "perso" ? this.persoCards : this.bonusCards;
+    const availableCards = [...cards.values()].filter(
+      (card) => !excludeIds.includes(card.id)
+    );
+
+    if (availableCards.length < count) {
+      throw new Error(`Pas assez de cartes ${type} disponibles`);
+    }
+
+    // Mélanger et sélectionner les cartes
+    const selectedCards = availableCards
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count);
+
+    // Ajouter les SVG et les stats initiales
+    return Promise.all(
+      selectedCards.map(async (card) => ({
+        ...card,
+        type,
+        svgContent: await this.loadCardSVG(type, card.id),
+        currentStats: {
+          pointsdevie: parseInt(card.pointsdevie || 0),
+          forceattaque: parseInt(card.forceattaque || 0),
+          tourattaque: parseInt(card.tourattaque || 0),
+          bonusActifs: [],
+        },
+      }))
+    );
+  }
+
+  async loadCard(type, id) {
+    try {
+      const cards = type === "perso" ? this.persoCards : this.bonusCards;
+      const card = cards.get(parseInt(id));
+
+      if (!card) {
+        throw new Error(`Carte ${type}/${id} non trouvée`);
+      }
+
+      const svgContent = await this.loadCardSVG(type, id);
+
+      console.log(`Chargement carte ${type}/${id}:`, {
+        hasCard: !!card,
+        hasSvg: !!svgContent,
+        imageUrl: getImageUrl(type, id),
       });
-    } else {
-      dummyCards.push({
-        id: `B${i}`,
-        nomcartebonus: `Bonus Test ${i}`,
-        pourcentagebonus: "20",
-        tourbonus: "2",
-        nomdupouvoir: `Effet Test ${i}`,
-        description: "Description de l'effet de test",
-        type: "bonus",
-      });
+
+      return {
+        ...card,
+        type,
+        svgContent,
+      };
+    } catch (error) {
+      console.error(`Erreur chargement carte ${type}/${id}:`, error);
+      return null;
     }
   }
 
-  return dummyCards;
-}
+  async loadCardSVG(type, id) {
+    try {
+      const svgPath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "stock",
+        `svg_${type}`,
+        `${type === "perso" ? "P" : "B"}${id.replace(/[PB]/, "")}.svg`
+      );
 
-// Charger les données au démarrage
-loadCardData();
+      if (!fs.existsSync(svgPath)) {
+        console.error(`Fichier SVG non trouvé: ${svgPath}`);
+        return null;
+      }
 
-// Méthode pour récupérer des cartes aléatoires d'un type spécifique
-function getRandomCards(type, count) {
-  // Déterminer quelle source de données utiliser
-  const data = type === "perso" ? persoData : bonusData;
+      let svgContent = await fs.promises.readFile(svgPath, "utf8");
 
-  // S'assurer que count ne dépasse pas le nombre de cartes disponibles
-  count = Math.min(count, data.length);
+      // Corriger l'URL de l'image de fond
+      svgContent = svgContent.replace(
+        /xlink:href="[^"]*\/images\/(bonus|perso)\/data\/images\/(bonus|perso)\/([^"]+)"/g,
+        (match, type1, type2, filename) => {
+          const correctUrl = getImageUrl(type, filename.replace(".png", ""));
+          return `xlink:href="${correctUrl}"`;
+        }
+      );
 
-  if (data.length === 0) {
-    console.warn(`Aucune donnée disponible pour le type ${type}`);
-    return [];
+      return svgContent;
+    } catch (error) {
+      console.error(`Erreur chargement SVG pour ${type}/${id}:`, error);
+      return null;
+    }
   }
-
-  // Copier le tableau pour ne pas modifier l'original
-  const shuffled = [...data];
-
-  // Mélanger le tableau
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-
-  // Ajouter l'URL de l'image pour chaque carte
-  return shuffled.slice(0, count).map((card) => {
-    // Construire l'URL du SVG
-    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
-    card.imageUrl = `/stock/${svgType}/${card.id}.svg`;
-    card.type = type;
-    return card;
-  });
 }
 
-// Méthode pour récupérer une carte spécifique par son ID
-function getCardById(type, id) {
-  const data = type === "perso" ? persoData : bonusData;
-  const card = data.find((card) => card.id === id);
-
-  if (card) {
-    const svgType = type === "perso" ? "svg_perso" : "svg_bonus";
-    card.imageUrl = `/stock/${svgType}/${card.id}.svg`;
-    card.type = type;
-  }
-
-  return card;
-}
-
-// Recharger les données (utile pour les tests)
-function reloadCardData() {
-  loadCardData();
-  return { persoCount: persoData.length, bonusCount: bonusData.length };
-}
-
-module.exports = {
-  getRandomCards,
-  getCardById,
-  reloadCardData,
-};
+module.exports = new CardManager();
 
 
 ===== /Users/robert/Victorryan/backend/services/gameManager.js =====
-const supabase = require("../config/supabase");
-const cardManager = require("./cardManager");
 const crypto = require("crypto");
+const cardManager = require("./cardManager");
 
 // Map pour stocker les parties actives en mémoire
 const activeGames = new Map();
+
+// Déplacer le code de distribution des cartes dans une fonction asynchrone
+async function distributeInitialCards(game, playerId, isPlayer2 = false) {
+  const playerKey = isPlayer2 ? "player2" : "player1";
+
+  if (!game[playerKey].hand || game[playerKey].hand.length === 0) {
+    // Distribuer 5 cartes de chaque type
+    const persoCards = await cardManager.getRandomCards("perso", 5);
+    const bonusCards = await cardManager.getRandomCards("bonus", 5);
+
+    game[playerKey].hand = [...persoCards, ...bonusCards];
+    game[playerKey].cardSVGs = {};
+
+    // Stocker les SVG
+    [...persoCards, ...bonusCards].forEach((card) => {
+      if (card.svgContent) {
+        game[playerKey].cardSVGs[card.id] = card.svgContent;
+      }
+    });
+
+    console.log(`${playerKey} a reçu ${game[playerKey].hand.length} cartes`);
+  }
+  return game;
+}
 
 // Fonction pour gérer les parties avec Socket.io
 module.exports = function (io) {
@@ -500,8 +543,6 @@ module.exports = function (io) {
     createGame: async function (playerId) {
       try {
         const gameId = generateUniqueId();
-
-        // Structure initiale de la partie
         const gameState = {
           id: gameId,
           player1: {
@@ -512,6 +553,7 @@ module.exports = function (io) {
             activeBonus: {},
             deck: [],
             hand: [],
+            cardSVGs: {},
           },
           player2: null,
           currentPlayer: "player1",
@@ -520,47 +562,11 @@ module.exports = function (io) {
           createdAt: new Date().toISOString(),
         };
 
+        // Distribuer les cartes initiales
+        await distributeInitialCards(gameState, playerId);
+
         // Sauvegarder dans la Map locale
         activeGames.set(gameId, gameState);
-
-        // Sauvegarder dans Supabase - table games
-        try {
-          const { error } = await supabase.from("games").insert({
-            id: gameId,
-            host_name: playerId,
-            status: "waiting",
-            created_at: new Date().toISOString(),
-            current_state: {
-              player1: gameState.player1,
-              currentPlayer: gameState.currentPlayer,
-              gameOver: gameState.gameOver,
-            },
-          });
-
-          if (error) {
-            console.error(
-              "Erreur Supabase lors de la création (games):",
-              error
-            );
-          } else {
-            console.log(`Partie ${gameId} créée dans Supabase (games)`);
-
-            // Ajouter le joueur à la table players
-            const { error: playerError } = await supabase
-              .from("players")
-              .insert({
-                id: crypto.randomUUID(),
-                game_id: gameId,
-                name: playerId,
-              });
-
-            if (playerError) {
-              console.error("Erreur lors de l'ajout du joueur:", playerError);
-            }
-          }
-        } catch (dbError) {
-          console.error("Exception Supabase lors de la création:", dbError);
-        }
 
         return gameId;
       } catch (error) {
@@ -575,195 +581,16 @@ module.exports = function (io) {
       );
 
       try {
-        // Récupérer la partie depuis la Map ou Supabase
         let game = activeGames.get(gameId);
+        if (!game) return false;
 
-        if (!game) {
-          // Si la partie n'est pas en mémoire, la chercher dans Supabase
-          console.log(`Recherche de la partie ${gameId} dans Supabase`);
-
-          try {
-            const { data, error } = await supabase
-              .from("games")
-              .select("*")
-              .eq("id", gameId)
-              .single();
-
-            if (error) {
-              console.error("Erreur Supabase:", error);
-              return false;
-            }
-
-            if (!data) {
-              console.log("Partie non trouvée dans Supabase");
-              return false;
-            }
-
-            // Reconstruire l'état du jeu à partir des données Supabase
-            game = {
-              id: data.id,
-              player1: {
-                id: data.host_name,
-                health: {},
-                attack: {},
-                turns: {},
-                activeBonus: {},
-                deck: [],
-                hand: [],
-              },
-              player2: null,
-              currentPlayer: "player1",
-              gameOver: data.status === "finished",
-              winner: null,
-              createdAt: data.created_at,
-            };
-
-            // Si current_state existe, incorporer ces données
-            if (data.current_state) {
-              if (data.current_state.player1) {
-                game.player1 = data.current_state.player1;
-              }
-              if (data.current_state.player2) {
-                game.player2 = data.current_state.player2;
-              }
-              if (data.current_state.currentPlayer) {
-                game.currentPlayer = data.current_state.currentPlayer;
-              }
-              if (data.current_state.gameOver !== undefined) {
-                game.gameOver = data.current_state.gameOver;
-              }
-              if (data.current_state.winner) {
-                game.winner = data.current_state.winner;
-              }
-            }
-
-            // Si opponent_name existe, initialiser player2
-            if (data.opponent_name) {
-              game.player2 = game.player2 || {
-                id: data.opponent_name,
-                health: {},
-                attack: {},
-                turns: {},
-                activeBonus: {},
-                deck: [],
-                hand: [],
-              };
-            }
-
-            activeGames.set(gameId, game);
-            console.log("Partie récupérée depuis Supabase:", gameId);
-
-            // Récupérer les cartes de la partie
-            try {
-              const { data: cardsData, error: cardsError } = await supabase
-                .from("game_cards")
-                .select("*")
-                .eq("game_id", gameId);
-
-              if (!cardsError && cardsData && cardsData.length > 0) {
-                console.log(
-                  `Récupéré ${cardsData.length} cartes pour la partie ${gameId}`
-                );
-
-                // Reconstruire les mains des joueurs
-                cardsData.forEach((cardData) => {
-                  const playerKey =
-                    cardData.player_name === game.player1.id
-                      ? "player1"
-                      : cardData.player_name === game.player2?.id
-                      ? "player2"
-                      : null;
-
-                  if (playerKey && game[playerKey]) {
-                    // Récupérer les données de la carte depuis le gestionnaire de cartes
-                    const cardInfo = cardManager.getCardById(
-                      cardData.card_type,
-                      cardData.card_id
-                    );
-
-                    if (cardInfo) {
-                      // Ajouter à la main du joueur si pas déjà présente
-                      const cardExists = game[playerKey].hand.some(
-                        (c) => c.id === cardInfo.id
-                      );
-                      if (!cardExists) {
-                        game[playerKey].hand.push(cardInfo);
-                      }
-
-                      // Mettre à jour les statistiques si current_state existe
-                      if (cardData.current_state) {
-                        if (cardData.current_state.health !== undefined) {
-                          game[playerKey].health[cardInfo.id] =
-                            cardData.current_state.health;
-                        }
-                        if (cardData.current_state.attack !== undefined) {
-                          game[playerKey].attack[cardInfo.id] =
-                            cardData.current_state.attack;
-                        }
-                        if (cardData.current_state.turns !== undefined) {
-                          game[playerKey].turns[cardInfo.id] =
-                            cardData.current_state.turns;
-                        }
-                        if (cardData.current_state.activeBonus) {
-                          game[playerKey].activeBonus[cardInfo.id] =
-                            cardData.current_state.activeBonus;
-                        }
-                      }
-                    }
-                  }
-                });
-              }
-            } catch (cardsErr) {
-              console.error(
-                "Erreur lors de la récupération des cartes:",
-                cardsErr
-              );
-            }
-          } catch (err) {
-            console.error("Exception lors de la recherche dans Supabase:", err);
-            return false;
-          }
-        }
-
-        // Si le joueur 1 essaie de rejoindre à nouveau, retourner l'état actuel
         if (game.player1 && game.player1.id === playerId) {
-          console.log(`Le joueur 1 (${playerId}) rejoint sa propre partie`);
-
-          // Si le joueur 1 n'a pas encore de cartes, les distribuer
-          if (!game.player1.hand || game.player1.hand.length === 0) {
-            console.log("Distribution initiale de cartes pour le joueur 1");
-            const persoCards = cardManager.getRandomCards("perso", 5);
-            const bonusCards = cardManager.getRandomCards("bonus", 5);
-
-            game.player1.hand = [...persoCards, ...bonusCards];
-
-            // Initialiser les statistiques des cartes
-            persoCards.forEach((card) => {
-              game.player1.health[card.id] = parseInt(card.pointsdevie) || 100;
-              game.player1.attack[card.id] = parseInt(card.forceattaque) || 30;
-              game.player1.turns[card.id] = parseInt(card.tourattaque) || 2;
-            });
-
-            // Sauvegarder les cartes dans Supabase
-            await savePlayerCards(game.id, playerId, [
-              ...persoCards,
-              ...bonusCards,
-            ]);
-
-            // Mettre à jour l'état du jeu
-            await updateGameState(game);
-          }
-
+          game = await distributeInitialCards(game, playerId, false);
           return true;
         }
 
-        // Si la partie n'a pas de joueur 2 ou si c'est le joueur 2 qui rejoint
         if (!game.player2 || (game.player2 && game.player2.id === playerId)) {
-          // Si c'est un nouveau joueur 2
           if (!game.player2) {
-            console.log(`Nouveau joueur 2 (${playerId}) rejoint la partie`);
-
-            // Initialiser le joueur 2
             game.player2 = {
               id: playerId,
               health: {},
@@ -772,125 +599,27 @@ module.exports = function (io) {
               activeBonus: {},
               deck: [],
               hand: [],
+              cardSVGs: {},
             };
 
-            // Mettre à jour le statut dans Supabase
-            try {
-              const { error } = await supabase
-                .from("games")
-                .update({
-                  opponent_name: playerId,
-                  status: "active",
-                  started_at: new Date().toISOString(),
-                })
-                .eq("id", gameId);
+            // Distribuer les cartes au joueur 2
+            game = await distributeInitialCards(game, playerId, true);
 
-              if (error) {
-                console.error(
-                  "Erreur lors de la mise à jour du joueur 2:",
-                  error
-                );
-              } else {
-                // Ajouter le joueur à la table players
-                const { error: playerError } = await supabase
-                  .from("players")
-                  .insert({
-                    id: crypto.randomUUID(),
-                    game_id: gameId,
-                    name: playerId,
-                  });
+            activeGames.set(gameId, game);
 
-                if (playerError) {
-                  console.error(
-                    "Erreur lors de l'ajout du joueur 2:",
-                    playerError
-                  );
-                }
-              }
-            } catch (err) {
-              console.error(
-                "Exception lors de la mise à jour du joueur 2:",
-                err
-              );
+            if (io) {
+              io.to(gameId).emit("gameStarted", {
+                gameId,
+                player1Id: game.player1.id,
+                player2Id: game.player2.id,
+                currentPlayer: game.currentPlayer,
+                player1Cards: game.player1.hand,
+                player2Cards: game.player2.hand,
+              });
             }
-          } else {
-            console.log(`Le joueur 2 existant (${playerId}) rejoint à nouveau`);
           }
-
-          // Distribuer les cartes aux joueurs si nécessaire
-          let updateNeeded = false;
-
-          // Vérifier/distribuer les cartes au joueur 1 si nécessaire
-          if (!game.player1.hand || game.player1.hand.length === 0) {
-            console.log("Distribution de cartes pour le joueur 1");
-            updateNeeded = true;
-
-            const persoCardsP1 = cardManager.getRandomCards("perso", 5);
-            const bonusCardsP1 = cardManager.getRandomCards("bonus", 5);
-
-            // Configuration des cartes joueur 1
-            game.player1.hand = [...persoCardsP1, ...bonusCardsP1];
-            persoCardsP1.forEach((card) => {
-              game.player1.health[card.id] = parseInt(card.pointsdevie) || 100;
-              game.player1.attack[card.id] = parseInt(card.forceattaque) || 30;
-              game.player1.turns[card.id] = parseInt(card.tourattaque) || 2;
-            });
-
-            // Sauvegarder les cartes dans Supabase
-            await savePlayerCards(game.id, game.player1.id, [
-              ...persoCardsP1,
-              ...bonusCardsP1,
-            ]);
-          }
-
-          // Vérifier/distribuer les cartes au joueur 2 si nécessaire
-          if (!game.player2.hand || game.player2.hand.length === 0) {
-            console.log("Distribution de cartes pour le joueur 2");
-            updateNeeded = true;
-
-            const persoCardsP2 = cardManager.getRandomCards("perso", 5);
-            const bonusCardsP2 = cardManager.getRandomCards("bonus", 5);
-
-            // Configuration des cartes joueur 2
-            game.player2.hand = [...persoCardsP2, ...bonusCardsP2];
-            persoCardsP2.forEach((card) => {
-              game.player2.health[card.id] = parseInt(card.pointsdevie) || 100;
-              game.player2.attack[card.id] = parseInt(card.forceattaque) || 30;
-              game.player2.turns[card.id] = parseInt(card.tourattaque) || 2;
-            });
-
-            // Sauvegarder les cartes dans Supabase
-            await savePlayerCards(game.id, game.player2.id, [
-              ...persoCardsP2,
-              ...bonusCardsP2,
-            ]);
-          }
-
-          // Mettre à jour dans la Map locale
-          activeGames.set(gameId, game);
-
-          // Mettre à jour l'état de la partie dans Supabase si nécessaire
-          if (updateNeeded) {
-            await updateGameState(game);
-          }
-
-          // Notifier les joueurs via Socket.io
-          if (io) {
-            io.to(gameId).emit("gameStarted", {
-              gameId,
-              player1Id: game.player1.id,
-              player2Id: game.player2.id,
-              currentPlayer: game.currentPlayer,
-            });
-            console.log("Événement gameStarted émis");
-          }
-
           return true;
         }
-
-        console.log(
-          "Impossible de rejoindre la partie (déjà complète ou autre problème)"
-        );
         return false;
       } catch (error) {
         console.error(
@@ -902,466 +631,32 @@ module.exports = function (io) {
     },
 
     playTurn: async function (gameId, playerId, actions) {
-      try {
-        // Récupérer la partie
-        let game = activeGames.get(gameId);
+      // Version simplifiée pour le débogage
+      console.log(`Joueur ${playerId} joue dans la partie ${gameId}`);
+      console.log("Actions:", actions);
 
-        if (!game) {
-          // Vous pouvez réutiliser la logique de récupération de joinGame ici
-          console.log(
-            "Partie non trouvée en mémoire, tentative de récupération depuis Supabase"
-          );
-          return false;
-        }
+      // Récupérer la partie
+      let game = activeGames.get(gameId);
 
-        if (!game || game.gameOver) {
-          console.log("Partie terminée ou invalide");
-          return false;
-        }
-
-        // Déterminer quel joueur joue
-        const playerKey = game.player1.id === playerId ? "player1" : "player2";
-
-        // Vérifier que c'est bien le tour du joueur
-        if (game.currentPlayer !== playerKey) {
-          console.log(`Ce n'est pas le tour de ${playerKey}`);
-          return false;
-        }
-
-        const player = game[playerKey];
-        const opponent = playerKey === "player1" ? game.player2 : game.player1;
-
-        console.log(`Tour de ${playerKey} - Actions:`, actions);
-
-        // Traiter les actions
-        if (actions.bonus && actions.bonus.length > 0) {
-          applyBonusEffects(player, opponent, actions.bonus);
-          console.log("Bonus appliqués");
-        }
-
-        if (actions.attack && actions.attack.targetId) {
-          applyAttack(player, opponent, actions.attack, game);
-          console.log("Attaque effectuée");
-        }
-
-        // Vérifier les conditions de victoire
-        if (checkWinCondition(game)) {
-          game.gameOver = true;
-          game.winner = playerKey;
-
-          console.log(`Partie terminée, gagnant: ${game.winner}`);
-
-          // Mettre à jour le statut de la partie dans Supabase
-          try {
-            const { error } = await supabase
-              .from("games")
-              .update({
-                status: "finished",
-                finished_at: new Date().toISOString(),
-              })
-              .eq("id", gameId);
-
-            if (error) {
-              console.error(
-                "Erreur lors de la mise à jour du statut de fin de partie:",
-                error
-              );
-            }
-          } catch (err) {
-            console.error(
-              "Exception lors de la mise à jour du statut de fin de partie:",
-              err
-            );
-          }
-
-          // Notifier les joueurs de la fin de partie
-          if (io) {
-            io.to(gameId).emit("gameOver", {
-              gameId,
-              winner: playerKey,
-              player1Health: game.player1.health,
-              player2Health: game.player2.health,
-            });
-          }
-        } else {
-          // Passer au joueur suivant si l'action n'est pas "endTurn: false"
-          if (!actions.endTurn === false) {
-            game.currentPlayer =
-              game.currentPlayer === "player1" ? "player2" : "player1";
-            console.log(`Tour passé à ${game.currentPlayer}`);
-          }
-
-          // Notifier du changement de tour
-          if (io) {
-            io.to(gameId).emit("turnChanged", {
-              gameId,
-              currentPlayer: game.currentPlayer,
-              player1Health: game.player1.health,
-              player2Health: game.player2.health,
-            });
-          }
-        }
-
-        // Mettre à jour dans la Map locale
-        activeGames.set(gameId, game);
-
-        // Mettre à jour l'état de la partie dans Supabase
-        await updateGameState(game);
-
-        // Mettre à jour les cartes dans Supabase
-        await updateGameCards(game);
-
-        return true;
-      } catch (error) {
-        console.error("Erreur lors du tour de jeu:", error);
+      if (!game) {
+        console.log("Partie non trouvée");
         return false;
       }
+
+      // Dans cette version simplifiée, toujours retourner true
+      return true;
     },
 
     getGameState: async function (gameId) {
-      try {
-        // Récupérer la partie depuis la Map ou Supabase
-        let game = activeGames.get(gameId);
-
-        if (!game) {
-          // Si la partie n'est pas en mémoire, utiliser la même logique de récupération que joinGame
-          console.log(
-            "État du jeu non trouvé en mémoire, tentative de récupération depuis Supabase"
-          );
-
-          try {
-            // Vous pouvez appeler joinGame avec un ID de joueur temporaire pour récupérer l'état
-            // ou implémenter une version simplifiée de la logique ici
-            return null;
-          } catch (err) {
-            console.error(
-              "Exception lors de la récupération de l'état du jeu:",
-              err
-            );
-            return null;
-          }
-        }
-
-        return game;
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération de l'état de la partie:",
-          error
-        );
-        return null;
-      }
+      return activeGames.get(gameId) || null;
     },
   };
 };
 
-// Fonction utilitaire pour sauvegarder les cartes d'un joueur
-async function savePlayerCards(gameId, playerId, cards) {
-  try {
-    for (const card of cards) {
-      const cardState = {
-        health:
-          card.type === "perso" ? parseInt(card.pointsdevie) || 100 : null,
-        attack:
-          card.type === "perso" ? parseInt(card.forceattaque) || 30 : null,
-        turns: card.type === "perso" ? parseInt(card.tourattaque) || 2 : null,
-      };
-
-      const { error } = await supabase.from("game_cards").insert({
-        id: crypto.randomUUID(),
-        game_id: gameId,
-        player_name: playerId,
-        card_type: card.type,
-        card_id: card.id,
-        current_state: cardState,
-        created_at: new Date().toISOString(),
-      });
-
-      if (error) {
-        console.error(
-          `Erreur lors de la sauvegarde de la carte ${card.id}:`,
-          error
-        );
-      }
-    }
-  } catch (error) {
-    console.error("Exception lors de la sauvegarde des cartes:", error);
-  }
-}
-
-// Fonction utilitaire pour mettre à jour l'état du jeu
-async function updateGameState(game) {
-  try {
-    const { error } = await supabase
-      .from("games")
-      .update({
-        current_state: {
-          player1: game.player1,
-          player2: game.player2,
-          currentPlayer: game.currentPlayer,
-          gameOver: game.gameOver,
-          winner: game.winner,
-        },
-      })
-      .eq("id", game.id);
-
-    if (error) {
-      console.error("Erreur lors de la mise à jour de l'état du jeu:", error);
-    }
-  } catch (error) {
-    console.error("Exception lors de la mise à jour de l'état du jeu:", error);
-  }
-}
-
-// Fonction utilitaire pour mettre à jour les cartes du jeu
-async function updateGameCards(game) {
-  try {
-    // Mettre à jour les cartes du joueur 1
-    for (const card of game.player1.hand) {
-      if (card.type === "perso") {
-        const cardState = {
-          health: game.player1.health[card.id] || 0,
-          attack: game.player1.attack[card.id] || 0,
-          turns: game.player1.turns[card.id] || 0,
-          activeBonus: game.player1.activeBonus[card.id] || [],
-        };
-
-        const { error } = await supabase
-          .from("game_cards")
-          .update({ current_state: cardState })
-          .eq("game_id", game.id)
-          .eq("player_name", game.player1.id)
-          .eq("card_id", card.id);
-
-        if (error) {
-          console.error(
-            `Erreur lors de la mise à jour de la carte ${card.id}:`,
-            error
-          );
-        }
-      }
-    }
-
-    // Mettre à jour les cartes du joueur 2 s'il existe
-    if (game.player2) {
-      for (const card of game.player2.hand) {
-        if (card.type === "perso") {
-          const cardState = {
-            health: game.player2.health[card.id] || 0,
-            attack: game.player2.attack[card.id] || 0,
-            turns: game.player2.turns[card.id] || 0,
-            activeBonus: game.player2.activeBonus[card.id] || [],
-          };
-
-          const { error } = await supabase
-            .from("game_cards")
-            .update({ current_state: cardState })
-            .eq("game_id", game.id)
-            .eq("player_name", game.player2.id)
-            .eq("card_id", card.id);
-
-          if (error) {
-            console.error(
-              `Erreur lors de la mise à jour de la carte ${card.id}:`,
-              error
-            );
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Exception lors de la mise à jour des cartes:", error);
-  }
-}
-
-// Fonctions utilitaires existantes inchangées
-
 // Générer un identifiant unique pour la partie
 function generateUniqueId() {
-  // Générer un UUID v4 compatible avec Supabase
+  // Générer un UUID v4
   return crypto.randomUUID();
-}
-
-// Appliquer les effets des bonus
-function applyBonusEffects(player, opponent, bonusActions) {
-  if (!bonusActions || !Array.isArray(bonusActions)) return;
-
-  bonusActions.forEach((action) => {
-    const { bonusId, targetId } = action;
-
-    // Vérifier que la carte bonus existe dans la main du joueur
-    const bonusIndex = player.hand.findIndex((card) => card.id === bonusId);
-    if (bonusIndex === -1) {
-      console.warn(`Bonus ${bonusId} non trouvé dans la main du joueur`);
-      return;
-    }
-
-    const bonusCard = player.hand[bonusIndex];
-
-    // Vérifier que la carte cible existe
-    if (!player.health[targetId]) {
-      console.warn(`Carte cible ${targetId} non trouvée`);
-      return;
-    }
-
-    // Initialiser les bonus actifs pour cette carte s'ils n'existent pas
-    if (!player.activeBonus[targetId]) {
-      player.activeBonus[targetId] = [];
-    }
-
-    // Ajouter le bonus à la carte cible
-    player.activeBonus[targetId].push({
-      id: bonusId,
-      value: parseInt(bonusCard.pourcentagebonus) || 0,
-      remainingTurns: parseInt(bonusCard.tourbonus) || 1,
-    });
-
-    console.log(
-      `Bonus ${bonusId} appliqué à ${targetId} - Valeur: ${bonusCard.pourcentagebonus}%, Tours: ${bonusCard.tourbonus}`
-    );
-
-    // Retirer la carte bonus de la main du joueur
-    player.hand.splice(bonusIndex, 1);
-  });
-}
-
-// Appliquer une attaque
-function applyAttack(attacker, defender, attackAction, game) {
-  const { cardId, targetId } = attackAction;
-
-  // Vérifier que la carte d'attaque existe et a des tours restants
-  if (
-    !attacker.health[cardId] ||
-    !attacker.turns[cardId] ||
-    attacker.turns[cardId] <= 0
-  ) {
-    console.warn(`Carte d'attaque ${cardId} invalide ou sans tours restants`);
-    return;
-  }
-
-  // Vérifier que la cible existe
-  if (!defender.health[targetId] || defender.health[targetId] <= 0) {
-    console.warn(`Cible ${targetId} invalide ou déjà vaincue`);
-    return;
-  }
-
-  // Calculer la force d'attaque de base
-  let attackPower = attacker.attack[cardId] || 0;
-
-  // Appliquer les bonus actifs
-  if (attacker.activeBonus[cardId] && attacker.activeBonus[cardId].length > 0) {
-    attacker.activeBonus[cardId].forEach((bonus) => {
-      // Augmenter l'attaque en fonction du bonus
-      attackPower += attackPower * (bonus.value / 100);
-    });
-  }
-
-  // Arrondir pour avoir un entier
-  attackPower = Math.round(attackPower);
-
-  // Réduire les points de vie de la cible
-  defender.health[targetId] = Math.max(
-    0,
-    defender.health[targetId] - attackPower
-  );
-
-  console.log(
-    `Attaque de ${cardId} sur ${targetId} - Dégâts: ${attackPower}, PV restants: ${defender.health[targetId]}`
-  );
-
-  // Réduire le nombre de tours d'attaque
-  attacker.turns[cardId]--;
-
-  // Mettre à jour les tours restants des bonus et supprimer ceux expirés
-  Object.keys(attacker.activeBonus || {}).forEach((cardId) => {
-    if (!attacker.activeBonus[cardId]) return;
-
-    attacker.activeBonus[cardId] = attacker.activeBonus[cardId].filter(
-      (bonus) => {
-        bonus.remainingTurns--;
-        const active = bonus.remainingTurns > 0;
-        if (!active) {
-          console.log(`Bonus ${bonus.id} sur ${cardId} expiré`);
-        }
-        return active;
-      }
-    );
-
-    // Si plus aucun bonus, supprimer la clé
-    if (attacker.activeBonus[cardId].length === 0) {
-      delete attacker.activeBonus[cardId];
-    }
-  });
-}
-
-// Vérifier les conditions de victoire
-function checkWinCondition(game) {
-  if (!game.player1 || !game.player2) {
-    console.warn("Impossible de vérifier la victoire: joueurs manquants");
-    return false;
-  }
-
-  // Vérifier si un joueur a perdu toutes ses cartes (santé à 0)
-  const player1Alive = Object.values(game.player1.health || {}).some(
-    (health) => health > 0
-  );
-  const player2Alive = Object.values(game.player2.health || {}).some(
-    (health) => health > 0
-  );
-
-  // Vérifier si un joueur a encore des tours d'attaque disponibles
-  const player1CanAttack = Object.values(game.player1.turns || {}).some(
-    (turns) => turns > 0
-  );
-  const player2CanAttack = Object.values(game.player2.turns || {}).some(
-    (turns) => turns > 0
-  );
-
-  // Si les deux joueurs sont en vie mais ne peuvent plus attaquer, c'est un match nul
-  if (player1Alive && player2Alive && !player1CanAttack && !player2CanAttack) {
-    // Calculer le total des points de vie restants
-    const player1TotalHealth = Object.values(game.player1.health || {}).reduce(
-      (sum, health) => sum + health,
-      0
-    );
-    const player2TotalHealth = Object.values(game.player2.health || {}).reduce(
-      (sum, health) => sum + health,
-      0
-    );
-
-    // Le gagnant est celui avec le plus de points de vie
-    if (player1TotalHealth > player2TotalHealth) {
-      game.winner = "player1";
-    } else if (player2TotalHealth > player1TotalHealth) {
-      game.winner = "player2";
-    } else {
-      game.winner = "draw"; // Match nul
-    }
-
-    console.log(
-      `Match nul résolu par les PV: Player1=${player1TotalHealth}, Player2=${player2TotalHealth}, Winner=${game.winner}`
-    );
-    return true;
-  }
-
-  // Si un joueur n'a plus de personnages en vie, l'autre gagne
-  if (!player1Alive) {
-    game.winner = "player2";
-    console.log(
-      "Le joueur 1 n'a plus de personnages en vie, le joueur 2 gagne"
-    );
-    return true;
-  }
-
-  if (!player2Alive) {
-    game.winner = "player1";
-    console.log(
-      "Le joueur 2 n'a plus de personnages en vie, le joueur 1 gagne"
-    );
-    return true;
-  }
-
-  // Sinon, la partie continue
-  return false;
 }
 
 
@@ -2001,6 +1296,90 @@ function reloadCardData() {
   return { persoCount: persoData.length, bonusCount: bonusData.length };
 }
 
+function displayCard(card, container) {
+  const cardElement = document.createElement("div");
+  cardElement.className = "card";
+  cardElement.dataset.cardId = card.id;
+
+  if (card.svgContent) {
+    // Si nous avons le contenu SVG, l'utiliser directement
+    cardElement.innerHTML = card.svgContent;
+  } else {
+    // Sinon, créer une image qui pointe vers le fichier
+    const img = document.createElement("img");
+    img.src = card.imageUrl;
+    img.alt = card.type === "perso" ? card.nomcarteperso : card.nomcartebonus;
+    cardElement.appendChild(img);
+  }
+
+  container.appendChild(cardElement);
+
+  // Log pour le débogage
+  console.log(`Carte affichée:`, {
+    id: card.id,
+    type: card.type,
+    hasSVG: !!card.svgContent,
+    imageUrl: card.imageUrl,
+  });
+}
+
+function displayAllCards(gameState, playerId, container) {
+  // Vider le conteneur
+  container.innerHTML = "";
+
+  // Créer une section pour les cartes du joueur
+  const playerSection = document.createElement("div");
+  playerSection.className = "player-cards";
+  playerSection.innerHTML = "<h3>Vos cartes</h3>";
+
+  // Créer une section pour les cartes de l'adversaire
+  const opponentSection = document.createElement("div");
+  opponentSection.className = "opponent-cards";
+  opponentSection.innerHTML = "<h3>Cartes adverses</h3>";
+
+  // Déterminer qui est le joueur et qui est l'adversaire
+  const isPlayer1 = gameState.player1.id === playerId;
+  const playerCards = isPlayer1
+    ? gameState.player1.hand
+    : gameState.player2.hand;
+  const opponentCards = isPlayer1
+    ? gameState.player2.hand
+    : gameState.player1.hand;
+
+  // Afficher les cartes du joueur
+  playerCards.forEach((card) => {
+    const cardElement = createCardElement(card, true);
+    playerSection.appendChild(cardElement);
+  });
+
+  // Afficher les cartes de l'adversaire
+  opponentCards.forEach((card) => {
+    const cardElement = createCardElement(card, false);
+    opponentSection.appendChild(cardElement);
+  });
+
+  // Ajouter les sections au conteneur
+  container.appendChild(opponentSection);
+  container.appendChild(playerSection);
+}
+
+function createCardElement(card, isPlayable) {
+  const cardElement = document.createElement("div");
+  cardElement.className = `card ${isPlayable ? "playable" : "opponent"}`;
+  cardElement.dataset.cardId = card.id;
+
+  if (card.svgContent) {
+    cardElement.innerHTML = card.svgContent;
+  } else {
+    const img = document.createElement("img");
+    img.src = card.imageUrl;
+    img.alt = card.type === "perso" ? card.nomcarteperso : card.nomcartebonus;
+    cardElement.appendChild(img);
+  }
+
+  return cardElement;
+}
+
 module.exports = {
   getRandomCards,
   getCardById,
@@ -2009,40 +1388,12 @@ module.exports = {
 
 
 ===== /Users/robert/Victorryan/frontend/js/game.js =====
-// Récupérer les éléments du DOM
-const createGameBtn = document.getElementById("create-game-btn");
-const joinGameBtn = document.getElementById("join-game-btn");
-const gameIdInput = document.getElementById("game-id-input");
-const mainMenu = document.getElementById("main-menu");
-const gameBoard = document.getElementById("game-board");
-const player1CardsContainer = document.getElementById("player1-cards");
-const player2CardsContainer = document.getElementById("player2-cards");
-const playBonusBtn = document.getElementById("play-bonus-btn");
-const attackBtn = document.getElementById("attack-btn");
-const endTurnBtn = document.getElementById("end-turn-btn");
-const turnIndicator = document.getElementById("turn-indicator");
-const gameIdDisplay = document.getElementById("game-id-display");
-const statusDisplay = document.getElementById("status-display");
-
-// Variables globales
-let gameId = null;
-let playerId = null;
-let playerCards = [];
-let selectedCardId = null;
-let selectedTargetId = null;
-let selectedBonusCards = [];
-let isMyTurn = false;
-let playerKey = null; // 'player1' ou 'player2'
-
-// Fonction pour créer une partie
 async function createGame() {
   try {
-    // Générer un ID de joueur unique
-    playerId = generatePlayerId();
+    const playerId = crypto.randomUUID();
+    console.log("Création d'une partie...");
 
-    statusDisplay.textContent = "Création de la partie...";
-
-    const response = await fetch("/games/create", {
+    const response = await fetch("/api/games/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2050,558 +1401,376 @@ async function createGame() {
       body: JSON.stringify({ playerId }),
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log("Réponse reçue:", data);
 
     if (data.success) {
-      gameId = data.gameId;
-      playerKey = "player1"; // Le créateur est toujours le joueur 1
+      // Stocker l'ID de partie et l'ID joueur
+      window.gameId = data.gameId;
+      window.playerId = playerId;
 
-      // Afficher l'ID de la partie pour que le joueur 2 puisse le rejoindre
-      gameIdDisplay.textContent = `ID de la partie: ${gameId}`;
-      statusDisplay.textContent = "En attente d'un adversaire...";
+      // Cacher le menu et afficher le plateau
+      document.getElementById("main-menu").style.display = "none";
+      document.getElementById("game-board").style.display = "block";
 
-      // Connecter via WebSocket
-      if (window.gameSocket) {
-        window.gameSocket.joinGame(gameId, playerId);
+      // Mettre à jour l'affichage du code de partie
+      const gameIdDisplay = document.getElementById("game-id-display");
+      if (gameIdDisplay) {
+        gameIdDisplay.textContent = `Code partie: ${data.gameId}`;
       }
 
-      // Passer à l'écran de jeu
-      mainMenu.style.display = "none";
-      gameBoard.style.display = "block";
+      // Indiquer que c'est le créateur
+      if (window.gameUI) {
+        window.gameUI.setAsCreator();
+      }
 
-      // Initialiser le plateau de jeu
-      await joinGame();
-    } else {
-      alert("Erreur lors de la création de la partie: " + data.message);
+      // Connecter au WebSocket
+      if (window.gameSocket) {
+        window.gameSocket.joinGame(data.gameId, playerId);
+      }
     }
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
-    alert("Erreur de connexion au serveur.");
+    alert("Erreur lors de la création de la partie");
   }
 }
 
-// Fonction pour rejoindre une partie
 async function joinGame() {
   try {
-    statusDisplay.textContent = "Connexion à la partie...";
-
-    const response = await fetch("/games/join", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ gameId, playerId }),
-    });
-
-    const data = await response.json();
-
-    if (data.success && data.joined) {
-      // La partie a été rejointe avec succès
-      mainMenu.style.display = "none";
-      gameBoard.style.display = "block";
-
-      // Si c'est le joueur 2 qui rejoint
-      if (!playerKey) {
-        playerKey = "player2";
-      }
-
-      // Déterminer si c'est le tour du joueur
-      isMyTurn = data.gameState.currentPlayer === playerKey;
-      updateTurnIndicator();
-
-      // Récupérer les cartes du joueur
-      if (data.gameState[playerKey]) {
-        playerCards = data.gameState[playerKey].hand || [];
-        renderPlayerCards();
-      }
-
-      // Connecter via WebSocket si ce n'est pas déjà fait
-      if (window.gameSocket) {
-        window.gameSocket.joinGame(gameId, playerId);
-      }
-
-      // Configurer les événements pour les actions du joueur
-      setupGameEvents();
-
-      statusDisplay.textContent = "Partie en cours";
-    } else {
-      alert(
-        "Impossible de rejoindre la partie: " +
-          (data.message || "La partie est peut-être complète ou n'existe pas.")
-      );
-    }
-  } catch (error) {
-    console.error("Erreur lors de la connexion à la partie:", error);
-    alert("Erreur de connexion au serveur.");
-  }
-}
-
-// Fonction pour mettre à jour l'indicateur de tour
-function updateTurnIndicator() {
-  if (turnIndicator) {
-    turnIndicator.textContent = isMyTurn
-      ? "C'est votre tour"
-      : "Tour de l'adversaire";
-    turnIndicator.className = isMyTurn ? "your-turn" : "opponent-turn";
-
-    // Activer/désactiver les boutons d'action
-    if (playBonusBtn) playBonusBtn.disabled = !isMyTurn;
-    if (attackBtn) attackBtn.disabled = !isMyTurn;
-    if (endTurnBtn) endTurnBtn.disabled = !isMyTurn;
-  }
-}
-
-// Fonction pour configurer les événements du jeu
-function setupGameEvents() {
-  // Événement de clic sur les cartes du joueur
-  player1CardsContainer.addEventListener("click", (event) => {
-    const cardElement = event.target.closest(".card");
-    if (!cardElement) return;
-
-    if (isMyTurn) {
-      // Si une carte est déjà sélectionnée, la désélectionner
-      const previousSelected =
-        player1CardsContainer.querySelector(".card.selected");
-      if (previousSelected) {
-        previousSelected.classList.remove("selected");
-      }
-
-      // Sélectionner la nouvelle carte
-      cardElement.classList.add("selected");
-      selectedCardId = cardElement.dataset.id;
-
-      // Déterminer si c'est une carte bonus ou personnage
-      const isBonus = cardElement.dataset.type === "bonus";
-
-      if (isBonus) {
-        // Si c'est une carte bonus, l'ajouter à la liste des bonus sélectionnés
-        if (!selectedBonusCards.includes(selectedCardId)) {
-          selectedBonusCards.push(selectedCardId);
-        }
-      } else {
-        // Si c'est une carte personnage, réinitialiser la liste des bonus
-        selectedBonusCards = [];
-      }
-    }
-  });
-
-  // Événement de clic sur les cartes de l'adversaire
-  player2CardsContainer.addEventListener("click", (event) => {
-    const cardElement = event.target.closest(".card");
-    if (!cardElement || !isMyTurn) return;
-
-    // Si une carte est déjà sélectionnée, la désélectionner
-    const previousSelected =
-      player2CardsContainer.querySelector(".card.selected");
-    if (previousSelected) {
-      previousSelected.classList.remove("selected-target");
-    }
-
-    // Sélectionner la nouvelle cible
-    cardElement.classList.add("selected-target");
-    selectedTargetId = cardElement.dataset.id;
-  });
-
-  // Événement de clic sur le bouton "Jouer Bonus"
-  if (playBonusBtn) {
-    playBonusBtn.addEventListener("click", playBonus);
-  }
-
-  // Événement de clic sur le bouton "Attaquer"
-  if (attackBtn) {
-    attackBtn.addEventListener("click", attack);
-  }
-
-  // Événement de clic sur le bouton "Terminer Tour"
-  if (endTurnBtn) {
-    endTurnBtn.addEventListener("click", endTurn);
-  }
-}
-
-// Fonction pour afficher les cartes du joueur
-function renderPlayerCards() {
-  if (!player1CardsContainer) return;
-
-  player1CardsContainer.innerHTML = "";
-
-  playerCards.forEach((card) => {
-    const cardElement = document.createElement("div");
-    cardElement.classList.add("card");
-    cardElement.dataset.id = card.id;
-    cardElement.dataset.type = card.type;
-
-    // Afficher la carte en fonction de son type
-    if (card.type === "perso") {
-      cardElement.innerHTML = `
-        <div class="card-header">${card.nomcarteperso}</div>
-        <img src="${card.imageUrl || `/stock/svg_perso/${card.id}.svg`}" alt="${
-        card.nomcarteperso
-      }">
-        <div class="card-stats">
-          <div class="stat">PV: ${card.pointsdevie}</div>
-          <div class="stat">ATT: ${card.forceattaque}</div>
-          <div class="stat">Tours: ${card.tourattaque}</div>
-        </div>
-        <div class="card-name">${card.nomdupouvoir}</div>
-      `;
-    } else {
-      cardElement.innerHTML = `
-        <div class="card-header">${card.nomcartebonus}</div>
-        <img src="${card.imageUrl || `/stock/svg_bonus/${card.id}.svg`}" alt="${
-        card.nomcartebonus
-      }">
-        <div class="card-stats">
-          <div class="stat">Bonus: ${card.pourcentagebonus}%</div>
-          <div class="stat">Tours: ${card.tourbonus}</div>
-        </div>
-        <div class="card-name">${card.nomdupouvoir}</div>
-      `;
-    }
-
-    player1CardsContainer.appendChild(cardElement);
-  });
-}
-
-// Fonction pour afficher les cartes de l'adversaire
-function renderOpponentCards(cards) {
-  if (!player2CardsContainer) return;
-
-  player2CardsContainer.innerHTML = "";
-
-  cards.forEach((card) => {
-    const cardElement = document.createElement("div");
-    cardElement.classList.add("card", "opponent-card");
-    cardElement.dataset.id = card.id;
-    cardElement.dataset.type = card.type;
-
-    // Afficher la carte en fonction de son type
-    if (card.type === "perso") {
-      cardElement.innerHTML = `
-        <div class="card-header">${card.nomcarteperso}</div>
-        <img src="${card.imageUrl || `/stock/svg_perso/${card.id}.svg`}" alt="${
-        card.nomcarteperso
-      }">
-        <div class="card-stats">
-          <div class="stat">PV: ${card.pointsdevie}</div>
-        </div>
-        <div class="card-name">${card.nomdupouvoir}</div>
-      `;
-    } else {
-      // Pour les cartes bonus de l'adversaire, on affiche juste le dos
-      cardElement.innerHTML = `
-        <div class="card-back">Carte Bonus Adversaire</div>
-      `;
-    }
-
-    player2CardsContainer.appendChild(cardElement);
-  });
-}
-
-// Fonction pour jouer un bonus
-async function playBonus() {
-  if (!isMyTurn || selectedBonusCards.length === 0 || !selectedCardId) {
-    alert(
-      "Vous devez sélectionner une carte bonus et une carte personnage cible."
-    );
-    return;
-  }
-
-  try {
-    // Préparer les actions de bonus
-    const bonusActions = selectedBonusCards.map((bonusId) => ({
-      bonusId,
-      targetId: selectedCardId,
-    }));
-
-    // Envoyer l'action au serveur
-    const response = await fetch("/games/play", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        gameId,
-        playerId,
-        actions: {
-          bonus: bonusActions,
-          attack: null,
-        },
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      // Mettre à jour l'état du jeu
-      updateGameState(data.gameState);
-
-      // Réinitialiser les sélections
-      selectedBonusCards = [];
-      selectedCardId = null;
-
-      // Désélectionner les cartes
-      const selectedCards = document.querySelectorAll(".card.selected");
-      selectedCards.forEach((card) => card.classList.remove("selected"));
-    } else {
-      alert("Erreur lors du jeu des bonus: " + data.message);
-    }
-  } catch (error) {
-    console.error("Erreur lors du jeu des bonus:", error);
-    alert("Erreur de connexion au serveur.");
-  }
-}
-
-// Fonction pour attaquer
-async function attack() {
-  if (!isMyTurn || !selectedCardId || !selectedTargetId) {
-    alert("Vous devez sélectionner une carte personnage et une cible.");
-    return;
-  }
-
-  try {
-    // Envoyer l'action au serveur
-    const response = await fetch("/games/play", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        gameId,
-        playerId,
-        actions: {
-          bonus: [],
-          attack: {
-            cardId: selectedCardId,
-            targetId: selectedTargetId,
-          },
-        },
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      // Mettre à jour l'état du jeu
-      updateGameState(data.gameState);
-
-      // Réinitialiser les sélections
-      selectedCardId = null;
-      selectedTargetId = null;
-
-      // Désélectionner les cartes
-      const selectedCards = document.querySelectorAll(
-        ".card.selected, .card.selected-target"
-      );
-      selectedCards.forEach((card) => {
-        card.classList.remove("selected");
-        card.classList.remove("selected-target");
-      });
-    } else {
-      alert("Erreur lors de l'attaque: " + data.message);
-    }
-  } catch (error) {
-    console.error("Erreur lors de l'attaque:", error);
-    alert("Erreur de connexion au serveur.");
-  }
-}
-
-// Fonction pour terminer le tour
-async function endTurn() {
-  if (!isMyTurn) {
-    alert("Ce n'est pas votre tour.");
-    return;
-  }
-
-  try {
-    // Envoyer l'action au serveur
-    const response = await fetch("/games/play", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        gameId,
-        playerId,
-        actions: {
-          bonus: [],
-          attack: null,
-          endTurn: true,
-        },
-      }),
-    });
-
-    const data = await response.json();
-
-    if (data.success) {
-      // Mettre à jour l'état du jeu
-      updateGameState(data.gameState);
-
-      // Indiquer que ce n'est plus notre tour
-      isMyTurn = false;
-      updateTurnIndicator();
-    } else {
-      alert("Erreur lors de la fin du tour: " + data.message);
-    }
-  } catch (error) {
-    console.error("Erreur lors de la fin du tour:", error);
-    alert("Erreur de connexion au serveur.");
-  }
-}
-
-// Fonction pour mettre à jour l'état du jeu
-function updateGameState(gameState) {
-  if (!gameState) return;
-
-  // Mettre à jour les informations du joueur
-  if (gameState[playerKey]) {
-    playerCards = gameState[playerKey].hand || [];
-    renderPlayerCards();
-
-    // Mettre à jour les statistiques des cartes
-    updateCardStats(gameState[playerKey], player1CardsContainer);
-  }
-
-  // Mettre à jour les informations de l'adversaire
-  const opponentKey = playerKey === "player1" ? "player2" : "player1";
-  if (gameState[opponentKey]) {
-    const opponentCards = gameState[opponentKey].hand || [];
-    renderOpponentCards(opponentCards);
-
-    // Mettre à jour les statistiques des cartes
-    updateCardStats(gameState[opponentKey], player2CardsContainer);
-  }
-
-  // Mettre à jour l'indicateur de tour
-  isMyTurn = gameState.currentPlayer === playerKey;
-  updateTurnIndicator();
-
-  // Vérifier si la partie est terminée
-  if (gameState.gameOver) {
-    const hasWon = gameState.winner === playerKey;
-    alert(hasWon ? "Félicitations ! Vous avez gagné !" : "Vous avez perdu !");
-
-    // Désactiver les boutons d'action
-    isMyTurn = false;
-    updateTurnIndicator();
-
-    // Ajouter un bouton pour revenir au menu principal
-    const backButton = document.createElement("button");
-    backButton.textContent = "Retour au menu principal";
-    backButton.className = "btn";
-    backButton.addEventListener("click", () => {
-      window.location.reload();
-    });
-
-    const gameControls = document.getElementById("game-controls");
-    if (gameControls) {
-      gameControls.appendChild(backButton);
-    }
-  }
-}
-
-// Fonction pour mettre à jour les statistiques des cartes
-function updateCardStats(player, container) {
-  if (!container) return;
-
-  // Mettre à jour les points de vie des cartes
-  Object.entries(player.health || {}).forEach(([cardId, health]) => {
-    const cardElement = container.querySelector(`[data-id="${cardId}"]`);
-    if (cardElement) {
-      const pvElement = cardElement.querySelector(".stat:nth-child(1)");
-      if (pvElement) {
-        pvElement.textContent = `PV: ${health}`;
-
-        // Appliquer un style visuel si les PV sont bas
-        if (health < 30) {
-          cardElement.classList.add("low-health");
-        } else {
-          cardElement.classList.remove("low-health");
-        }
-      }
-    }
-  });
-
-  // Mettre à jour les tours d'attaque restants
-  Object.entries(player.turns || {}).forEach(([cardId, turns]) => {
-    const cardElement = container.querySelector(`[data-id="${cardId}"]`);
-    if (cardElement) {
-      const turnsElement = cardElement.querySelector(".stat:nth-child(3)");
-      if (turnsElement) {
-        turnsElement.textContent = `Tours: ${turns}`;
-
-        // Appliquer un style visuel si les tours sont épuisés
-        if (turns <= 0) {
-          cardElement.classList.add("no-turns");
-        } else {
-          cardElement.classList.remove("no-turns");
-        }
-      }
-    }
-  });
-
-  // Mettre à jour les bonus actifs
-  Object.entries(player.activeBonus || {}).forEach(([cardId, bonusList]) => {
-    const cardElement = container.querySelector(`[data-id="${cardId}"]`);
-    if (cardElement && bonusList.length > 0) {
-      // Ajouter un indicateur visuel de bonus actif
-      cardElement.classList.add("has-bonus");
-
-      // Optionnel : Afficher le nombre de bonus actifs
-      const bonusIndicator = document.createElement("div");
-      bonusIndicator.className = "bonus-indicator";
-      bonusIndicator.textContent = `${bonusList.length} bonus`;
-
-      // Remplacer l'ancien indicateur s'il existe
-      const oldIndicator = cardElement.querySelector(".bonus-indicator");
-      if (oldIndicator) {
-        cardElement.replaceChild(bonusIndicator, oldIndicator);
-      } else {
-        cardElement.appendChild(bonusIndicator);
-      }
-    } else if (cardElement) {
-      cardElement.classList.remove("has-bonus");
-      const oldIndicator = cardElement.querySelector(".bonus-indicator");
-      if (oldIndicator) {
-        oldIndicator.remove();
-      }
-    }
-  });
-}
-
-// Fonction pour générer un identifiant de joueur unique
-function generatePlayerId() {
-  // Utiliser un timestamp + valeur aléatoire pour l'unicité
-  return `player_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-}
-
-// Configurer les événements pour les boutons du menu principal
-if (createGameBtn) {
-  createGameBtn.addEventListener("click", createGame);
-}
-
-if (joinGameBtn) {
-  joinGameBtn.addEventListener("click", () => {
-    const enteredGameId = gameIdInput.value.trim();
-    if (!enteredGameId) {
-      alert("Veuillez entrer un ID de partie valide.");
+    const gameId = document.getElementById("game-id-input").value.toUpperCase();
+    const playerId = crypto.randomUUID();
+
+    if (!gameId) {
+      alert("Veuillez entrer un code de partie");
       return;
     }
 
-    gameId = enteredGameId;
-    playerId = generatePlayerId();
+    // Cacher le menu et afficher le plateau
+    document.getElementById("main-menu").style.display = "none";
+    document.getElementById("game-board").style.display = "block";
 
-    joinGame();
-  });
+    // Stocker l'ID de partie et l'ID joueur
+    window.gameId = gameId;
+    window.playerId = playerId;
+
+    // Connecter au WebSocket
+    if (window.gameSocket) {
+      window.gameSocket.joinGame(gameId, playerId);
+    }
+  } catch (error) {
+    console.error("Erreur lors de la connexion à la partie:", error);
+    alert("Erreur lors de la connexion à la partie");
+  }
 }
 
-// Fonctions exposées globalement
-window.gameController = {
-  createGame,
-  joinGame,
-  playBonus,
-  attack,
-  endTurn,
-};
+// Ajouter les gestionnaires d'événements quand le DOM est chargé
+document.addEventListener("DOMContentLoaded", () => {
+  const createBtn = document.getElementById("create-game-btn");
+  const joinBtn = document.getElementById("join-game-btn");
+
+  if (createBtn) {
+    createBtn.addEventListener("click", createGame);
+  }
+
+  if (joinBtn) {
+    joinBtn.addEventListener("click", joinGame);
+  }
+});
+
+class GameUI {
+  constructor(container) {
+    if (!container) {
+      throw new Error("Container non trouvé");
+    }
+
+    this.container = container;
+    this.gameState = null;
+    this.playerId = null;
+    this.selectedBonus = null;
+    this.selectedPerso = null;
+    this.isMyTurn = false;
+    this.isCreator = false;
+
+    this.setupUI();
+    console.log("Interface initialisée avec succès");
+  }
+
+  setupUI() {
+    this.turnIndicator = document.getElementById("turn-indicator");
+    this.gameStatus = document.getElementById("game-status");
+    this.endTurnBtn = document.getElementById("end-turn-btn");
+    this.drawCardsBtn = document.getElementById("draw-cards-btn");
+
+    if (this.drawCardsBtn) {
+      this.drawCardsBtn.addEventListener("click", () => this.handleDrawCards());
+    }
+  }
+
+  setAsCreator() {
+    this.isCreator = true;
+    if (this.drawCardsBtn) {
+      this.drawCardsBtn.style.display = "block";
+    }
+  }
+
+  async handleDrawCards() {
+    try {
+      const response = await fetch("/api/games/draw-cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gameId: window.gameId,
+          playerId: window.playerId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Erreur lors du tirage des cartes");
+      }
+
+      if (data.success) {
+        this.updateState(data.state);
+        if (this.drawCardsBtn) {
+          this.drawCardsBtn.style.display = "none";
+        }
+      } else {
+        throw new Error(data.error || "Erreur lors du tirage des cartes");
+      }
+    } catch (error) {
+      console.error("Erreur tirage cartes:", error);
+      this.showNotification(error.message, "error");
+    }
+  }
+
+  showNotification(message, type = "info") {
+    const container = document.getElementById("notification-container");
+    if (!container) {
+      console.log("Notification:", message);
+      return;
+    }
+
+    const notification = document.createElement("div");
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    container.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+  }
+
+  updateState(state) {
+    if (!state) {
+      console.error("État invalide reçu");
+      return;
+    }
+
+    console.log("Mise à jour de l'état:", state);
+    this.gameState = state;
+    this.isMyTurn = state.isYourTurn;
+
+    // Toujours afficher les cartes
+    this.displayCards();
+
+    // Mettre à jour l'interface
+    this.updateInterface();
+  }
+
+  updateInterface() {
+    if (this.turnIndicator) {
+      this.turnIndicator.textContent = this.isMyTurn
+        ? "C'est votre tour"
+        : "Tour de l'adversaire";
+    }
+
+    if (this.gameStatus) {
+      this.gameStatus.textContent =
+        this.gameState.status === "waiting"
+          ? "En attente d'un autre joueur..."
+          : "Partie en cours";
+    }
+  }
+
+  renderCardStats(card) {
+    if (card.type === "perso") {
+      return `
+        <div class="stats">
+          <div>PV: ${card.currentStats?.pointsdevie || card.pointsdevie}</div>
+          <div>ATT: ${
+            card.currentStats?.forceattaque || card.forceattaque
+          }</div>
+          <div>TOUR: ${card.currentStats?.tourattaque || card.tourattaque}</div>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="stats">
+          <div>BONUS: ${card.pourcentagebonus}%</div>
+          <div>TOUR: ${card.tourbonus}</div>
+        </div>
+      `;
+    }
+  }
+
+  renderCards(cards, isPlayable) {
+    if (!Array.isArray(cards)) {
+      console.error("cards n'est pas un tableau:", cards);
+      return "";
+    }
+
+    return cards
+      .map((card) => {
+        if (!card) {
+          console.error("Carte invalide:", card);
+          return "";
+        }
+
+        console.log(`Rendu carte ${card.id}:`, {
+          svgContent: card.svgContent ? "présent" : "absent",
+          type: card.type,
+          isPlayable,
+        });
+
+        return `
+          <div class="card ${
+            isPlayable ? "playable" : ""
+          } ${this.getSelectedClass(card)}"
+               data-card-id="${card.id}"
+               data-card-type="${card.type}">
+            <div class="card-content">
+              ${
+                card.svgContent ||
+                `
+                <!-- SVG par défaut -->
+                <svg viewBox="0 0 100 140">
+                  <rect width="100" height="140" fill="#ddd"/>
+                  <text x="50" y="70" text-anchor="middle" fill="#666">
+                    ${card.id} (SVG manquant)
+                  </text>
+                </svg>
+              `
+              }
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  getDefaultCardImage(card) {
+    // Ne retourner le SVG que si pas d'image de fond
+    if (!card.fond) {
+      return `
+        <svg viewBox="0 0 100 140">
+          <rect width="100" height="140" fill="#ddd"/>
+          <text x="50" y="70" text-anchor="middle" fill="#666">
+            ${card.id}
+          </text>
+        </svg>
+      `;
+    }
+    return "";
+  }
+
+  getSelectedClass(card) {
+    if (card.id === this.selectedBonus?.id) return "selected bonus-selected";
+    if (card.id === this.selectedPerso?.id) return "selected perso-selected";
+    return "";
+  }
+
+  displayCards() {
+    if (!this.gameState?.playerCards) {
+      console.log("Pas de cartes à afficher");
+      return;
+    }
+
+    try {
+      const { playerCards, opponentCards } = this.gameState;
+
+      if (!playerCards?.perso || !playerCards?.bonus) {
+        console.log("En attente des cartes...");
+        return;
+      }
+
+      console.log("Affichage des cartes:", {
+        player: playerCards,
+        opponent: opponentCards,
+      });
+
+      this.container.innerHTML = `
+        <div class="opponent-area">
+          <div class="bonus-cards">${this.renderCards(
+            opponentCards.bonus || [],
+            false
+          )}</div>
+          <div class="perso-cards">${this.renderCards(
+            opponentCards.perso || [],
+            false
+          )}</div>
+        </div>
+        <div class="player-area">
+          <div class="perso-cards">${this.renderCards(
+            playerCards.perso || [],
+            this.isMyTurn
+          )}</div>
+          <div class="bonus-cards">${this.renderCards(
+            playerCards.bonus || [],
+            this.isMyTurn
+          )}</div>
+        </div>
+      `;
+
+      this.attachCardListeners();
+    } catch (error) {
+      console.error("Erreur affichage cartes:", error);
+    }
+  }
+
+  attachCardListeners() {
+    const cards = this.container.querySelectorAll(".card.playable");
+    cards.forEach((card) => {
+      card.addEventListener("click", () => this.handleCardClick(card));
+    });
+  }
+
+  handleCardClick(cardElement) {
+    const cardId = cardElement.dataset.cardId;
+    const cardType = cardElement.dataset.cardType;
+
+    if (!this.isMyTurn) return;
+
+    if (cardType === "bonus") {
+      this.handleBonusSelection(cardId);
+    } else if (cardType === "perso") {
+      this.handlePersoSelection(cardId);
+    }
+  }
+
+  handleBonusSelection(cardId) {
+    if (!this.isMyTurn) return;
+
+    const card = this.gameState.playerCards.bonus.find((c) => c.id === cardId);
+    if (!card) return;
+
+    this.selectedBonus = this.selectedBonus?.id === cardId ? null : card;
+    this.displayCards(); // Rafraîchir l'affichage
+  }
+
+  handlePersoSelection(cardId) {
+    if (!this.isMyTurn) return;
+
+    const card = this.gameState.playerCards.perso.find((c) => c.id === cardId);
+    if (!card) return;
+
+    this.selectedPerso = this.selectedPerso?.id === cardId ? null : card;
+    this.displayCards(); // Rafraîchir l'affichage
+  }
+}
 
 
 ===== /Users/robert/Victorryan/frontend/js/utils.js =====
@@ -2924,6 +2093,52 @@ document.addEventListener("DOMContentLoaded", () => {
     getGameId: () => gameId,
     isMyTurn: () => isMyTurn,
   };
+});
+
+class GameSocket {
+  constructor() {
+    this.socket = io();
+    this.setupListeners();
+  }
+
+  setupListeners() {
+    this.socket.on("connect", () => {
+      console.log("Connecté au serveur WebSocket", this.socket.id);
+    });
+
+    this.socket.on("gameState", (state) => {
+      console.log("État reçu:", state);
+      if (window.gameUI) {
+        window.gameUI.updateState(state);
+      }
+    });
+
+    this.socket.on("playerJoined", ({ playerId }) => {
+      console.log("Joueur rejoint:", playerId);
+      if (window.gameUI) {
+        window.gameUI.showNotification("Un joueur a rejoint la partie");
+      }
+    });
+
+    this.socket.on("error", (error) => {
+      console.error("Erreur socket:", error);
+      if (window.gameUI) {
+        window.gameUI.showNotification(error.message, "error");
+      }
+    });
+  }
+
+  joinGame(gameId, playerId) {
+    console.log(
+      `Tentative de rejoindre la partie ${gameId} en tant que ${playerId}`
+    );
+    this.socket.emit("joinGame", { gameId, playerId });
+  }
+}
+
+// Initialiser le socket après le chargement du DOM
+document.addEventListener("DOMContentLoaded", () => {
+  window.gameSocket = new GameSocket();
 });
 
 
@@ -7007,18 +6222,24 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
-const socketIo = require("socket.io");
+const { Server } = require("socket.io");
 require("dotenv").config();
+const crypto = require("crypto");
+const gameCache = require("./backend/services/gameCache");
+const cardManager = require("./backend/services/cardManager");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new Server(server);
 
-// Afficher les chemins pour le débogage
+// Configuration des chemins
+const frontendPath = path.join(__dirname, "frontend");
+const stockPath = path.join(__dirname, "stock");
+
 console.log("Chemins de l'application:");
-console.log("- Répertoire courant:", process.cwd());
-console.log("- Chemin du frontend:", path.join(__dirname, "frontend"));
-console.log("- Chemin du stock:", path.join(__dirname, "stock"));
+console.log("- Répertoire courant:", __dirname);
+console.log("- Chemin du frontend:", frontendPath);
+console.log("- Chemin du stock:", stockPath);
 console.log("- Structure des répertoires:");
 console.log("  - backend/:", path.join(__dirname, "backend"));
 console.log("  - backend/services/:", path.join(__dirname, "backend/services"));
@@ -7028,10 +6249,20 @@ app.use(cors());
 app.use(express.json());
 
 // Servir les fichiers statiques du frontend
-app.use(express.static(path.join(__dirname, "frontend")));
+app.use(express.static(frontendPath));
 
 // Servir les fichiers du dossier stock (pour les images des cartes)
-app.use("/stock", express.static(path.join(__dirname, "stock")));
+app.use("/stock", express.static(stockPath));
+
+// Servir les fichiers SVG
+app.use(
+  "/stock/svg_perso",
+  express.static(path.join(__dirname, "stock/svg_perso"))
+);
+app.use(
+  "/stock/svg_bonus",
+  express.static(path.join(__dirname, "stock/svg_bonus"))
+);
 
 // Initialiser le module de gestion des jeux avec Socket.io
 const gameManager = require("./backend/services/gameManager")(io);
@@ -7039,6 +6270,125 @@ const gameManager = require("./backend/services/gameManager")(io);
 // Routes pour les parties et les cartes
 app.use("/games", require("./backend/routes/games"));
 app.use("/cards", require("./backend/routes/cards"));
+
+// Routes pour la gestion des parties
+app.post("/api/games/create", async (req, res) => {
+  try {
+    const { playerId } = req.body;
+    if (!playerId) {
+      throw new Error("playerId requis");
+    }
+
+    const result = await gameCache.createGame(playerId);
+    res.json({
+      success: true,
+      gameId: result.gameId,
+      playerId: playerId,
+      state: result.state,
+    });
+  } catch (error) {
+    console.error("Erreur création partie:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+app.post("/api/games/join", async (req, res) => {
+  try {
+    const { gameId, playerId } = req.body;
+    const game = gameCache.getGame(gameId);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: "Partie non trouvée",
+      });
+    }
+
+    const playerRole = game.addPlayer(playerId);
+    if (!playerRole) {
+      return res.status(400).json({
+        success: false,
+        error: "Partie complète",
+      });
+    }
+
+    // S'assurer que les cartes sont distribuées
+    if (!game.cards.player1.perso.length) {
+      await game.distributeInitialCards(cardManager);
+    }
+
+    res.json({
+      success: true,
+      state: game.getStateForPlayer(playerId),
+    });
+
+    // Notifier l'autre joueur de la mise à jour
+    const otherPlayerId =
+      playerRole === "player1" ? game.players.player2 : game.players.player1;
+    if (otherPlayerId) {
+      io.to(gameId).emit("gameState", game.getStateForPlayer(otherPlayerId));
+    }
+  } catch (error) {
+    console.error("Erreur join partie:", error);
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors de la connexion à la partie",
+    });
+  }
+});
+
+// Route pour le tirage des cartes
+app.post("/api/games/draw-cards", async (req, res) => {
+  try {
+    const { gameId, playerId } = req.body;
+    const game = gameCache.getGame(gameId);
+
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: "Partie non trouvée",
+      });
+    }
+
+    // Vérifier que c'est bien le créateur
+    if (game.players.player1 !== playerId) {
+      return res.status(403).json({
+        success: false,
+        error: "Seul le créateur peut tirer les cartes",
+      });
+    }
+
+    // Distribuer les cartes
+    await game.distributeInitialCards(cardManager);
+
+    // Envoyer l'état mis à jour aux deux joueurs via WebSocket
+    io.to(gameId).emit(
+      "gameState",
+      game.getStateForPlayer(game.players.player1)
+    );
+    if (game.players.player2) {
+      io.to(gameId).emit(
+        "gameState",
+        game.getStateForPlayer(game.players.player2)
+      );
+    }
+
+    // Répondre au créateur
+    res.json({
+      success: true,
+      state: game.getStateForPlayer(playerId),
+    });
+  } catch (error) {
+    console.error("Erreur tirage cartes:", error);
+    res.status(500).json({
+      success: false,
+      error: "Erreur lors du tirage des cartes",
+    });
+  }
+});
 
 // Routes de base
 app.get("/", (req, res) => {
@@ -7076,30 +6426,117 @@ app.get("/api/diagnostic", (req, res) => {
   }
 });
 
-// Configuration des WebSockets
+// Route de diagnostic pour les SVG
+app.get("/api/check-svg/:type/:id", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const cardManager = require("./backend/services/cardManager");
+    const svg = await cardManager.loadCardSVG(type, id);
+
+    res.json({
+      success: true,
+      svg: svg,
+      cardId: id,
+      type: type,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Route de diagnostic pour les images
+app.get("/api/check-image/:type/:id", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const card = await cardManager.getCard(type, id);
+
+    res.json({
+      success: true,
+      card: {
+        id: card.id,
+        type: card.type,
+        fond: card.fond,
+        svgContent: card.svgContent ? "présent" : "absent",
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Route de test pour les URLs des images
+app.get("/api/test-image-url/:type/:id", (req, res) => {
+  const { type, id } = req.params;
+  const { getImageUrl } = require("./backend/config/supabase");
+
+  const imageUrl = getImageUrl(type, id);
+
+  res.json({
+    url: imageUrl,
+    testUrl: `${process.env.SUPABASE_URL}/storage/v1/object/public/images/${type}/${id}.png`,
+    type,
+    id,
+  });
+});
+
+// Gestion des WebSockets
 io.on("connection", (socket) => {
   console.log("Un client s'est connecté:", socket.id);
 
-  socket.on("joinGame", ({ gameId, playerId }) => {
-    socket.join(gameId);
-    console.log(`Joueur ${playerId} a rejoint la partie ${gameId}`);
+  socket.on("joinGame", async ({ gameId, playerId }) => {
+    try {
+      console.log(`Tentative de rejoindre la partie ${gameId} par ${playerId}`);
+      console.log("Parties existantes:", Array.from(gameCache.games.keys()));
 
-    // Notifier les autres joueurs dans la salle
-    socket.to(gameId).emit("playerJoined", { playerId });
-  });
+      const game = gameCache.getGame(gameId);
+      if (!game) {
+        console.log(`Partie ${gameId} non trouvée`);
+        throw new Error("Partie non trouvée");
+      }
 
-  socket.on("playCard", ({ gameId, playerId, cardData, targetId }) => {
-    console.log(
-      `Joueur ${playerId} joue la carte ${cardData.id} sur ${targetId}`
-    );
-    // Informer les autres joueurs de la carte jouée
-    socket.to(gameId).emit("cardPlayed", { playerId, cardData, targetId });
-  });
+      console.log("État actuel de la partie:", {
+        players: game.players,
+        status: game.status,
+      });
 
-  socket.on("endTurn", ({ gameId, playerId }) => {
-    console.log(`Joueur ${playerId} termine son tour`);
-    // Informer les autres joueurs de la fin du tour
-    socket.to(gameId).emit("turnEnded", { playerId });
+      const playerRole = game.addPlayer(playerId);
+      if (!playerRole) {
+        console.log("Impossible d'ajouter le joueur, partie pleine");
+        throw new Error("Impossible de rejoindre la partie");
+      }
+
+      socket.join(gameId);
+      console.log(`Joueur ${playerId} ajouté comme ${playerRole}`);
+
+      // Si c'est le second joueur, distribuer les cartes
+      if (playerRole === "player2") {
+        const cardManager = require("./backend/services/cardManager");
+        await game.distributeInitialCards(cardManager);
+      }
+
+      // Envoyer l'état actuel au joueur qui rejoint
+      socket.emit("gameState", game.getStateForPlayer(playerId));
+
+      // Notifier l'autre joueur
+      const otherPlayerId =
+        game.players[playerRole === "player1" ? "player2" : "player1"];
+      if (otherPlayerId) {
+        socket
+          .to(gameId)
+          .emit("gameState", game.getStateForPlayer(otherPlayerId));
+      }
+
+      socket.to(gameId).emit("playerJoined", { playerId });
+    } catch (error) {
+      console.error("Erreur joinGame:", error);
+      socket.emit("error", { message: error.message });
+    }
   });
 
   socket.on("disconnect", () => {

@@ -104,6 +104,8 @@ class GameUI {
     this.selectedPerso = null;
     this.isMyTurn = false;
     this.isCreator = false;
+    this.selectedCard = null;
+    this.selectedTarget = null;
 
     this.setupUI();
     console.log("Interface initialisée avec succès");
@@ -227,49 +229,54 @@ class GameUI {
     }
   }
 
-  renderCards(cards, isPlayable) {
-    if (!Array.isArray(cards)) {
-      console.error("cards n'est pas un tableau:", cards);
-      return "";
-    }
+  renderCards(cards, container, type, isPlayer, isAttackable = false) {
+    if (!cards || !Array.isArray(cards)) return;
 
-    return cards
-      .map((card) => {
-        if (!card) {
-          console.error("Carte invalide:", card);
-          return "";
-        }
+    cards.forEach((card) => {
+      const cardElement = document.createElement("div");
+      cardElement.className = `card ${type}-card ${
+        isAttackable ? "attackable" : ""
+      }`;
+      cardElement.dataset.id = card.id;
+      cardElement.dataset.type = type;
 
-        console.log(`Rendu carte ${card.id}:`, {
-          svgContent: card.svgContent ? "présent" : "absent",
-          type: card.type,
-          isPlayable,
+      // Ajouter la classe "playable" si c'est le tour du joueur et que la carte est jouable
+      if (isPlayer && this.gameState.isYourTurn && !card.hasAttacked) {
+        cardElement.classList.add("playable");
+      }
+
+      // Créer le contenu de la carte
+      const cardContent = document.createElement("div");
+      cardContent.className = "card-content";
+
+      // Charger le SVG de la carte
+      fetch(`/stock/svg_${type}/${card.id}.svg`)
+        .then((response) => response.text())
+        .then((svgContent) => {
+          cardContent.innerHTML = svgContent;
+        })
+        .catch((error) => {
+          console.error(`Erreur chargement SVG pour ${card.id}:`, error);
+          cardContent.innerHTML = `<div class="card-placeholder">${
+            type === "perso" ? "P" : "B"
+          }</div>`;
         });
 
-        return `
-          <div class="card ${
-            isPlayable ? "playable" : ""
-          } ${this.getSelectedClass(card)}"
-               data-card-id="${card.id}"
-               data-card-type="${card.type}">
-            <div class="card-content">
-              ${
-                card.svgContent ||
-                `
-                <!-- SVG par défaut -->
-                <svg viewBox="0 0 100 140">
-                  <rect width="100" height="140" fill="#ddd"/>
-                  <text x="50" y="70" text-anchor="middle" fill="#666">
-                    ${card.id} (SVG manquant)
-                  </text>
-                </svg>
-              `
-              }
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+      cardElement.appendChild(cardContent);
+
+      // Ajouter les gestionnaires d'événements
+      if (isPlayer && this.gameState.isYourTurn) {
+        cardElement.addEventListener("click", () =>
+          this.handleCardClick(card, cardElement)
+        );
+      } else if (isAttackable && this.gameState.isYourTurn) {
+        cardElement.addEventListener("click", () =>
+          this.handleTargetClick(card, cardElement)
+        );
+      }
+
+      container.appendChild(cardElement);
+    });
   }
 
   getDefaultCardImage(card) {
@@ -316,21 +323,29 @@ class GameUI {
         <div class="opponent-area">
           <div class="bonus-cards">${this.renderCards(
             opponentCards.bonus || [],
+            this.container.querySelector(".opponent-area .bonus-cards"),
+            "bonus",
             false
           )}</div>
           <div class="perso-cards">${this.renderCards(
             opponentCards.perso || [],
+            this.container.querySelector(".opponent-area .perso-cards"),
+            "perso",
             false
           )}</div>
         </div>
         <div class="player-area">
           <div class="perso-cards">${this.renderCards(
             playerCards.perso || [],
-            this.isMyTurn
+            this.container.querySelector(".player-area .perso-cards"),
+            "perso",
+            true
           )}</div>
           <div class="bonus-cards">${this.renderCards(
             playerCards.bonus || [],
-            this.isMyTurn
+            this.container.querySelector(".player-area .bonus-cards"),
+            "bonus",
+            true
           )}</div>
         </div>
       `;
@@ -348,36 +363,79 @@ class GameUI {
     });
   }
 
-  handleCardClick(cardElement) {
-    const cardId = cardElement.dataset.cardId;
-    const cardType = cardElement.dataset.cardType;
+  handleCardClick(card, element) {
+    if (!this.gameState.isYourTurn) return;
 
-    if (!this.isMyTurn) return;
-
-    if (cardType === "bonus") {
-      this.handleBonusSelection(cardId);
-    } else if (cardType === "perso") {
-      this.handlePersoSelection(cardId);
+    // Si une carte était déjà sélectionnée, la désélectionner
+    if (this.selectedCard) {
+      const prevElement = document.querySelector(
+        `.card[data-id="${this.selectedCard.id}"]`
+      );
+      if (prevElement) prevElement.classList.remove("selected");
     }
+
+    // Sélectionner la nouvelle carte
+    this.selectedCard = card;
+    element.classList.add("selected");
+
+    // Si c'est une carte personnage, activer les cibles potentielles
+    if (element.dataset.type === "perso") {
+      this.activateTargets();
+    }
+
+    this.showNotification(`Carte ${card.id} sélectionnée`, "info");
   }
 
-  handleBonusSelection(cardId) {
-    if (!this.isMyTurn) return;
+  handleTargetClick(card, element) {
+    if (!this.selectedCard) return;
 
-    const card = this.gameState.playerCards.bonus.find((c) => c.id === cardId);
-    if (!card) return;
+    // Si la carte sélectionnée est une carte personnage, attaquer
+    if (this.selectedCard.type === "perso") {
+      this.attackCard(this.selectedCard.id, card.id);
+    }
 
-    this.selectedBonus = this.selectedBonus?.id === cardId ? null : card;
-    this.displayCards(); // Rafraîchir l'affichage
+    // Réinitialiser la sélection
+    this.resetSelection();
   }
 
-  handlePersoSelection(cardId) {
-    if (!this.isMyTurn) return;
+  attackCard(attackerId, targetId) {
+    if (!window.gameSocket) {
+      this.showNotification("Erreur: connexion au serveur perdue", "error");
+      return;
+    }
 
-    const card = this.gameState.playerCards.perso.find((c) => c.id === cardId);
-    if (!card) return;
+    window.gameSocket.attackCard(
+      attackerId,
+      targetId,
+      window.gameId,
+      window.playerId
+    );
+  }
 
-    this.selectedPerso = this.selectedPerso?.id === cardId ? null : card;
-    this.displayCards(); // Rafraîchir l'affichage
+  resetSelection() {
+    this.selectedCard = null;
+    this.selectedTarget = null;
+
+    // Désélectionner toutes les cartes
+    document.querySelectorAll(".card.selected").forEach((card) => {
+      card.classList.remove("selected");
+    });
+
+    // Désactiver toutes les cibles
+    document.querySelectorAll(".card.attackable").forEach((card) => {
+      card.classList.remove("attackable");
+    });
+  }
+
+  activateTargets() {
+    const opponentCards = document.querySelectorAll(
+      ".opponent-area .perso-card"
+    );
+    opponentCards.forEach((card) => {
+      card.classList.add("attackable");
+    });
   }
 }
+
+// Exposer la classe
+window.GameUI = GameUI;
