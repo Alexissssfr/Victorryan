@@ -372,9 +372,9 @@ class GameSocket {
     this.socket.on("attackPerformed", (data) => {
       console.log("Attaque effectuée:", data);
       if (window.gameUI) {
-        // Mettre à jour les SVG des cartes
-        window.gameUI.updateCardSVG(data.attackerId, 100, true); // L'attaquant
-        window.gameUI.updateCardSVG(data.targetId, data.remainingHP, false); // La cible
+        // Mettre à jour les SVG des cartes - INVERSER l'ordre ici
+        window.gameUI.updateCardSVG(data.attackerId, 100, true); // L'attaquant garde ses PV
+        window.gameUI.updateCardSVG(data.targetId, data.remainingHP, false); // La cible perd des PV
 
         // Afficher une notification
         window.gameUI.showNotification(

@@ -339,6 +339,15 @@ io.on("connection", (socket) => {
         // Effectuer l'attaque
         const result = game.attackCard(attackerId, targetId, playerId);
 
+        // Changer le tour après l'attaque
+        const currentPlayer = game.currentTurn.player;
+        const nextPlayer = currentPlayer === "player1" ? "player2" : "player1";
+        game.currentTurn = {
+          player: nextPlayer,
+          selectedBonus: null,
+          targetPerso: null,
+        };
+
         // Envoyer le nouvel état aux deux joueurs
         io.to(gameId).emit(
           "gameState",

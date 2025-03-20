@@ -183,6 +183,12 @@ class GameUI {
     }
 
     console.log("Mise à jour de l'état:", state);
+
+    // Si le tour change, réinitialiser les cartes attaquables
+    if (this.isMyTurn !== state.isYourTurn) {
+      this.resetAttackableCards();
+    }
+
     this.gameState = state;
     this.isMyTurn = state.isYourTurn;
 
@@ -680,29 +686,11 @@ class GameUI {
       return;
     }
 
-    // Ajouter un indicateur visuel des points de vie
-    const hpIndicator = document.createElement("div");
-    hpIndicator.className = "hp-indicator";
-    hpIndicator.textContent = `PV: ${newHP}`;
-    hpIndicator.style.position = "absolute";
-    hpIndicator.style.bottom = "5px";
-    hpIndicator.style.left = "5px";
-    hpIndicator.style.backgroundColor =
-      newHP < 50 ? "red" : newHP < 75 ? "orange" : "green";
-    hpIndicator.style.color = "white";
-    hpIndicator.style.padding = "2px 5px";
-    hpIndicator.style.borderRadius = "3px";
-    hpIndicator.style.fontSize = "12px";
-    hpIndicator.style.fontWeight = "bold";
-    hpIndicator.style.zIndex = "10";
-
     // Supprimer l'ancien indicateur s'il existe
     const oldIndicator = cardElement.querySelector(".hp-indicator");
     if (oldIndicator) {
       oldIndicator.remove();
     }
-
-    cardElement.appendChild(hpIndicator);
 
     // Essayer de mettre à jour le SVG si possible
     const svgElement = svgContainer.querySelector("svg");
@@ -713,14 +701,34 @@ class GameUI {
         let updated = false;
 
         for (const text of textElements) {
+          // Chercher tous les textes qui pourraient contenir des points de vie
+          const content = text.textContent;
           if (
-            text.textContent.includes("HP:") ||
-            text.textContent.includes("PV:") ||
-            text.textContent.includes("pointsdevie")
+            content.includes("HP:") ||
+            content.includes("PV:") ||
+            content.includes("pointsdevie") ||
+            content.match(/\d+\s*\/\s*\d+/) || // Format "XX / XX"
+            content.match(/PV\s*:\s*\d+/) || // Format "PV: XX"
+            content.match(/HP\s*:\s*\d+/)
           ) {
-            // Mettre à jour le texte
-            const originalText = text.textContent;
-            text.textContent = originalText.replace(/\d+/, newHP);
+            // Format "HP: XX"
+
+            // Mettre à jour le texte en préservant le format
+            if (content.includes("/")) {
+              // Format "XX / 100"
+              text.textContent = content.replace(/\d+\s*\//, `${newHP} /`);
+            } else if (
+              content.match(/PV\s*:\s*\d+/) ||
+              content.match(/HP\s*:\s*\d+/)
+            ) {
+              // Format "PV: XX" ou "HP: XX"
+              text.textContent = content.replace(/\d+/, newHP);
+            } else {
+              // Autres formats
+              text.textContent = content.replace(/\d+/, newHP);
+            }
+
+            // Changer la couleur en fonction des PV
             text.setAttribute(
               "fill",
               newHP < 50 ? "red" : newHP < 75 ? "orange" : "black"
@@ -769,7 +777,7 @@ class GameUI {
       // Ajouter un effet de dégâts
       const damageEffect = document.createElement("div");
       damageEffect.className = "damage-effect";
-      damageEffect.textContent = "-40"; // Dégâts fixes pour l'exemple
+      damageEffect.textContent = "-" + (100 - newHP);
       damageEffect.style.position = "absolute";
       damageEffect.style.top = "50%";
       damageEffect.style.left = "50%";
@@ -832,6 +840,19 @@ class GameUI {
             console.error(`Erreur chargement SVG pour ${cardId}:`, error);
           });
       }
+    });
+  }
+
+  resetAttackableCards() {
+    // Supprimer la classe attackable de toutes les cartes
+    document.querySelectorAll(".card.attackable").forEach((card) => {
+      card.classList.remove("attackable");
+      card.style.boxShadow = "";
+    });
+
+    // Supprimer la classe selected de toutes les cartes
+    document.querySelectorAll(".card.selected").forEach((card) => {
+      card.classList.remove("selected");
     });
   }
 }
