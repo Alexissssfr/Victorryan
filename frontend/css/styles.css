@@ -406,4 +406,16 @@ input {
   position: absolute;
   z-index: 100;
   pointer-events: none;
+}
+
+/* Ajouter cette animation pour le clignotement du texte */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* Style pour l'indicateur de points de vie */
+.hp-indicator {
+  transition: background-color 0.3s;
 } 

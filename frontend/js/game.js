@@ -393,6 +393,7 @@ class GameUI {
       ); // Marquer comme attaquable
       this.renderCards(opponentCards.bonus, opponentBonus, "bonus", false);
 
+      this.fixCardImages();
       this.fixAttackableCards();
     } catch (error) {
       console.error("Erreur affichage cartes:", error);
@@ -661,51 +662,99 @@ class GameUI {
   }
 
   updateCardSVG(cardId, newHP, isAttacker = false) {
-    // Trouver l'élément de carte
-    const cardElement = document.querySelector(`.card[data-id="${cardId}"]`);
-    if (!cardElement) return;
-
-    // Récupérer le contenu SVG
-    const svgContainer = cardElement.querySelector(".card-content");
-    if (!svgContainer) return;
-
-    const svgElement = svgContainer.querySelector("svg");
-    if (!svgElement) return;
-
     console.log(
       `Mise à jour du SVG pour la carte ${cardId}, nouveaux PV: ${newHP}`
     );
 
-    // Trouver et mettre à jour le texte des points de vie
-    const textElements = svgElement.querySelectorAll("text");
-    for (const text of textElements) {
-      if (
-        text.textContent.includes("HP:") ||
-        text.textContent.includes("PV:")
-      ) {
-        // Mettre à jour le texte
-        text.textContent = `PV: ${newHP}`;
+    // Trouver l'élément de carte
+    const cardElement = document.querySelector(`.card[data-id="${cardId}"]`);
+    if (!cardElement) {
+      console.error(`Carte ${cardId} non trouvée dans le DOM`);
+      return;
+    }
 
-        // Changer la couleur en fonction des PV
-        if (newHP < 50) {
-          text.setAttribute("fill", "red");
-        } else if (newHP < 75) {
-          text.setAttribute("fill", "orange");
+    // Récupérer le contenu SVG
+    const svgContainer = cardElement.querySelector(".card-content");
+    if (!svgContainer) {
+      console.error(`Conteneur SVG non trouvé pour la carte ${cardId}`);
+      return;
+    }
+
+    // Ajouter un indicateur visuel des points de vie
+    const hpIndicator = document.createElement("div");
+    hpIndicator.className = "hp-indicator";
+    hpIndicator.textContent = `PV: ${newHP}`;
+    hpIndicator.style.position = "absolute";
+    hpIndicator.style.bottom = "5px";
+    hpIndicator.style.left = "5px";
+    hpIndicator.style.backgroundColor =
+      newHP < 50 ? "red" : newHP < 75 ? "orange" : "green";
+    hpIndicator.style.color = "white";
+    hpIndicator.style.padding = "2px 5px";
+    hpIndicator.style.borderRadius = "3px";
+    hpIndicator.style.fontSize = "12px";
+    hpIndicator.style.fontWeight = "bold";
+    hpIndicator.style.zIndex = "10";
+
+    // Supprimer l'ancien indicateur s'il existe
+    const oldIndicator = cardElement.querySelector(".hp-indicator");
+    if (oldIndicator) {
+      oldIndicator.remove();
+    }
+
+    cardElement.appendChild(hpIndicator);
+
+    // Essayer de mettre à jour le SVG si possible
+    const svgElement = svgContainer.querySelector("svg");
+    if (svgElement) {
+      try {
+        // Trouver et mettre à jour le texte des points de vie dans le SVG
+        const textElements = svgElement.querySelectorAll("text");
+        let updated = false;
+
+        for (const text of textElements) {
+          if (
+            text.textContent.includes("HP:") ||
+            text.textContent.includes("PV:") ||
+            text.textContent.includes("pointsdevie")
+          ) {
+            // Mettre à jour le texte
+            const originalText = text.textContent;
+            text.textContent = originalText.replace(/\d+/, newHP);
+            text.setAttribute(
+              "fill",
+              newHP < 50 ? "red" : newHP < 75 ? "orange" : "black"
+            );
+            updated = true;
+
+            // Ajouter une animation de clignotement
+            text.style.animation = "blink 0.5s 3";
+          }
         }
 
-        // Ajouter une animation de clignotement
-        const animate = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "animate"
+        if (!updated) {
+          // Si aucun texte n'a été trouvé, ajouter un nouveau texte
+          const newText = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+          );
+          newText.setAttribute("x", "50%");
+          newText.setAttribute("y", "95%");
+          newText.setAttribute("text-anchor", "middle");
+          newText.setAttribute(
+            "fill",
+            newHP < 50 ? "red" : newHP < 75 ? "orange" : "black"
+          );
+          newText.setAttribute("font-size", "14");
+          newText.setAttribute("font-weight", "bold");
+          newText.textContent = `PV: ${newHP}`;
+          svgElement.appendChild(newText);
+        }
+      } catch (error) {
+        console.error(
+          `Erreur lors de la mise à jour du SVG pour ${cardId}:`,
+          error
         );
-        animate.setAttribute("attributeName", "opacity");
-        animate.setAttribute("values", "1;0.5;1");
-        animate.setAttribute("dur", "0.5s");
-        animate.setAttribute("repeatCount", "3");
-        text.appendChild(animate);
-
-        // Déclencher l'animation
-        animate.beginElement();
       }
     }
 
@@ -720,7 +769,7 @@ class GameUI {
       // Ajouter un effet de dégâts
       const damageEffect = document.createElement("div");
       damageEffect.className = "damage-effect";
-      damageEffect.textContent = "-" + (100 - newHP);
+      damageEffect.textContent = "-40"; // Dégâts fixes pour l'exemple
       damageEffect.style.position = "absolute";
       damageEffect.style.top = "50%";
       damageEffect.style.left = "50%";
@@ -734,6 +783,56 @@ class GameUI {
       cardElement.appendChild(damageEffect);
       setTimeout(() => damageEffect.remove(), 1000);
     }
+  }
+
+  fixCardImages() {
+    // Sélectionner toutes les cartes
+    const cards = document.querySelectorAll(".card");
+
+    cards.forEach((card) => {
+      const cardId = card.dataset.id;
+      const cardType = card.dataset.type;
+
+      // Vérifier si l'image de fond existe déjà
+      if (!card.style.backgroundImage) {
+        // Ajouter une image de fond de secours
+        const bgUrl = `/stock/images/${cardType}/${cardId}.png`;
+        card.style.backgroundImage = `url('${bgUrl}')`;
+        card.style.backgroundSize = "cover";
+        card.style.backgroundPosition = "center";
+      }
+
+      // Vérifier si le SVG est chargé
+      const svgContainer = card.querySelector(".card-content");
+      if (svgContainer && !svgContainer.innerHTML.includes("<svg")) {
+        // Réessayer de charger le SVG
+        fetch(`/stock/svg_${cardType}/${cardId}.svg`)
+          .then((response) => response.text())
+          .then((svgContent) => {
+            svgContainer.innerHTML = svgContent;
+
+            // Ajouter un fond blanc au SVG pour une meilleure visibilité
+            const svg = svgContainer.querySelector("svg");
+            if (svg) {
+              // Ajouter un rectangle blanc en arrière-plan
+              const rect = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "rect"
+              );
+              rect.setAttribute("width", "100%");
+              rect.setAttribute("height", "100%");
+              rect.setAttribute("fill", "white");
+              rect.setAttribute("opacity", "0.8");
+
+              // Insérer le rectangle en premier enfant du SVG
+              svg.insertBefore(rect, svg.firstChild);
+            }
+          })
+          .catch((error) => {
+            console.error(`Erreur chargement SVG pour ${cardId}:`, error);
+          });
+      }
+    });
   }
 }
 
