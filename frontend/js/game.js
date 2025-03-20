@@ -452,12 +452,42 @@ class GameUI {
       return;
     }
 
-    window.gameSocket.attackCard(
-      attackerId,
-      targetId,
-      window.gameId,
-      window.playerId
-    );
+    try {
+      console.log(`Attaque de ${attackerId} vers ${targetId}`);
+
+      // Appeler la fonction d'attaque du socket
+      window.gameSocket.attackCard(
+        attackerId,
+        targetId,
+        window.gameId,
+        window.playerId
+      );
+
+      // Ajouter des animations temporaires en attendant la réponse du serveur
+      const attackerElement = document.querySelector(
+        `.card[data-id="${attackerId}"]`
+      );
+      const targetElement = document.querySelector(
+        `.card[data-id="${targetId}"]`
+      );
+
+      if (attackerElement) attackerElement.classList.add("attacking");
+      if (targetElement) targetElement.classList.add("receiving-damage");
+
+      setTimeout(() => {
+        if (attackerElement) attackerElement.classList.remove("attacking");
+        if (targetElement) targetElement.classList.remove("receiving-damage");
+      }, 1000);
+
+      // Réinitialiser la sélection
+      this.resetSelection();
+    } catch (error) {
+      console.error("Erreur lors de l'attaque:", error);
+      this.showNotification(
+        "Erreur lors de l'attaque: " + error.message,
+        "error"
+      );
+    }
   }
 
   resetSelection() {
@@ -627,6 +657,82 @@ class GameUI {
           }
         });
       });
+    }
+  }
+
+  updateCardSVG(cardId, newHP, isAttacker = false) {
+    // Trouver l'élément de carte
+    const cardElement = document.querySelector(`.card[data-id="${cardId}"]`);
+    if (!cardElement) return;
+
+    // Récupérer le contenu SVG
+    const svgContainer = cardElement.querySelector(".card-content");
+    if (!svgContainer) return;
+
+    const svgElement = svgContainer.querySelector("svg");
+    if (!svgElement) return;
+
+    console.log(
+      `Mise à jour du SVG pour la carte ${cardId}, nouveaux PV: ${newHP}`
+    );
+
+    // Trouver et mettre à jour le texte des points de vie
+    const textElements = svgElement.querySelectorAll("text");
+    for (const text of textElements) {
+      if (
+        text.textContent.includes("HP:") ||
+        text.textContent.includes("PV:")
+      ) {
+        // Mettre à jour le texte
+        text.textContent = `PV: ${newHP}`;
+
+        // Changer la couleur en fonction des PV
+        if (newHP < 50) {
+          text.setAttribute("fill", "red");
+        } else if (newHP < 75) {
+          text.setAttribute("fill", "orange");
+        }
+
+        // Ajouter une animation de clignotement
+        const animate = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "animate"
+        );
+        animate.setAttribute("attributeName", "opacity");
+        animate.setAttribute("values", "1;0.5;1");
+        animate.setAttribute("dur", "0.5s");
+        animate.setAttribute("repeatCount", "3");
+        text.appendChild(animate);
+
+        // Déclencher l'animation
+        animate.beginElement();
+      }
+    }
+
+    // Ajouter un effet visuel à la carte
+    if (isAttacker) {
+      cardElement.classList.add("attacking");
+      setTimeout(() => cardElement.classList.remove("attacking"), 1000);
+    } else {
+      cardElement.classList.add("receiving-damage");
+      setTimeout(() => cardElement.classList.remove("receiving-damage"), 1000);
+
+      // Ajouter un effet de dégâts
+      const damageEffect = document.createElement("div");
+      damageEffect.className = "damage-effect";
+      damageEffect.textContent = "-" + (100 - newHP);
+      damageEffect.style.position = "absolute";
+      damageEffect.style.top = "50%";
+      damageEffect.style.left = "50%";
+      damageEffect.style.transform = "translate(-50%, -50%)";
+      damageEffect.style.color = "red";
+      damageEffect.style.fontSize = "24px";
+      damageEffect.style.fontWeight = "bold";
+      damageEffect.style.textShadow = "0 0 5px white";
+      damageEffect.style.animation = "fadeUp 1s forwards";
+
+      cardElement.appendChild(damageEffect);
+      setTimeout(() => damageEffect.remove(), 1000);
     }
   }
 }

@@ -368,6 +368,20 @@ class GameSocket {
         window.gameUI.showNotification(error.message, "error");
       }
     });
+
+    this.socket.on("attackPerformed", (data) => {
+      console.log("Attaque effectuée:", data);
+      if (window.gameUI) {
+        // Mettre à jour les SVG des cartes
+        window.gameUI.updateCardSVG(data.attackerId, 100, true); // L'attaquant
+        window.gameUI.updateCardSVG(data.targetId, data.remainingHP, false); // La cible
+
+        // Afficher une notification
+        window.gameUI.showNotification(
+          `Attaque: ${data.damage} dégâts infligés!`
+        );
+      }
+    });
   }
 
   joinGame(gameId, playerId) {
@@ -380,5 +394,28 @@ class GameSocket {
 
 // Initialiser le socket après le chargement du DOM
 document.addEventListener("DOMContentLoaded", () => {
-  window.gameSocket = new GameSocket();
+  // Créer une instance de GameSocket
+  const gameSocketInstance = new GameSocket();
+
+  // Fusionner les fonctions existantes avec la nouvelle instance
+  window.gameSocket = {
+    ...window.gameSocket,
+    attackCard: function (attackerId, targetId, gameId, playerId) {
+      console.log(`Attaque de ${attackerId} vers ${targetId}`);
+      gameSocketInstance.socket.emit("attackCard", {
+        gameId,
+        playerId,
+        attackerId,
+        targetId,
+      });
+
+      // Afficher une notification
+      if (window.gameUI) {
+        window.gameUI.showNotification("Attaque en cours...");
+      }
+    },
+    joinGame: function (gameId, playerId) {
+      gameSocketInstance.joinGame(gameId, playerId);
+    },
+  };
 });
