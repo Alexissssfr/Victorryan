@@ -1,92 +1,101 @@
 import json
 import os
-import sys
-from pathlib import Path
+from PIL import Image, ImageDraw, ImageFont
 
-def get_project_root():
-    """Retourne le chemin racine du projet"""
-    script_path = Path(__file__).resolve()
-    return script_path.parent.parent
+class CardGeneratorPerso:
+    def __init__(self):
+        # Dimensions de la carte (en pixels)
+        self.card_width = 600
+        self.card_height = 800
+        self.background_path = os.path.join("data", "backgrounds", "perso")  # Images de fond
+        self.output_path = os.path.join("stock", "images", "perso")  # Où sauvegarder les cartes finales
 
-def create_output_dir(output_dir):
-    """Crée le dossier de sortie s'il n'existe pas"""
-    if not output_dir.exists():
-        os.makedirs(output_dir)
-        print(f"Dossier créé : {output_dir}")
+    def generate_cards(self):
+        # Charger les données des personnages
+        with open('stock/personnages.json', 'r', encoding='utf-8') as f:
+            personnages = json.load(f)
 
-def generate_character_cards():
-    try:
-        # Obtenir le chemin racine du projet
-        root_dir = get_project_root()
-        
-        # Définition des chemins
-        template_path = root_dir / "data" / "templates" / "modele_carte.svg"
-        output_dir = root_dir / "stock" / "svg_perso"
-        json_path = root_dir / "personnages.json"
-        
-        # Vérification des fichiers
-        if not template_path.exists():
-            raise FileNotFoundError(f"Template SVG non trouvé : {template_path}")
-        if not json_path.exists():
-            raise FileNotFoundError(f"Fichier JSON non trouvé : {json_path}")
-        
-        # Création du dossier de sortie
-        create_output_dir(output_dir)
-        
-        # Lecture du template SVG
-        with open(template_path, 'r', encoding='utf-8') as f:
-            template = f.read()
-        
-        # Lecture du JSON
-        with open(json_path, 'r', encoding='utf-8') as f:
-            cards_data = json.load(f)
-        
-        # Compteur pour les statistiques
-        cards_generated = 0
-        
-        for card in cards_data:
+        # Créer les dossiers nécessaires
+        os.makedirs(self.output_path, exist_ok=True)
+
+        # Charger la police (utiliser une police système par défaut si Cinzel n'est pas disponible)
+        try:
+            title_font = ImageFont.truetype("Cinzel-Bold.ttf", 40)
+            text_font = ImageFont.truetype("Cinzel-Regular.ttf", 30)
+        except:
+            title_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
+
+        for perso in personnages:
             try:
-                # Création d'une copie du template
-                card_svg = template
-                
-                # Remplacement des valeurs dans le SVG
-                replacements = {
-                    # Image de fond
-                    'xlink:href="PERSO_IMAGE_PLACEHOLDER"': f'xlink:href="{card["fond"]}"',
-                    # Textes de la carte
-                    '>Chevalier<': f'>{card["nomcarteperso"]}<',
-                    '>100<': f'>{card["pointsdevie"]}<',
-                    '>30<': f'>{card["forceattaque"]}<',
-                    '>2<': f'>{card["tourattaque"]}<',
-                    '>Attaque Foudroyante<': f'>{card["nomdupouvoir"]}<',
-                    '>Inflige des dégâts électriques à l\'adversaire<': f'>{card["description"]}<'
-                }
-                
-                # Application des remplacements
-                for old_text, new_text in replacements.items():
-                    if old_text not in card_svg:
-                        print(f"⚠️ Attention : Texte '{old_text}' non trouvé dans le template pour {card['id']}")
-                    card_svg = card_svg.replace(old_text, new_text)
-                
-                # Sauvegarde de la carte
-                output_path = output_dir / f"{card['id']}.svg"
-                with open(output_path, 'w', encoding='utf-8') as f:
-                    f.write(card_svg)
-                
-                cards_generated += 1
-                print(f"✅ Carte générée : {card['id']} - {card['nomcarteperso']}")
+                # Créer une image vide avec fond transparent
+                img = Image.new('RGBA', (self.card_width, self.card_height), (0, 0, 0, 0))
+                draw = ImageDraw.Draw(img)
+
+                # Ajouter un fond semi-transparent
+                background = Image.new('RGBA', (self.card_width, self.card_height), (0, 0, 0, 128))
+                img.paste(background, (0, 0))
+
+                # Ajouter le titre
+                title = perso['nomcarteperso']
+                title_bbox = draw.textbbox((0, 0), title, font=title_font)
+                title_width = title_bbox[2] - title_bbox[0]
+                draw.text(
+                    (self.card_width/2 - title_width/2, 50),
+                    title,
+                    font=title_font,
+                    fill=(255, 255, 255)
+                )
+
+                # Ajouter le nom du pouvoir
+                pouvoir = perso['nomdupouvoir']
+                pouvoir_bbox = draw.textbbox((0, 0), pouvoir, font=text_font)
+                pouvoir_width = pouvoir_bbox[2] - pouvoir_bbox[0]
+                draw.text(
+                    (self.card_width/2 - pouvoir_width/2, 600),
+                    pouvoir,
+                    font=text_font,
+                    fill=(255, 255, 255)
+                )
+
+                # Ajouter la description
+                description = perso['description']
+                # Wrap text (simple implementation)
+                words = description.split()
+                lines = []
+                current_line = []
+                for word in words:
+                    current_line.append(word)
+                    line = ' '.join(current_line)
+                    line_bbox = draw.textbbox((0, 0), line, font=text_font)
+                    if line_bbox[2] - line_bbox[0] > self.card_width - 60:
+                        current_line.pop()
+                        lines.append(' '.join(current_line))
+                        current_line = [word]
+                if current_line:
+                    lines.append(' '.join(current_line))
+
+                y = 650
+                for line in lines:
+                    line_bbox = draw.textbbox((0, 0), line, font=text_font)
+                    line_width = line_bbox[2] - line_bbox[0]
+                    draw.text(
+                        (self.card_width/2 - line_width/2, y),
+                        line,
+                        font=text_font,
+                        fill=(255, 255, 255)
+                    )
+                    y += 40
+
+                # Sauvegarder l'image
+                img_path = os.path.join(self.output_path, f"{perso['id']}.png")
+                img.save(img_path, "PNG")
+
+                print(f"Carte PNG générée pour {perso['nomcarteperso']}")
                 
             except Exception as e:
-                print(f"❌ Erreur lors de la génération de la carte {card['id']} : {str(e)}")
-                continue
-        
-        print(f"\n🎉 Génération terminée !")
-        print(f"📊 Cartes générées : {cards_generated}")
-        
-    except Exception as e:
-        print(f"❌ Erreur critique : {str(e)}")
-        sys.exit(1)
+                print(f"Erreur lors de la génération de la carte {perso['id']}: {str(e)}")
 
 if __name__ == "__main__":
-    print("🚀 Début de la génération des cartes personnages...")
-    generate_character_cards()
+    generator = CardGeneratorPerso()
+    generator.generate_cards()
