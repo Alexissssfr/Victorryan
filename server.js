@@ -335,7 +335,7 @@ io.on("connection", (socket) => {
 
 // Route par défaut pour le client-side routing
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
 });
 
 // Port d'écoute

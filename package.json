@@ -22,7 +22,7 @@
     "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev": "react-scripts start"
+    "dev": "nodemon server.js"
   },
   "eslintConfig": {
     "extends": [
