@@ -24,11 +24,7 @@ Un jeu de cartes stratégique dans un univers fantastique où les joueurs s'affr
 │   └── index.html
 ├── stock/
 │   ├── personnages.json
-│   ├── bonus.json
-│   ├── svg_perso/
-│   │   └── (fichiers SVG des personnages)
-│   └── svg_bonus/
-│       └── (fichiers SVG des bonus)
+│   └── bonus.json
 ├── .env
 ├── package.json
 ├── server.js
@@ -39,14 +35,14 @@ Un jeu de cartes stratégique dans un univers fantastique où les joueurs s'affr
 
 1. Cloner le dépôt
 
-```bash
+```
 git clone <URL-DU-REPO>
 cd victorryan
 ```
 
 2. Installer les dépendances
 
-```bash
+```
 npm install
 ```
 
@@ -64,13 +60,13 @@ PORT=3000
 
 Pour démarrer le serveur en mode développement:
 
-```bash
+```
 npm run dev
 ```
 
 Pour démarrer le serveur en mode production:
 
-```bash
+```
 npm start
 ```
 
@@ -100,6 +96,14 @@ L'application sera disponible à l'adresse `http://localhost:3000` (ou le port q
   - Adversaire peut continuer à attaquer
 - En cas d'égalité : comparaison des PV restants
 
+## Affichage des Cartes
+
+- Les cartes utilisent des images PNG stockées sur Supabase
+- Les données dynamiques (PV, force d'attaque, etc.) sont superposées sur les images PNG
+- URLs des images:
+  - Personnages: `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P{id}.png`
+  - Bonus: `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B{id}.png`
+
 ## Déploiement sur Render
 
 Pour déployer sur Render, assurez-vous de:
@@ -117,7 +121,3 @@ Si vous rencontrez des erreurs liées aux chemins de fichiers, vérifiez:
 1. Que tous les fichiers sont correctement placés dans la structure
 2. Que les noms de fichiers respectent la casse exacte
 3. Que les chemins dans le code sont corrects
-
-## Licence
-
-Tous droits réservés © 2025
