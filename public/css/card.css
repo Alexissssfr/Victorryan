@@ -1,0 +1,203 @@
+/* Styles de base pour les cartes */
+.card {
+  position: relative;
+  width: 180px;
+  height: 250px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin: 10px;
+  cursor: pointer;
+  background-color: #2a2a2a;
+}
+
+.card-small {
+  width: 120px;
+  height: 167px;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Image de fond */
+.card-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Overlay et contenu */
+.card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  color: white;
+  text-shadow: 0 0 3px black;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0) 20%,
+    rgba(0, 0, 0, 0) 60%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+}
+
+/* En-tête de la carte */
+.card-header {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.card-name {
+  font-size: 14px;
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 3px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Pouvoir de la carte */
+.card-power {
+  font-size: 12px;
+  text-align: center;
+  margin-top: auto;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* Statistiques */
+.card-stats {
+  margin-top: 5px;
+  display: flex;
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Barre de vie */
+.health-bar {
+  width: 50px;
+  height: 6px;
+  background-color: #333;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.health-bar-fill {
+  height: 100%;
+  background-color: #4CAF50;
+  transition: width 0.3s ease;
+}
+
+/* Bonus actifs */
+.active-bonus {
+  position: absolute;
+  top: 40px;
+  right: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bonus-indicator {
+  background-color: rgba(255, 215, 0, 0.8);
+  color: black;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  text-shadow: none;
+}
+
+/* États des cartes */
+.card.selected {
+  border: 2px solid #90caf9;
+  box-shadow: 0 0 15px #90caf9;
+}
+
+.card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.card.attackable {
+  border: 2px solid #f44336;
+  animation: pulse 1.5s infinite;
+}
+
+.card.attacked {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+  }
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    width: 140px;
+    height: 195px;
+  }
+  
+  .card-small {
+    width: 100px;
+    height: 139px;
+  }
+  
+  .card-name {
+    font-size: 12px;
+  }
+  
+  .card-power {
+    font-size: 10px;
+  }
+  
+  .card-stats {
+    font-size: 10px;
+  }
+} 

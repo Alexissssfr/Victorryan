@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Accueil - Jeu de Cartes</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #1a1a1a;
+        color: white;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 600px;
+        width: 100%;
+        padding: 40px;
+        background-color: #2a2a2a;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #90caf9;
+      }
+
+      .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      button {
+        padding: 15px 30px;
+        font-size: 18px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      .join-form {
+        display: none;
+        margin-top: 20px;
+      }
+
+      .join-form input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #3a3a3a;
+        color: white;
+        font-size: 16px;
+      }
+
+      .join-form input::placeholder {
+        color: #888;
+      }
+
+      .error-message {
+        color: #f44336;
+        margin-top: 10px;
+        text-align: center;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Jeu de Cartes</h1>
+      <div class="actions">
+        <button id="create-game-btn">Créer une partie</button>
+        <button id="join-game-btn">Rejoindre une partie</button>
+        <div class="join-form" id="join-form">
+          <input type="text" id="game-id-input" placeholder="ID de la partie" />
+          <button id="submit-join-btn">Rejoindre</button>
+        </div>
+        <div class="error-message" id="error-message"></div>
+      </div>
+    </div>
+
+    <script>
+      // Générer un ID de joueur unique s'il n'existe pas déjà
+      if (!localStorage.getItem("playerId")) {
+        localStorage.setItem(
+          "playerId",
+          Math.random().toString(36).substring(2, 15)
+        );
+      }
+
+      const createGameBtn = document.getElementById("create-game-btn");
+      const joinGameBtn = document.getElementById("join-game-btn");
+      const joinForm = document.getElementById("join-form");
+      const gameIdInput = document.getElementById("game-id-input");
+      const submitJoinBtn = document.getElementById("submit-join-btn");
+      const errorMessage = document.getElementById("error-message");
+
+      createGameBtn.addEventListener("click", async () => {
+        try {
+          const response = await fetch("/api/games", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              playerId: localStorage.getItem("playerId"),
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Erreur lors de la création de la partie");
+          }
+
+          const data = await response.json();
+          window.location.href = `/game.html?gameId=${data.gameId}`;
+        } catch (error) {
+          showError(error.message);
+        }
+      });
+
+      joinGameBtn.addEventListener("click", () => {
+        joinForm.style.display =
+          joinForm.style.display === "none" ? "block" : "none";
+      });
+
+      submitJoinBtn.addEventListener("click", async () => {
+        const gameId = gameIdInput.value.trim();
+        if (!gameId) {
+          showError("Veuillez entrer un ID de partie");
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/games/${gameId}/join`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              playerId: localStorage.getItem("playerId"),
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Impossible de rejoindre la partie");
+          }
+
+          window.location.href = `/game.html?gameId=${gameId}`;
+        } catch (error) {
+          showError(error.message);
+        }
+      });
+
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+        setTimeout(() => {
+          errorMessage.style.display = "none";
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>

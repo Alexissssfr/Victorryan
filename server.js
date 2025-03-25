@@ -7,6 +7,7 @@ require("dotenv").config();
 const crypto = require("crypto");
 const gameCache = require("./backend/services/gameCache");
 const cardManager = require("./backend/services/cardManager");
+const { GameManager } = require("./backend/services/gameManager");
 
 const app = express();
 const server = http.createServer(app);
@@ -50,128 +51,122 @@ app.use(
 );
 
 // Initialiser le module de gestion des jeux avec Socket.io
-const gameManager = require("./backend/services/gameManager")(io);
+const gameManager = new GameManager();
 
 // Routes pour les parties et les cartes
 app.use("/games", require("./backend/routes/games"));
 app.use("/cards", require("./backend/routes/cards"));
 
 // Routes pour la gestion des parties
-app.post("/api/games/create", async (req, res) => {
+app.post("/api/games", (req, res) => {
   try {
     const { playerId } = req.body;
     if (!playerId) {
-      throw new Error("playerId requis");
+      return res.status(400).json({ error: "playerId is required" });
     }
 
-    const result = await gameCache.createGame(playerId);
-    res.json({
-      success: true,
-      gameId: result.gameId,
-      playerId: playerId,
-      state: result.state,
-    });
+    const game = gameManager.createGame();
+    game.addPlayer(playerId);
+
+    res.json({ gameId: game.gameId });
   } catch (error) {
-    console.error("Erreur création partie:", error);
-    res.status(500).json({
-      success: false,
-      error: error.message,
-    });
+    console.error("Error creating game:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.post("/api/games/join", async (req, res) => {
+app.post("/api/games/:gameId/join", (req, res) => {
   try {
-    const { gameId, playerId } = req.body;
-    const game = gameCache.getGame(gameId);
+    const { gameId } = req.params;
+    const { playerId } = req.body;
 
+    if (!playerId) {
+      return res.status(400).json({ error: "playerId is required" });
+    }
+
+    const game = gameManager.getGame(gameId);
     if (!game) {
-      return res.status(404).json({
-        success: false,
-        error: "Partie non trouvée",
-      });
+      return res.status(404).json({ error: "Game not found" });
     }
 
-    const playerRole = game.addPlayer(playerId);
-    if (!playerRole) {
-      return res.status(400).json({
-        success: false,
-        error: "Partie complète",
-      });
+    if (!game.canJoin()) {
+      return res.status(400).json({ error: "Game is full" });
     }
 
-    // S'assurer que les cartes sont distribuées
-    if (!game.cards.player1.perso.length) {
-      await game.distributeInitialCards(cardManager);
-    }
-
-    res.json({
-      success: true,
-      state: game.getStateForPlayer(playerId),
-    });
-
-    // Notifier l'autre joueur de la mise à jour
-    const otherPlayerId =
-      playerRole === "player1" ? game.players.player2 : game.players.player1;
-    if (otherPlayerId) {
-      io.to(gameId).emit("gameState", game.getStateForPlayer(otherPlayerId));
-    }
+    game.addPlayer(playerId);
+    res.json({ success: true });
   } catch (error) {
-    console.error("Erreur join partie:", error);
-    res.status(500).json({
-      success: false,
-      error: "Erreur lors de la connexion à la partie",
-    });
+    console.error("Error joining game:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Route pour le tirage des cartes
-app.post("/api/games/draw-cards", async (req, res) => {
+app.post("/api/games/:gameId/bonus", (req, res) => {
   try {
-    const { gameId, playerId } = req.body;
-    const game = gameCache.getGame(gameId);
+    const { gameId } = req.params;
+    const { playerId, bonusCardId, targetCardId } = req.body;
 
+    if (!playerId || !bonusCardId || !targetCardId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const game = gameManager.getGame(gameId);
     if (!game) {
-      return res.status(404).json({
-        success: false,
-        error: "Partie non trouvée",
-      });
+      return res.status(404).json({ error: "Game not found" });
     }
 
-    // Vérifier que c'est bien le créateur
-    if (game.players.player1 !== playerId) {
-      return res.status(403).json({
-        success: false,
-        error: "Seul le créateur peut tirer les cartes",
-      });
-    }
-
-    // Distribuer les cartes
-    await game.distributeInitialCards(cardManager);
-
-    // Envoyer l'état mis à jour aux deux joueurs via WebSocket
-    io.to(gameId).emit(
-      "gameState",
-      game.getStateForPlayer(game.players.player1)
-    );
-    if (game.players.player2) {
-      io.to(gameId).emit(
-        "gameState",
-        game.getStateForPlayer(game.players.player2)
-      );
-    }
-
-    // Répondre au créateur
-    res.json({
-      success: true,
-      state: game.getStateForPlayer(playerId),
-    });
+    const result = game.playBonus(playerId, bonusCardId, targetCardId);
+    io.to(gameId).emit("gameStateUpdate", game.getStateForPlayer(playerId));
+    res.json(result);
   } catch (error) {
-    console.error("Erreur tirage cartes:", error);
-    res.status(500).json({
-      success: false,
-      error: "Erreur lors du tirage des cartes",
-    });
+    console.error("Error playing bonus:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/api/games/:gameId/attack", (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerId, attackerCardId, targetCardId } = req.body;
+
+    if (!playerId || !attackerCardId || !targetCardId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const game = gameManager.getGame(gameId);
+    if (!game) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    const result = game.attack(playerId, attackerCardId, targetCardId);
+    io.to(gameId).emit("gameStateUpdate", game.getStateForPlayer(playerId));
+    res.json(result);
+  } catch (error) {
+    console.error("Error attacking:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+app.post("/api/games/:gameId/end-turn", (req, res) => {
+  try {
+    const { gameId } = req.params;
+    const { playerId } = req.body;
+
+    if (!playerId) {
+      return res.status(400).json({ error: "playerId is required" });
+    }
+
+    const game = gameManager.getGame(gameId);
+    if (!game) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    game.endTurn(playerId);
+    io.to(gameId).emit("gameStateUpdate", game.getStateForPlayer(playerId));
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error ending turn:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
@@ -272,60 +267,18 @@ app.get("/api/test-image-url/:type/:id", (req, res) => {
 
 // Gestion des WebSockets
 io.on("connection", (socket) => {
-  console.log("Un client s'est connecté:", socket.id);
+  console.log("New client connected");
 
   socket.on("joinGame", async ({ gameId, playerId }) => {
-    try {
-      console.log(`Tentative de rejoindre la partie ${gameId} par ${playerId}`);
-      console.log("Parties existantes:", Array.from(gameCache.games.keys()));
-
-      const game = gameCache.getGame(gameId);
-      if (!game) {
-        console.log(`Partie ${gameId} non trouvée`);
-        throw new Error("Partie non trouvée");
-      }
-
-      console.log("État actuel de la partie:", {
-        players: game.players,
-        status: game.status,
-      });
-
-      const playerRole = game.addPlayer(playerId);
-      if (!playerRole) {
-        console.log("Impossible d'ajouter le joueur, partie pleine");
-        throw new Error("Impossible de rejoindre la partie");
-      }
-
-      socket.join(gameId);
-      console.log(`Joueur ${playerId} ajouté comme ${playerRole}`);
-
-      // Si c'est le second joueur, distribuer les cartes
-      if (playerRole === "player2") {
-        const cardManager = require("./backend/services/cardManager");
-        await game.distributeInitialCards(cardManager);
-      }
-
-      // Envoyer l'état actuel au joueur qui rejoint
-      socket.emit("gameState", game.getStateForPlayer(playerId));
-
-      // Notifier l'autre joueur
-      const otherPlayerId =
-        game.players[playerRole === "player1" ? "player2" : "player1"];
-      if (otherPlayerId) {
-        socket
-          .to(gameId)
-          .emit("gameState", game.getStateForPlayer(otherPlayerId));
-      }
-
-      socket.to(gameId).emit("playerJoined", { playerId });
-    } catch (error) {
-      console.error("Erreur joinGame:", error);
-      socket.emit("error", { message: error.message });
+    socket.join(gameId);
+    const game = gameManager.getGame(gameId);
+    if (game) {
+      socket.emit("gameStateUpdate", game.getStateForPlayer(playerId));
     }
   });
 
   socket.on("disconnect", () => {
-    console.log("Un client s'est déconnecté:", socket.id);
+    console.log("Client disconnected");
   });
 
   socket.on(
@@ -336,7 +289,7 @@ io.on("connection", (socket) => {
           `Attaque de ${attackerId} vers ${targetId} par ${playerId}`
         );
 
-        const game = gameCache.getGame(gameId);
+        const game = gameManager.getGame(gameId);
         if (!game) {
           throw new Error("Partie non trouvée");
         }
@@ -378,6 +331,11 @@ io.on("connection", (socket) => {
       }
     }
   );
+});
+
+// Route par défaut pour le client-side routing
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Port d'écoute

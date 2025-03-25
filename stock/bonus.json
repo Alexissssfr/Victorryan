@@ -1,902 +1,902 @@
 [
-    {
-        "id": "B1",
-        "nomcartebonus": "Artefact Mystique",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "NECTAR COSMIQUE",
-        "description": "Augmente temporairement la puissance cosmique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/1.png"
-    },
-    {
-        "id": "B2",
-        "nomcartebonus": "Artefact Mystique",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "NECTAR COSMIQUE",
-        "description": "Augmente temporairement la puissance cosmique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/2.png"
-    },
-    {
-        "id": "B3",
-        "nomcartebonus": "Reliques du Savoir Perdu",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Invocation des Secrets Anciens",
-        "description": "Augmente temporairement les connaissances stratégiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/3.png"
-    },
-    {
-        "id": "B4",
-        "nomcartebonus": "Reliques du Savoir Perdu",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Invocation des Secrets Anciens",
-        "description": "Augmente temporairement les connaissances stratégiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/4.png"
-    },
-    {
-        "id": "B5",
-        "nomcartebonus": "Les Chroniques Sablesques",
-        "pourcentagebonus": "10",
-        "tourbonus": "1",
-        "nomdupouvoir": "Révélation Sablée",
-        "description": "Révèle une vérité cachée",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/5.png"
-    },
-    {
-        "id": "B6",
-        "nomcartebonus": "Les Chroniques Sablesques",
-        "pourcentagebonus": "10",
-        "tourbonus": "1",
-        "nomdupouvoir": "Révélation Sablée",
-        "description": "Révèle une vérité cachée",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/6.png"
-    },
-    {
-        "id": "B7",
-        "nomcartebonus": "Épée du Destin Ancien",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Coup d'Éternité",
-        "description": "Inflige une frappe intemporelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/7.png"
-    },
-    {
-        "id": "B8",
-        "nomcartebonus": "Épée du Destin Ancien",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Coup d'Éternité",
-        "description": "Inflige une frappe intemporelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/8.png"
-    },
-    {
-        "id": "B9",
-        "nomcartebonus": "Intrusion Systémique",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Chaos Numérique",
-        "description": "Perturbe les systèmes ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/9.png"
-    },
-    {
-        "id": "B10",
-        "nomcartebonus": "Intrusion Systémique",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Chaos Numérique",
-        "description": "Perturbe les systèmes ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/10.png"
-    },
-    {
-        "id": "B11",
-        "nomcartebonus": "Portail de l'Inconnu",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Passage Fracturé",
-        "description": "Crée une brèche dimensionnelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/11.png"
-    },
-    {
-        "id": "B12",
-        "nomcartebonus": "Portail de l'Inconnu",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Passage Fracturé",
-        "description": "Crée une brèche dimensionnelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/12.png"
-    },
-    {
-        "id": "B13",
-        "nomcartebonus": "Baguette Arcano-Techno",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Éclat Technomagique",
-        "description": "Projette une onde technologique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/13.png"
-    },
-    {
-        "id": "B14",
-        "nomcartebonus": "Baguette Arcano-Techno",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Éclat Technomagique",
-        "description": "Projette une onde technologique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/14.png"
-    },
-    {
-        "id": "B15",
-        "nomcartebonus": "Mutant Écailleux",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Régénération Mutante",
-        "description": "Se régénère rapidement après des attaques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/15.png"
-    },
-    {
-        "id": "B16",
-        "nomcartebonus": "Mutant Écailleux",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Régénération Mutante",
-        "description": "Se régénère rapidement après des attaques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/16.png"
-    },
-    {
-        "id": "B17",
-        "nomcartebonus": "Rêve Fragmenté",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Distorsion Mentale",
-        "description": "Perturbe la conscience ennemie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/17.png"
-    },
-    {
-        "id": "B18",
-        "nomcartebonus": "Rêve Fragmenté",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Distorsion Mentale",
-        "description": "Perturbe la conscience ennemie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/18.png"
-    },
-    {
-        "id": "B19",
-        "nomcartebonus": "Âme Errante",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Appel des Ancêtres",
-        "description": "Invoque les forces des anciens",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/19.png"
-    },
-    {
-        "id": "B20",
-        "nomcartebonus": "Âme Errante",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Appel des Ancêtres",
-        "description": "Invoque les forces des anciens",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/20.png"
-    },
-    {
-        "id": "B21",
-        "nomcartebonus": "Gardien Sylvestre",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Souffle d'Ambroisie",
-        "description": "Restaure l'énergie vitale",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/21.png"
-    },
-    {
-        "id": "B22",
-        "nomcartebonus": "Gardien Sylvestre",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Souffle d'Ambroisie",
-        "description": "Restaure l'énergie vitale",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/22.png"
-    },
-    {
-        "id": "B23",
-        "nomcartebonus": "Talisman des Âges",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Éveil Ancestral",
-        "description": "Accroît la puissance spirituelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/23.png"
-    },
-    {
-        "id": "B24",
-        "nomcartebonus": "Talisman des Âges",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Éveil Ancestral",
-        "description": "Accroît la puissance spirituelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/24.png"
-    },
-    {
-        "id": "B25",
-        "nomcartebonus": "Grimoire des Secrets",
-        "pourcentagebonus": "15",
-        "tourbonus": "1",
-        "nomdupouvoir": "Page Maudite",
-        "description": "Inflige une malédiction temporaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/25.png"
-    },
-    {
-        "id": "B26",
-        "nomcartebonus": "Grimoire des Secrets",
-        "pourcentagebonus": "15",
-        "tourbonus": "1",
-        "nomdupouvoir": "Page Maudite",
-        "description": "Inflige une malédiction temporaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/26.png"
-    },
-    {
-        "id": "B27",
-        "nomcartebonus": "Clé des Mondes Cachés",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Passage Interdit",
-        "description": "Ouvre une dimension secrète",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/27.png"
-    },
-    {
-        "id": "B28",
-        "nomcartebonus": "Clé des Mondes Cachés",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Passage Interdit",
-        "description": "Ouvre une dimension secrète",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/28.png"
-    },
-    {
-        "id": "B29",
-        "nomcartebonus": "Masque des Esprits",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Chant des Anciens",
-        "description": "Augmente temporairement la concentration",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/29.png"
-    },
-    {
-        "id": "B30",
-        "nomcartebonus": "Masque des Esprits",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Chant des Anciens",
-        "description": "Augmente temporairement la concentration",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/30.png"
-    },
-    {
-        "id": "B31",
-        "nomcartebonus": "Sceptre de la Foudre Divine",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Impact Fulgurant",
-        "description": "Déchaîne une énergie céleste",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/31.png"
-    },
-    {
-        "id": "B32",
-        "nomcartebonus": "Sceptre de la Foudre Divine",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Impact Fulgurant",
-        "description": "Déchaîne une énergie céleste",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/32.png"
-    },
-    {
-        "id": "B33",
-        "nomcartebonus": "Lanterne du Voyageur Perdu",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Lueur Guidante",
-        "description": "Éclaire les chemins inconnus",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/33.png"
-    },
-    {
-        "id": "B34",
-        "nomcartebonus": "Lanterne du Voyageur Perdu",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Lueur Guidante",
-        "description": "Éclaire les chemins inconnus",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/34.png"
-    },
-    {
-        "id": "B35",
-        "nomcartebonus": "Anneau du Destin Brisé",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Cercle du Chaos",
-        "description": "Modifie la trajectoire du destin",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/35.png"
-    },
-    {
-        "id": "B36",
-        "nomcartebonus": "Anneau du Destin Brisé",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Cercle du Chaos",
-        "description": "Modifie la trajectoire du destin",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/36.png"
-    },
-    {
-        "id": "B37",
-        "nomcartebonus": "Prisme des Réalités Alternatives",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Miroir Distordu",
-        "description": "Confond l'ennemi avec des illusions",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/37.png"
-    },
-    {
-        "id": "B38",
-        "nomcartebonus": "Prisme des Réalités Alternatives",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Miroir Distordu",
-        "description": "Confond l'ennemi avec des illusions",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/38.png"
-    },
-    {
-        "id": "B39",
-        "nomcartebonus": "Bouclier des Titans Perdus",
-        "pourcentagebonus": "30",
-        "tourbonus": "3",
-        "nomdupouvoir": "Barrière Primordiale",
-        "description": "Absorbe une grande quantité de dégâts",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/39.png"
-    },
-    {
-        "id": "B40",
-        "nomcartebonus": "Bouclier des Titans Perdus",
-        "pourcentagebonus": "30",
-        "tourbonus": "3",
-        "nomdupouvoir": "Barrière Primordiale",
-        "description": "Absorbe une grande quantité de dégâts",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/40.png"
-    },
-    {
-        "id": "B41",
-        "nomcartebonus": "Corne de l'Oracle Antique",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Prophétie d'Éternité",
-        "description": "Anticipe les mouvements ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/41.png"
-    },
-    {
-        "id": "B42",
-        "nomcartebonus": "Corne de l'Oracle Antique",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Prophétie d'Éternité",
-        "description": "Anticipe les mouvements ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/42.png"
-    },
-    {
-        "id": "B43",
-        "nomcartebonus": "Plume de l'Aigle Céleste",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Vol du Destin",
-        "description": "Augmente l'agilité temporairement",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/43.png"
-    },
-    {
-        "id": "B44",
-        "nomcartebonus": "Plume de l'Aigle Céleste",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Vol du Destin",
-        "description": "Augmente l'agilité temporairement",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/44.png"
-    },
-    {
-        "id": "B45",
-        "nomcartebonus": "Statuette du Sage Perdu",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Savoir Éternel",
-        "description": "Améliore la compréhension magique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/45.png"
-    },
-    {
-        "id": "B46",
-        "nomcartebonus": "Statuette du Sage Perdu",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Savoir Éternel",
-        "description": "Améliore la compréhension magique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/46.png"
-    },
-    {
-        "id": "B47",
-        "nomcartebonus": "Orbe des Illusions Oubliées",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Reflet Trompeur",
-        "description": "Désoriente l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/47.png"
-    },
-    {
-        "id": "B48",
-        "nomcartebonus": "Orbe des Illusions Oubliées",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Reflet Trompeur",
-        "description": "Désoriente l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/48.png"
-    },
-    {
-        "id": "B49",
-        "nomcartebonus": "Casque du Guerrier Éthéréen",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Voix des Anciens",
-        "description": "Renforce le courage et la détermination",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/49.png"
-    },
-    {
-        "id": "B50",
-        "nomcartebonus": "Casque du Guerrier Éthéréen",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Voix des Anciens",
-        "description": "Renforce le courage et la détermination",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/50.png"
-    },
-    {
-        "id": "B51",
-        "nomcartebonus": "Anneau du Destin Oublié",
-        "pourcentagebonus": "15",
-        "tourbonus": "3",
-        "nomdupouvoir": "Révélation Cachée",
-        "description": "Augmente les chances de critique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/51.png"
-    },
-    {
-        "id": "B52",
-        "nomcartebonus": "Anneau du Destin Oublié",
-        "pourcentagebonus": "15",
-        "tourbonus": "3",
-        "nomdupouvoir": "Révélation Cachée",
-        "description": "Augmente les chances de critique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/52.png"
-    },
-    {
-        "id": "B53",
-        "nomcartebonus": "Corne du Léviathan Ancien",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Rugissement Abyssal",
-        "description": "Diminue la défense des ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/53.png"
-    },
-    {
-        "id": "B54",
-        "nomcartebonus": "Corne du Léviathan Ancien",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Rugissement Abyssal",
-        "description": "Diminue la défense des ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/54.png"
-    },
-    {
-        "id": "B55",
-        "nomcartebonus": "Cristal de Lune Éclatante",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Énergie Lunaire",
-        "description": "Restaure progressivement la vie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/55.png"
-    },
-    {
-        "id": "B56",
-        "nomcartebonus": "Cristal de Lune Éclatante",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Énergie Lunaire",
-        "description": "Restaure progressivement la vie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/56.png"
-    },
-    {
-        "id": "B57",
-        "nomcartebonus": "Lanternes des Esprits Perdus",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Lueur Spectrale",
-        "description": "Empêche les ennemis de fuir",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/57.png"
-    },
-    {
-        "id": "B58",
-        "nomcartebonus": "Lanternes des Esprits Perdus",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Lueur Spectrale",
-        "description": "Empêche les ennemis de fuir",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/58.png"
-    },
-    {
-        "id": "B59",
-        "nomcartebonus": "Écu du Dragon Endormi",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Protection Draconique",
-        "description": "Réduit tous les dégâts subis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/59.png"
-    },
-    {
-        "id": "B60",
-        "nomcartebonus": "Écu du Dragon Endormi",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Protection Draconique",
-        "description": "Réduit tous les dégâts subis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/60.png"
-    },
-    {
-        "id": "B61",
-        "nomcartebonus": "Gemme du Cauchemar Sans Fin",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Horreur Onirique",
-        "description": "Fait perdre de la concentration aux ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/61.png"
-    },
-    {
-        "id": "B62",
-        "nomcartebonus": "Gemme du Cauchemar Sans Fin",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Horreur Onirique",
-        "description": "Fait perdre de la concentration aux ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/62.png"
-    },
-    {
-        "id": "B63",
-        "nomcartebonus": "Plume du Phoenix Déchu",
-        "pourcentagebonus": "30",
-        "tourbonus": "3",
-        "nomdupouvoir": "Renaissance Ardente",
-        "description": "Résurrection avec un bonus d'attaque",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/63.png"
-    },
-    {
-        "id": "B64",
-        "nomcartebonus": "Plume du Phoenix Déchu",
-        "pourcentagebonus": "30",
-        "tourbonus": "3",
-        "nomdupouvoir": "Renaissance Ardente",
-        "description": "Résurrection avec un bonus d'attaque",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/64.png"
-    },
-    {
-        "id": "B65",
-        "nomcartebonus": "Talisman du Chaos Primordial",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Vortex Chaotique",
-        "description": "Mélange les statuts des combattants",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/65.png"
-    },
-    {
-        "id": "B66",
-        "nomcartebonus": "Talisman du Chaos Primordial",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Vortex Chaotique",
-        "description": "Mélange les statuts des combattants",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/66.png"
-    },
-    {
-        "id": "B67",
-        "nomcartebonus": "Totem du Dernier Esprit",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Invocation Suprême",
-        "description": "Renforce massivement un allié",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/67.png"
-    },
-    {
-        "id": "B68",
-        "nomcartebonus": "Totem du Dernier Esprit",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Invocation Suprême",
-        "description": "Renforce massivement un allié",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/68.png"
-    },
-    {
-        "id": "B69",
-        "nomcartebonus": "Médaillon des Héros Perdus",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Dernier Courage",
-        "description": "Accorde une action supplémentaire en cas de danger",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/69.png"
-    },
-    {
-        "id": "B70",
-        "nomcartebonus": "Médaillon des Héros Perdus",
-        "pourcentagebonus": "15",
-        "tourbonus": "2",
-        "nomdupouvoir": "Dernier Courage",
-        "description": "Accorde une action supplémentaire en cas de danger",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/70.png"
-    },
-    {
-        "id": "B71",
-        "nomcartebonus": "Cristal du Zénith Astral",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Clarté Cosmique",
-        "description": "Augmente temporairement la vitesse",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/71.png"
-    },
-    {
-        "id": "B72",
-        "nomcartebonus": "Cristal du Zénith Astral",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Clarté Cosmique",
-        "description": "Augmente temporairement la vitesse",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/72.png"
-    },
-    {
-        "id": "B73",
-        "nomcartebonus": "Éclat de la Lame Divine",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Tranchant Céleste",
-        "description": "Augmente la puissance d'attaque",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/73.png"
-    },
-    {
-        "id": "B74",
-        "nomcartebonus": "Éclat de la Lame Divine",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Tranchant Céleste",
-        "description": "Augmente la puissance d'attaque",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/74.png"
-    },
-    {
-        "id": "B75",
-        "nomcartebonus": "Rosée du Matin Sacré",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Purification Naturelle",
-        "description": "Soigne tous les malus de statut",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/75.png"
-    },
-    {
-        "id": "B76",
-        "nomcartebonus": "Rosée du Matin Sacré",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Purification Naturelle",
-        "description": "Soigne tous les malus de statut",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/76.png"
-    },
-    {
-        "id": "B77",
-        "nomcartebonus": "Bannière du Dernier Rempart",
-        "pourcentagebonus": "30",
-        "tourbonus": "2",
-        "nomdupouvoir": "Détermination Inébranlable",
-        "description": "Diminue les dégâts subis en défense",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/77.png"
-    },
-    {
-        "id": "B78",
-        "nomcartebonus": "Bannière du Dernier Rempart",
-        "pourcentagebonus": "30",
-        "tourbonus": "2",
-        "nomdupouvoir": "Détermination Inébranlable",
-        "description": "Diminue les dégâts subis en défense",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/78.png"
-    },
-    {
-        "id": "B79",
-        "nomcartebonus": "Perle du Dragon Enchaîné",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Rage Libérée",
-        "description": "Augmente l'attaque en fonction des PV perdus",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/79.png"
-    },
-    {
-        "id": "B80",
-        "nomcartebonus": "Perle du Dragon Enchaîné",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Rage Libérée",
-        "description": "Augmente l'attaque en fonction des PV perdus",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/80.png"
-    },
-    {
-        "id": "B81",
-        "nomcartebonus": "Scarabée de l'Éclipse Noire",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Ombre Silencieuse",
-        "description": "Rend le porteur insensible aux coups critiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/81.png"
-    },
-    {
-        "id": "B82",
-        "nomcartebonus": "Scarabée de l'Éclipse Noire",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Ombre Silencieuse",
-        "description": "Rend le porteur insensible aux coups critiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/82.png"
-    },
-    {
-        "id": "B83",
-        "nomcartebonus": "Sceau de la Destinée Oubliée",
-        "pourcentagebonus": "15",
-        "tourbonus": "3",
-        "nomdupouvoir": "Vision Prophétique",
-        "description": "Augmente la précision des attaques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/83.png"
-    },
-    {
-        "id": "B84",
-        "nomcartebonus": "Sceau de la Destinée Oubliée",
-        "pourcentagebonus": "15",
-        "tourbonus": "3",
-        "nomdupouvoir": "Vision Prophétique",
-        "description": "Augmente la précision des attaques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/84.png"
-    },
-    {
-        "id": "B85",
-        "nomcartebonus": "Orbe des Âmes Perdues",
-        "pourcentagebonus": "30",
-        "tourbonus": "2",
-        "nomdupouvoir": "Absorption Spectrale",
-        "description": "Convertit les dégâts infligés en soin",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/85.png"
-    },
-    {
-        "id": "B86",
-        "nomcartebonus": "Orbe des Âmes Perdues",
-        "pourcentagebonus": "30",
-        "tourbonus": "2",
-        "nomdupouvoir": "Absorption Spectrale",
-        "description": "Convertit les dégâts infligés en soin",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/86.png"
-    },
-    {
-        "id": "B87",
-        "nomcartebonus": "Cœur de la Flamme Antique",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Éveil du Brasier",
-        "description": "Inflige des dégâts de feu supplémentaires",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/87.png"
-    },
-    {
-        "id": "B88",
-        "nomcartebonus": "Cœur de la Flamme Antique",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Éveil du Brasier",
-        "description": "Inflige des dégâts de feu supplémentaires",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/88.png"
-    },
-    {
-        "id": "B89",
-        "nomcartebonus": "Plume du Vent Éthéré",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Esquive Fantôme",
-        "description": "Augmente temporairement l'esquive",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/89.png"
-    },
-    {
-        "id": "B90",
-        "nomcartebonus": "Plume du Vent Éthéré",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Esquive Fantôme",
-        "description": "Augmente temporairement l'esquive",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/90.png"
-    },
-    {
-        "id": "B91",
-        "nomcartebonus": "Totem de la Terre Éveillée",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Force Ancestrale",
-        "description": "Augmente la résistance aux altérations",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/91.png"
-    },
-    {
-        "id": "B92",
-        "nomcartebonus": "Totem de la Terre Éveillée",
-        "pourcentagebonus": "20",
-        "tourbonus": "3",
-        "nomdupouvoir": "Force Ancestrale",
-        "description": "Augmente la résistance aux altérations",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/92.png"
-    },
-    {
-        "id": "B93",
-        "nomcartebonus": "Griffe du Fauve Souverain",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Instinct Sauvage",
-        "description": "Augmente le taux de coup critique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/93.png"
-    },
-    {
-        "id": "B94",
-        "nomcartebonus": "Griffe du Fauve Souverain",
-        "pourcentagebonus": "25",
-        "tourbonus": "2",
-        "nomdupouvoir": "Instinct Sauvage",
-        "description": "Augmente le taux de coup critique",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/94.png"
-    },
-    {
-        "id": "B95",
-        "nomcartebonus": "Marque du Jugement Céleste",
-        "pourcentagebonus": "30",
-        "tourbonus": "3",
-        "nomdupouvoir": "Sanction Divine",
-        "description": "Inflige des dégâts aux ennemis qui attaquent",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/95.png"
-    },
-    {
-        "id": "B96",
-        "nomcartebonus": "Marque du Jugement Céleste",
-        "pourcentagebonus": "30",
-        "tourbonus": "3",
-        "nomdupouvoir": "Sanction Divine",
-        "description": "Inflige des dégâts aux ennemis qui attaquent",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/96.png"
-    },
-    {
-        "id": "B97",
-        "nomcartebonus": "Bague de la Lune Disparue",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Aura Mystique",
-        "description": "Confère une chance d'attaque double",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/97.png"
-    },
-    {
-        "id": "B98",
-        "nomcartebonus": "Bague de la Lune Disparue",
-        "pourcentagebonus": "20",
-        "tourbonus": "2",
-        "nomdupouvoir": "Aura Mystique",
-        "description": "Confère une chance d'attaque double",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/98.png"
-    },
-    {
-        "id": "B99",
-        "nomcartebonus": "Serre du Faucon Divin",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Précision Chirurgicale",
-        "description": "Ignore une partie de la défense ennemie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/99.png"
-    },
-    {
-        "id": "B100",
-        "nomcartebonus": "Serre du Faucon Divin",
-        "pourcentagebonus": "25",
-        "tourbonus": "3",
-        "nomdupouvoir": "Précision Chirurgicale",
-        "description": "Ignore une partie de la défense ennemie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/100.png"
-    }
+  {
+    "id": "B1",
+    "nomcartebonus": "Artefact Mystique",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "NECTAR COSMIQUE",
+    "description": "Augmente temporairement la puissance cosmique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B1.png"
+  },
+  {
+    "id": "B2",
+    "nomcartebonus": "Artefact Mystique",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "NECTAR COSMIQUE",
+    "description": "Augmente temporairement la puissance cosmique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B2.png"
+  },
+  {
+    "id": "B3",
+    "nomcartebonus": "Reliques du Savoir Perdu",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Invocation des Secrets Anciens",
+    "description": "Augmente temporairement les connaissances stratégiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B3.png"
+  },
+  {
+    "id": "B4",
+    "nomcartebonus": "Reliques du Savoir Perdu",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Invocation des Secrets Anciens",
+    "description": "Augmente temporairement les connaissances stratégiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B4.png"
+  },
+  {
+    "id": "B5",
+    "nomcartebonus": "Les Chroniques Sablesques",
+    "pourcentagebonus": "10",
+    "tourbonus": "1",
+    "nomdupouvoir": "Révélation Sablée",
+    "description": "Révèle une vérité cachée",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B5.png"
+  },
+  {
+    "id": "B6",
+    "nomcartebonus": "Les Chroniques Sablesques",
+    "pourcentagebonus": "10",
+    "tourbonus": "1",
+    "nomdupouvoir": "Révélation Sablée",
+    "description": "Révèle une vérité cachée",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B6.png"
+  },
+  {
+    "id": "B7",
+    "nomcartebonus": "Épée du Destin Ancien",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Coup d'Éternité",
+    "description": "Inflige une frappe intemporelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B7.png"
+  },
+  {
+    "id": "B8",
+    "nomcartebonus": "Épée du Destin Ancien",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Coup d'Éternité",
+    "description": "Inflige une frappe intemporelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B8.png"
+  },
+  {
+    "id": "B9",
+    "nomcartebonus": "Intrusion Systémique",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Chaos Numérique",
+    "description": "Perturbe les systèmes ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B9.png"
+  },
+  {
+    "id": "B10",
+    "nomcartebonus": "Intrusion Systémique",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Chaos Numérique",
+    "description": "Perturbe les systèmes ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B10.png"
+  },
+  {
+    "id": "B11",
+    "nomcartebonus": "Portail de l'Inconnu",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Passage Fracturé",
+    "description": "Crée une brèche dimensionnelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B11.png"
+  },
+  {
+    "id": "B12",
+    "nomcartebonus": "Portail de l'Inconnu",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Passage Fracturé",
+    "description": "Crée une brèche dimensionnelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B12.png"
+  },
+  {
+    "id": "B13",
+    "nomcartebonus": "Baguette Arcano-Techno",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Éclat Technomagique",
+    "description": "Projette une onde technologique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B13.png"
+  },
+  {
+    "id": "B14",
+    "nomcartebonus": "Baguette Arcano-Techno",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Éclat Technomagique",
+    "description": "Projette une onde technologique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B14.png"
+  },
+  {
+    "id": "B15",
+    "nomcartebonus": "Mutant Écailleux",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Régénération Mutante",
+    "description": "Se régénère rapidement après des attaques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B15.png"
+  },
+  {
+    "id": "B16",
+    "nomcartebonus": "Mutant Écailleux",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Régénération Mutante",
+    "description": "Se régénère rapidement après des attaques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B16.png"
+  },
+  {
+    "id": "B17",
+    "nomcartebonus": "Rêve Fragmenté",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Distorsion Mentale",
+    "description": "Perturbe la conscience ennemie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B17.png"
+  },
+  {
+    "id": "B18",
+    "nomcartebonus": "Rêve Fragmenté",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Distorsion Mentale",
+    "description": "Perturbe la conscience ennemie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B18.png"
+  },
+  {
+    "id": "B19",
+    "nomcartebonus": "Âme Errante",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Appel des Ancêtres",
+    "description": "Invoque les forces des anciens",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B19.png"
+  },
+  {
+    "id": "B20",
+    "nomcartebonus": "Âme Errante",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Appel des Ancêtres",
+    "description": "Invoque les forces des anciens",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B20.png"
+  },
+  {
+    "id": "B21",
+    "nomcartebonus": "Gardien Sylvestre",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Souffle d'Ambroisie",
+    "description": "Restaure l'énergie vitale",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B21.png"
+  },
+  {
+    "id": "B22",
+    "nomcartebonus": "Gardien Sylvestre",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Souffle d'Ambroisie",
+    "description": "Restaure l'énergie vitale",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B22.png"
+  },
+  {
+    "id": "B23",
+    "nomcartebonus": "Talisman des Âges",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Éveil Ancestral",
+    "description": "Accroît la puissance spirituelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B23.png"
+  },
+  {
+    "id": "B24",
+    "nomcartebonus": "Talisman des Âges",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Éveil Ancestral",
+    "description": "Accroît la puissance spirituelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B24.png"
+  },
+  {
+    "id": "B25",
+    "nomcartebonus": "Grimoire des Secrets",
+    "pourcentagebonus": "15",
+    "tourbonus": "1",
+    "nomdupouvoir": "Page Maudite",
+    "description": "Inflige une malédiction temporaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B25.png"
+  },
+  {
+    "id": "B26",
+    "nomcartebonus": "Grimoire des Secrets",
+    "pourcentagebonus": "15",
+    "tourbonus": "1",
+    "nomdupouvoir": "Page Maudite",
+    "description": "Inflige une malédiction temporaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B26.png"
+  },
+  {
+    "id": "B27",
+    "nomcartebonus": "Clé des Mondes Cachés",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Passage Interdit",
+    "description": "Ouvre une dimension secrète",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B27.png"
+  },
+  {
+    "id": "B28",
+    "nomcartebonus": "Clé des Mondes Cachés",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Passage Interdit",
+    "description": "Ouvre une dimension secrète",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B28.png"
+  },
+  {
+    "id": "B29",
+    "nomcartebonus": "Masque des Esprits",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Chant des Anciens",
+    "description": "Augmente temporairement la concentration",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B29.png"
+  },
+  {
+    "id": "B30",
+    "nomcartebonus": "Masque des Esprits",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Chant des Anciens",
+    "description": "Augmente temporairement la concentration",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B30.png"
+  },
+  {
+    "id": "B31",
+    "nomcartebonus": "Sceptre de la Foudre Divine",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Impact Fulgurant",
+    "description": "Déchaîne une énergie céleste",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B31.png"
+  },
+  {
+    "id": "B32",
+    "nomcartebonus": "Sceptre de la Foudre Divine",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Impact Fulgurant",
+    "description": "Déchaîne une énergie céleste",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B32.png"
+  },
+  {
+    "id": "B33",
+    "nomcartebonus": "Lanterne du Voyageur Perdu",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Lueur Guidante",
+    "description": "Éclaire les chemins inconnus",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B33.png"
+  },
+  {
+    "id": "B34",
+    "nomcartebonus": "Lanterne du Voyageur Perdu",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Lueur Guidante",
+    "description": "Éclaire les chemins inconnus",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B34.png"
+  },
+  {
+    "id": "B35",
+    "nomcartebonus": "Anneau du Destin Brisé",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Cercle du Chaos",
+    "description": "Modifie la trajectoire du destin",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B35.png"
+  },
+  {
+    "id": "B36",
+    "nomcartebonus": "Anneau du Destin Brisé",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Cercle du Chaos",
+    "description": "Modifie la trajectoire du destin",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B36.png"
+  },
+  {
+    "id": "B37",
+    "nomcartebonus": "Prisme des Réalités Alternatives",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Miroir Distordu",
+    "description": "Confond l'ennemi avec des illusions",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B37.png"
+  },
+  {
+    "id": "B38",
+    "nomcartebonus": "Prisme des Réalités Alternatives",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Miroir Distordu",
+    "description": "Confond l'ennemi avec des illusions",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B38.png"
+  },
+  {
+    "id": "B39",
+    "nomcartebonus": "Bouclier des Titans Perdus",
+    "pourcentagebonus": "30",
+    "tourbonus": "3",
+    "nomdupouvoir": "Barrière Primordiale",
+    "description": "Absorbe une grande quantité de dégâts",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B39.png"
+  },
+  {
+    "id": "B40",
+    "nomcartebonus": "Bouclier des Titans Perdus",
+    "pourcentagebonus": "30",
+    "tourbonus": "3",
+    "nomdupouvoir": "Barrière Primordiale",
+    "description": "Absorbe une grande quantité de dégâts",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B40.png"
+  },
+  {
+    "id": "B41",
+    "nomcartebonus": "Corne de l'Oracle Antique",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Prophétie d'Éternité",
+    "description": "Anticipe les mouvements ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B41.png"
+  },
+  {
+    "id": "B42",
+    "nomcartebonus": "Corne de l'Oracle Antique",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Prophétie d'Éternité",
+    "description": "Anticipe les mouvements ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B42.png"
+  },
+  {
+    "id": "B43",
+    "nomcartebonus": "Plume de l'Aigle Céleste",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Vol du Destin",
+    "description": "Augmente l'agilité temporairement",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B43.png"
+  },
+  {
+    "id": "B44",
+    "nomcartebonus": "Plume de l'Aigle Céleste",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Vol du Destin",
+    "description": "Augmente l'agilité temporairement",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B44.png"
+  },
+  {
+    "id": "B45",
+    "nomcartebonus": "Statuette du Sage Perdu",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Savoir Éternel",
+    "description": "Améliore la compréhension magique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B45.png"
+  },
+  {
+    "id": "B46",
+    "nomcartebonus": "Statuette du Sage Perdu",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Savoir Éternel",
+    "description": "Améliore la compréhension magique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B46.png"
+  },
+  {
+    "id": "B47",
+    "nomcartebonus": "Orbe des Illusions Oubliées",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Reflet Trompeur",
+    "description": "Désoriente l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B47.png"
+  },
+  {
+    "id": "B48",
+    "nomcartebonus": "Orbe des Illusions Oubliées",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Reflet Trompeur",
+    "description": "Désoriente l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B48.png"
+  },
+  {
+    "id": "B49",
+    "nomcartebonus": "Casque du Guerrier Éthéréen",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Voix des Anciens",
+    "description": "Renforce le courage et la détermination",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B49.png"
+  },
+  {
+    "id": "B50",
+    "nomcartebonus": "Casque du Guerrier Éthéréen",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Voix des Anciens",
+    "description": "Renforce le courage et la détermination",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B50.png"
+  },
+  {
+    "id": "B51",
+    "nomcartebonus": "Anneau du Destin Oublié",
+    "pourcentagebonus": "15",
+    "tourbonus": "3",
+    "nomdupouvoir": "Révélation Cachée",
+    "description": "Augmente les chances de critique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B51.png"
+  },
+  {
+    "id": "B52",
+    "nomcartebonus": "Anneau du Destin Oublié",
+    "pourcentagebonus": "15",
+    "tourbonus": "3",
+    "nomdupouvoir": "Révélation Cachée",
+    "description": "Augmente les chances de critique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B52.png"
+  },
+  {
+    "id": "B53",
+    "nomcartebonus": "Corne du Léviathan Ancien",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Rugissement Abyssal",
+    "description": "Diminue la défense des ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B53.png"
+  },
+  {
+    "id": "B54",
+    "nomcartebonus": "Corne du Léviathan Ancien",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Rugissement Abyssal",
+    "description": "Diminue la défense des ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B54.png"
+  },
+  {
+    "id": "B55",
+    "nomcartebonus": "Cristal de Lune Éclatante",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Énergie Lunaire",
+    "description": "Restaure progressivement la vie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B55.png"
+  },
+  {
+    "id": "B56",
+    "nomcartebonus": "Cristal de Lune Éclatante",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Énergie Lunaire",
+    "description": "Restaure progressivement la vie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B56.png"
+  },
+  {
+    "id": "B57",
+    "nomcartebonus": "Lanternes des Esprits Perdus",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Lueur Spectrale",
+    "description": "Empêche les ennemis de fuir",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B57.png"
+  },
+  {
+    "id": "B58",
+    "nomcartebonus": "Lanternes des Esprits Perdus",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Lueur Spectrale",
+    "description": "Empêche les ennemis de fuir",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B58.png"
+  },
+  {
+    "id": "B59",
+    "nomcartebonus": "Écu du Dragon Endormi",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Protection Draconique",
+    "description": "Réduit tous les dégâts subis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B59.png"
+  },
+  {
+    "id": "B60",
+    "nomcartebonus": "Écu du Dragon Endormi",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Protection Draconique",
+    "description": "Réduit tous les dégâts subis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B60.png"
+  },
+  {
+    "id": "B61",
+    "nomcartebonus": "Gemme du Cauchemar Sans Fin",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Horreur Onirique",
+    "description": "Fait perdre de la concentration aux ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B61.png"
+  },
+  {
+    "id": "B62",
+    "nomcartebonus": "Gemme du Cauchemar Sans Fin",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Horreur Onirique",
+    "description": "Fait perdre de la concentration aux ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B62.png"
+  },
+  {
+    "id": "B63",
+    "nomcartebonus": "Plume du Phoenix Déchu",
+    "pourcentagebonus": "30",
+    "tourbonus": "3",
+    "nomdupouvoir": "Renaissance Ardente",
+    "description": "Résurrection avec un bonus d'attaque",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B63.png"
+  },
+  {
+    "id": "B64",
+    "nomcartebonus": "Plume du Phoenix Déchu",
+    "pourcentagebonus": "30",
+    "tourbonus": "3",
+    "nomdupouvoir": "Renaissance Ardente",
+    "description": "Résurrection avec un bonus d'attaque",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B64.png"
+  },
+  {
+    "id": "B65",
+    "nomcartebonus": "Talisman du Chaos Primordial",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Vortex Chaotique",
+    "description": "Mélange les statuts des combattants",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B65.png"
+  },
+  {
+    "id": "B66",
+    "nomcartebonus": "Talisman du Chaos Primordial",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Vortex Chaotique",
+    "description": "Mélange les statuts des combattants",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B66.png"
+  },
+  {
+    "id": "B67",
+    "nomcartebonus": "Totem du Dernier Esprit",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Invocation Suprême",
+    "description": "Renforce massivement un allié",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B67.png"
+  },
+  {
+    "id": "B68",
+    "nomcartebonus": "Totem du Dernier Esprit",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Invocation Suprême",
+    "description": "Renforce massivement un allié",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B68.png"
+  },
+  {
+    "id": "B69",
+    "nomcartebonus": "Médaillon des Héros Perdus",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Dernier Courage",
+    "description": "Accorde une action supplémentaire en cas de danger",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B69.png"
+  },
+  {
+    "id": "B70",
+    "nomcartebonus": "Médaillon des Héros Perdus",
+    "pourcentagebonus": "15",
+    "tourbonus": "2",
+    "nomdupouvoir": "Dernier Courage",
+    "description": "Accorde une action supplémentaire en cas de danger",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B70.png"
+  },
+  {
+    "id": "B71",
+    "nomcartebonus": "Cristal du Zénith Astral",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Clarté Cosmique",
+    "description": "Augmente temporairement la vitesse",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B71.png"
+  },
+  {
+    "id": "B72",
+    "nomcartebonus": "Cristal du Zénith Astral",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Clarté Cosmique",
+    "description": "Augmente temporairement la vitesse",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B72.png"
+  },
+  {
+    "id": "B73",
+    "nomcartebonus": "Éclat de la Lame Divine",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Tranchant Céleste",
+    "description": "Augmente la puissance d'attaque",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B73.png"
+  },
+  {
+    "id": "B74",
+    "nomcartebonus": "Éclat de la Lame Divine",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Tranchant Céleste",
+    "description": "Augmente la puissance d'attaque",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B74.png"
+  },
+  {
+    "id": "B75",
+    "nomcartebonus": "Rosée du Matin Sacré",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Purification Naturelle",
+    "description": "Soigne tous les malus de statut",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B75.png"
+  },
+  {
+    "id": "B76",
+    "nomcartebonus": "Rosée du Matin Sacré",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Purification Naturelle",
+    "description": "Soigne tous les malus de statut",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B76.png"
+  },
+  {
+    "id": "B77",
+    "nomcartebonus": "Bannière du Dernier Rempart",
+    "pourcentagebonus": "30",
+    "tourbonus": "2",
+    "nomdupouvoir": "Détermination Inébranlable",
+    "description": "Diminue les dégâts subis en défense",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B77.png"
+  },
+  {
+    "id": "B78",
+    "nomcartebonus": "Bannière du Dernier Rempart",
+    "pourcentagebonus": "30",
+    "tourbonus": "2",
+    "nomdupouvoir": "Détermination Inébranlable",
+    "description": "Diminue les dégâts subis en défense",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B78.png"
+  },
+  {
+    "id": "B79",
+    "nomcartebonus": "Perle du Dragon Enchaîné",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Rage Libérée",
+    "description": "Augmente l'attaque en fonction des PV perdus",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B79.png"
+  },
+  {
+    "id": "B80",
+    "nomcartebonus": "Perle du Dragon Enchaîné",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Rage Libérée",
+    "description": "Augmente l'attaque en fonction des PV perdus",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B80.png"
+  },
+  {
+    "id": "B81",
+    "nomcartebonus": "Scarabée de l'Éclipse Noire",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Ombre Silencieuse",
+    "description": "Rend le porteur insensible aux coups critiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B81.png"
+  },
+  {
+    "id": "B82",
+    "nomcartebonus": "Scarabée de l'Éclipse Noire",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Ombre Silencieuse",
+    "description": "Rend le porteur insensible aux coups critiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B82.png"
+  },
+  {
+    "id": "B83",
+    "nomcartebonus": "Sceau de la Destinée Oubliée",
+    "pourcentagebonus": "15",
+    "tourbonus": "3",
+    "nomdupouvoir": "Vision Prophétique",
+    "description": "Augmente la précision des attaques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B83.png"
+  },
+  {
+    "id": "B84",
+    "nomcartebonus": "Sceau de la Destinée Oubliée",
+    "pourcentagebonus": "15",
+    "tourbonus": "3",
+    "nomdupouvoir": "Vision Prophétique",
+    "description": "Augmente la précision des attaques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B84.png"
+  },
+  {
+    "id": "B85",
+    "nomcartebonus": "Orbe des Âmes Perdues",
+    "pourcentagebonus": "30",
+    "tourbonus": "2",
+    "nomdupouvoir": "Absorption Spectrale",
+    "description": "Convertit les dégâts infligés en soin",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B85.png"
+  },
+  {
+    "id": "B86",
+    "nomcartebonus": "Orbe des Âmes Perdues",
+    "pourcentagebonus": "30",
+    "tourbonus": "2",
+    "nomdupouvoir": "Absorption Spectrale",
+    "description": "Convertit les dégâts infligés en soin",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B86.png"
+  },
+  {
+    "id": "B87",
+    "nomcartebonus": "Cœur de la Flamme Antique",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Éveil du Brasier",
+    "description": "Inflige des dégâts de feu supplémentaires",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B87.png"
+  },
+  {
+    "id": "B88",
+    "nomcartebonus": "Cœur de la Flamme Antique",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Éveil du Brasier",
+    "description": "Inflige des dégâts de feu supplémentaires",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B88.png"
+  },
+  {
+    "id": "B89",
+    "nomcartebonus": "Plume du Vent Éthéré",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Esquive Fantôme",
+    "description": "Augmente temporairement l'esquive",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B89.png"
+  },
+  {
+    "id": "B90",
+    "nomcartebonus": "Plume du Vent Éthéré",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Esquive Fantôme",
+    "description": "Augmente temporairement l'esquive",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B90.png"
+  },
+  {
+    "id": "B91",
+    "nomcartebonus": "Totem de la Terre Éveillée",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Force Ancestrale",
+    "description": "Augmente la résistance aux altérations",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B91.png"
+  },
+  {
+    "id": "B92",
+    "nomcartebonus": "Totem de la Terre Éveillée",
+    "pourcentagebonus": "20",
+    "tourbonus": "3",
+    "nomdupouvoir": "Force Ancestrale",
+    "description": "Augmente la résistance aux altérations",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B92.png"
+  },
+  {
+    "id": "B93",
+    "nomcartebonus": "Griffe du Fauve Souverain",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Instinct Sauvage",
+    "description": "Augmente le taux de coup critique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B93.png"
+  },
+  {
+    "id": "B94",
+    "nomcartebonus": "Griffe du Fauve Souverain",
+    "pourcentagebonus": "25",
+    "tourbonus": "2",
+    "nomdupouvoir": "Instinct Sauvage",
+    "description": "Augmente le taux de coup critique",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B94.png"
+  },
+  {
+    "id": "B95",
+    "nomcartebonus": "Marque du Jugement Céleste",
+    "pourcentagebonus": "30",
+    "tourbonus": "3",
+    "nomdupouvoir": "Sanction Divine",
+    "description": "Inflige des dégâts aux ennemis qui attaquent",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B95.png"
+  },
+  {
+    "id": "B96",
+    "nomcartebonus": "Marque du Jugement Céleste",
+    "pourcentagebonus": "30",
+    "tourbonus": "3",
+    "nomdupouvoir": "Sanction Divine",
+    "description": "Inflige des dégâts aux ennemis qui attaquent",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B96.png"
+  },
+  {
+    "id": "B97",
+    "nomcartebonus": "Bague de la Lune Disparue",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Aura Mystique",
+    "description": "Confère une chance d'attaque double",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B97.png"
+  },
+  {
+    "id": "B98",
+    "nomcartebonus": "Bague de la Lune Disparue",
+    "pourcentagebonus": "20",
+    "tourbonus": "2",
+    "nomdupouvoir": "Aura Mystique",
+    "description": "Confère une chance d'attaque double",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B98.png"
+  },
+  {
+    "id": "B99",
+    "nomcartebonus": "Serre du Faucon Divin",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Précision Chirurgicale",
+    "description": "Ignore une partie de la défense ennemie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B99.png"
+  },
+  {
+    "id": "B100",
+    "nomcartebonus": "Serre du Faucon Divin",
+    "pourcentagebonus": "25",
+    "tourbonus": "3",
+    "nomdupouvoir": "Précision Chirurgicale",
+    "description": "Ignore une partie de la défense ennemie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B100.png"
+  }
 ]
