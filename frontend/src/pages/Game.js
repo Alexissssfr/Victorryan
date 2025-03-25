@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Grid,
@@ -10,24 +10,34 @@ import {
   CircularProgress,
 } from "@mui/material";
 import axios from "axios";
+import config from "../config/config";
 import PlayerHand from "../components/PlayerHand";
 import GameBoard from "../components/GameBoard";
 import GameActions from "../components/GameActions";
 
 function Game() {
   const { gameId } = useParams();
+  const navigate = useNavigate();
   const [gameState, setGameState] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedCard, setSelectedCard] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
 
+  // Vérifier si le joueur est authentifié
+  useEffect(() => {
+    const playerId = localStorage.getItem("playerId");
+    if (!playerId) {
+      navigate("/");
+    }
+  }, [navigate]);
+
   // Récupérer l'état initial de la partie
   useEffect(() => {
     const fetchGameState = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3000/api/games/state/${gameId}`,
+          `${config.apiUrl}/api/games/state/${gameId}`,
           {
             headers: {
               Authorization: localStorage.getItem("playerId"),
@@ -45,7 +55,8 @@ function Game() {
       }
     };
 
-    fetchGameState();
+    const interval = setInterval(fetchGameState, 2000); // Polling toutes les 2 secondes
+    return () => clearInterval(interval);
   }, [gameId]);
 
   const handleCardSelect = (card) => {
@@ -62,7 +73,7 @@ function Game() {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/games/play-bonus",
+        `${config.apiUrl}/api/games/play-bonus`,
         {
           gameId,
           bonusCardId: selectedCard.id,
@@ -92,7 +103,7 @@ function Game() {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/games/attack",
+        `${config.apiUrl}/api/games/attack`,
         {
           gameId,
           attackerCardId: selectedCard.id,
@@ -118,7 +129,7 @@ function Game() {
   const handleEndTurn = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/games/end-turn",
+        `${config.apiUrl}/api/games/end-turn`,
         { gameId },
         {
           headers: {

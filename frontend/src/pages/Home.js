@@ -10,6 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import axios from "axios";
+import config from "../config/config";
 
 function Home() {
   const navigate = useNavigate();
@@ -28,14 +29,12 @@ function Home() {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/games/create",
-        {
-          playerId,
-        }
-      );
+      const response = await axios.post(`${config.apiUrl}/api/games/create`, {
+        playerId,
+      });
 
       if (response.data.success) {
+        localStorage.setItem("playerId", playerId);
         navigate(`/game/${response.data.gameId}`);
       }
     } catch (err) {
@@ -57,15 +56,13 @@ function Home() {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/games/join",
-        {
-          playerId,
-          gameId,
-        }
-      );
+      const response = await axios.post(`${config.apiUrl}/api/games/join`, {
+        playerId,
+        gameId,
+      });
 
       if (response.data.success) {
+        localStorage.setItem("playerId", playerId);
         navigate(`/game/${gameId}`);
       }
     } catch (err) {
