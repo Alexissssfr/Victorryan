@@ -3,7 +3,7 @@ services:
     name: card-game
     env: node
     buildCommand: npm install
-    startCommand: node backend/server.js
+    startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: 18.x
