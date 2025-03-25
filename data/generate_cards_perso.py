@@ -1,100 +1,89 @@
 import json
 import os
 from PIL import Image, ImageDraw, ImageFont
+import xml.etree.ElementTree as ET
+import subprocess
 
 class CardGeneratorPerso:
     def __init__(self):
-        # Dimensions de la carte (en pixels)
-        self.card_width = 600
-        self.card_height = 800
+        # Dimensions de la carte (en pixels) - augmentées pour plus de netteté
+        self.card_width = 1200  # Doublé pour plus de netteté
+        self.card_height = 1600 # Doublé pour plus de netteté
+        self.template_path = os.path.join("data", "templates", "modele_carte_perso.svg")
         self.background_path = os.path.join("data", "backgrounds", "perso")  # Images de fond
-        self.output_path = os.path.join("stock", "images", "perso")  # Où sauvegarder les cartes finales
+        self.output_path = os.path.join("stock", "images", "personnages")  # Où sauvegarder les cartes finales
+        self.output_svg_path = os.path.join("stock", "images", "personnages", "svg")  # Pour les fichiers SVG
 
     def generate_cards(self):
-        # Charger les données des personnages
         with open('stock/personnages.json', 'r', encoding='utf-8') as f:
             personnages = json.load(f)
 
-        # Créer les dossiers nécessaires
         os.makedirs(self.output_path, exist_ok=True)
-
-        # Charger la police (utiliser une police système par défaut si Cinzel n'est pas disponible)
-        try:
-            title_font = ImageFont.truetype("Cinzel-Bold.ttf", 40)
-            text_font = ImageFont.truetype("Cinzel-Regular.ttf", 30)
-        except:
-            title_font = ImageFont.load_default()
-            text_font = ImageFont.load_default()
+        os.makedirs(self.output_svg_path, exist_ok=True)
 
         for perso in personnages:
             try:
-                # Créer une image vide avec fond transparent
-                img = Image.new('RGBA', (self.card_width, self.card_height), (0, 0, 0, 0))
-                draw = ImageDraw.Draw(img)
+                print(f"\nTraitement de la carte {perso['id']} - {perso['nomcarteperso']}")
+                
+                # Charger le template SVG
+                tree = ET.parse(self.template_path)
+                root = tree.getroot()
 
-                # Ajouter un fond semi-transparent
-                background = Image.new('RGBA', (self.card_width, self.card_height), (0, 0, 0, 128))
-                img.paste(background, (0, 0))
+                # Mettre à jour l'image de fond
+                for image_elem in root.findall(".//{http://www.w3.org/2000/svg}image"):
+                    if image_elem.get('id') == 'fond':
+                        # Utiliser le chemin absolu vers l'image de fond
+                        background_path = os.path.abspath(os.path.join(self.background_path, f"{perso['id'].replace('P', '')}.png"))
+                        print(f"Chemin de l'image de fond : {background_path}")
+                        image_elem.set('{http://www.w3.org/1999/xlink}href', background_path)
+                        # S'assurer que l'image couvre toute la carte
+                        image_elem.set('width', '196.85001')
+                        image_elem.set('height', '274.9021')
+                        image_elem.set('x', '0')
+                        image_elem.set('y', '0')
+                        if 'transform' in image_elem.attrib:
+                            del image_elem.attrib['transform']
 
-                # Ajouter le titre
-                title = perso['nomcarteperso']
-                title_bbox = draw.textbbox((0, 0), title, font=title_font)
-                title_width = title_bbox[2] - title_bbox[0]
-                draw.text(
-                    (self.card_width/2 - title_width/2, 50),
-                    title,
-                    font=title_font,
-                    fill=(255, 255, 255)
-                )
+                # Mettre à jour les textes dans le SVG
+                for text_elem in root.findall(".//{http://www.w3.org/2000/svg}text"):
+                    if text_elem.get('id') == 'nomcarteperso':
+                        for tspan in text_elem.findall(".//{http://www.w3.org/2000/svg}tspan"):
+                            tspan.text = perso['nomcarteperso']
+                    elif text_elem.get('id') == 'nomdupouvoir':
+                        for tspan in text_elem.findall(".//{http://www.w3.org/2000/svg}tspan"):
+                            tspan.text = perso['nomdupouvoir']
+                    elif text_elem.get('id') == 'description':
+                        for tspan in text_elem.findall(".//{http://www.w3.org/2000/svg}tspan"):
+                            tspan.text = perso['description']
 
-                # Ajouter le nom du pouvoir
-                pouvoir = perso['nomdupouvoir']
-                pouvoir_bbox = draw.textbbox((0, 0), pouvoir, font=text_font)
-                pouvoir_width = pouvoir_bbox[2] - pouvoir_bbox[0]
-                draw.text(
-                    (self.card_width/2 - pouvoir_width/2, 600),
-                    pouvoir,
-                    font=text_font,
-                    fill=(255, 255, 255)
-                )
+                # Sauvegarder le SVG
+                svg_path = os.path.join(self.output_svg_path, f"{perso['id']}.svg")
+                tree.write(svg_path, encoding='utf-8', xml_declaration=True)
+                print(f"✓ SVG généré : {svg_path}")
 
-                # Ajouter la description
-                description = perso['description']
-                # Wrap text (simple implementation)
-                words = description.split()
-                lines = []
-                current_line = []
-                for word in words:
-                    current_line.append(word)
-                    line = ' '.join(current_line)
-                    line_bbox = draw.textbbox((0, 0), line, font=text_font)
-                    if line_bbox[2] - line_bbox[0] > self.card_width - 60:
-                        current_line.pop()
-                        lines.append(' '.join(current_line))
-                        current_line = [word]
-                if current_line:
-                    lines.append(' '.join(current_line))
-
-                y = 650
-                for line in lines:
-                    line_bbox = draw.textbbox((0, 0), line, font=text_font)
-                    line_width = line_bbox[2] - line_bbox[0]
-                    draw.text(
-                        (self.card_width/2 - line_width/2, y),
-                        line,
-                        font=text_font,
-                        fill=(255, 255, 255)
-                    )
-                    y += 40
-
-                # Sauvegarder l'image
-                img_path = os.path.join(self.output_path, f"{perso['id']}.png")
-                img.save(img_path, "PNG")
-
-                print(f"Carte PNG générée pour {perso['nomcarteperso']}")
+                # Convertir SVG en PNG immédiatement avec inkscape
+                try:
+                    png_path = os.path.join(self.output_path, f"{perso['id']}.png")
+                    subprocess.run([
+                        'inkscape',
+                        '--export-type=png',
+                        f'--export-filename={png_path}',
+                        f'--export-width={self.card_width}',
+                        f'--export-height={self.card_height}',
+                        '--export-dpi=300',  # Haute résolution
+                        '--export-background-opacity=0',  # Garde la transparence
+                        '--export-text-to-path',  # Convertit le texte en chemins pour une meilleure netteté
+                        '--export-area-page',  # Exporte la page entière
+                        '--export-overwrite',  # Écrase le fichier existant
+                        '--export-ps-level=3',  # Meilleure qualité de rendu
+                        svg_path
+                    ], check=True)
+                    print(f"✓ PNG généré : {png_path}")
+                except Exception as e:
+                    print(f"❌ Erreur lors de la conversion en PNG : {str(e)}")
                 
             except Exception as e:
-                print(f"Erreur lors de la génération de la carte {perso['id']}: {str(e)}")
+                print(f"❌ Erreur lors de la génération de la carte {perso['id']}: {str(e)}")
 
 if __name__ == "__main__":
     generator = CardGeneratorPerso()

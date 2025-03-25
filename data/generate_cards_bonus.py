@@ -1,105 +1,72 @@
 import json
 import os
 from PIL import Image, ImageDraw, ImageFont
+import xml.etree.ElementTree as ET
+import subprocess
 
 class CardGeneratorBonus:
     def __init__(self):
         # Dimensions de la carte (en pixels)
         self.card_width = 600
         self.card_height = 800
+        self.template_path = os.path.join("data", "templates", "modele_carte_bonus.svg")
         self.background_path = os.path.join("data", "backgrounds", "bonus")  # Images de fond
         self.output_path = os.path.join("stock", "images", "bonus")  # Où sauvegarder les cartes finales
+        self.output_svg_path = os.path.join("stock", "images", "bonus", "svg")  # Pour les fichiers SVG
 
     def generate_cards(self):
-        # Charger les données des bonus
         with open('stock/bonus.json', 'r', encoding='utf-8') as f:
             bonus = json.load(f)
 
-        # Créer le dossier de sortie
         os.makedirs(self.output_path, exist_ok=True)
+        os.makedirs(self.output_svg_path, exist_ok=True)
 
-        # Charger la police
-        try:
-            title_font = ImageFont.truetype("Cinzel-Bold.ttf", 40)
-            text_font = ImageFont.truetype("Cinzel-Regular.ttf", 30)
-        except:
-            title_font = ImageFont.load_default()
-            text_font = ImageFont.load_default()
-
-        for card in bonus:
+        for bonus_card in bonus:
             try:
-                # Charger l'image de fond
-                background_path = os.path.join(self.background_path, f"{card['id']}.png")
-                if os.path.exists(background_path):
-                    background = Image.open(background_path)
-                    background = background.resize((self.card_width, self.card_height))
-                else:
-                    # Créer une image avec fond noir si pas d'image de fond
-                    background = Image.new('RGBA', (self.card_width, self.card_height), (0, 0, 0, 128))
+                print(f"\nTraitement de la carte {bonus_card['id']} - {bonus_card['nomcartebonus']}")
+                
+                # Charger le template SVG
+                tree = ET.parse(self.template_path)
+                root = tree.getroot()
 
-                # Créer l'image finale
-                img = background.copy()
-                draw = ImageDraw.Draw(img)
+                # Mettre à jour l'image de fond
+                for image_elem in root.findall(".//{http://www.w3.org/2000/svg}image"):
+                    if image_elem.get('id') == 'fond':
+                        # Utiliser le chemin absolu vers l'image de fond
+                        background_path = os.path.abspath(os.path.join(self.background_path, f"{bonus_card['id'].replace('B', '')}.png"))
+                        image_elem.set('{http://www.w3.org/1999/xlink}href', background_path)
 
-                # Ajouter le titre
-                title = card['nomcartebonus']
-                title_bbox = draw.textbbox((0, 0), title, font=title_font)
-                title_width = title_bbox[2] - title_bbox[0]
-                draw.text(
-                    (self.card_width/2 - title_width/2, 50),
-                    title,
-                    font=title_font,
-                    fill=(255, 255, 255)
-                )
+                # Mettre à jour les textes dans le SVG
+                for text_elem in root.findall(".//{http://www.w3.org/2000/svg}text"):
+                    if text_elem.get('id') == 'nomcartebonus':
+                        text_elem.find('.//{http://www.w3.org/2000/svg}tspan').text = bonus_card['nomcartebonus']
+                    elif text_elem.get('id') == 'nomdupouvoir':
+                        text_elem.find('.//{http://www.w3.org/2000/svg}tspan').text = bonus_card['nomdupouvoir']
+                    elif text_elem.get('id') == 'description':
+                        text_elem.find('.//{http://www.w3.org/2000/svg}tspan').text = bonus_card['description']
 
-                # Ajouter le nom du pouvoir
-                pouvoir = card['nomdupouvoir']
-                pouvoir_bbox = draw.textbbox((0, 0), pouvoir, font=text_font)
-                pouvoir_width = pouvoir_bbox[2] - pouvoir_bbox[0]
-                draw.text(
-                    (self.card_width/2 - pouvoir_width/2, 600),
-                    pouvoir,
-                    font=text_font,
-                    fill=(255, 255, 255)
-                )
+                # Sauvegarder le SVG
+                svg_path = os.path.join(self.output_svg_path, f"{bonus_card['id']}.svg")
+                tree.write(svg_path, encoding='utf-8', xml_declaration=True)
+                print(f"✓ SVG généré : {svg_path}")
 
-                # Ajouter la description
-                description = card['description']
-                # Wrap text (simple implementation)
-                words = description.split()
-                lines = []
-                current_line = []
-                for word in words:
-                    current_line.append(word)
-                    line = ' '.join(current_line)
-                    line_bbox = draw.textbbox((0, 0), line, font=text_font)
-                    if line_bbox[2] - line_bbox[0] > self.card_width - 60:
-                        current_line.pop()
-                        lines.append(' '.join(current_line))
-                        current_line = [word]
-                if current_line:
-                    lines.append(' '.join(current_line))
-
-                y = 650
-                for line in lines:
-                    line_bbox = draw.textbbox((0, 0), line, font=text_font)
-                    line_width = line_bbox[2] - line_bbox[0]
-                    draw.text(
-                        (self.card_width/2 - line_width/2, y),
-                        line,
-                        font=text_font,
-                        fill=(255, 255, 255)
-                    )
-                    y += 40
-
-                # Sauvegarder l'image finale
-                output_path = os.path.join(self.output_path, f"{card['id']}.png")
-                img.save(output_path, "PNG")
-
-                print(f"Carte PNG générée pour {card['nomcartebonus']}")
+                # Convertir SVG en PNG immédiatement avec inkscape
+                try:
+                    png_path = os.path.join(self.output_path, f"{bonus_card['id']}.png")
+                    subprocess.run([
+                        'inkscape',
+                        '--export-type=png',
+                        f'--export-filename={png_path}',
+                        f'--export-width={self.card_width}',
+                        f'--export-height={self.card_height}',
+                        svg_path
+                    ], check=True)
+                    print(f"✓ PNG généré : {png_path}")
+                except Exception as e:
+                    print(f"❌ Erreur lors de la conversion en PNG : {str(e)}")
                 
             except Exception as e:
-                print(f"Erreur lors de la génération de la carte {card['id']}: {str(e)}")
+                print(f"❌ Erreur lors de la génération de la carte {bonus_card['id']}: {str(e)}")
 
 if __name__ == "__main__":
     generator = CardGeneratorBonus()

@@ -1,1002 +1,1002 @@
 [
-    {
-        "id": "P1",
-        "nomcarteperso": "ZEPHYR",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Tempête Déchaînée",
-        "description": "Inflige une tempête violente à l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/1.png"
-    },
-    {
-        "id": "P2",
-        "nomcarteperso": "ZEPHYR",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Tempête Déchaînée",
-        "description": "Inflige une tempête violente à l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/2.png"
-    },
-    {
-        "id": "P3",
-        "nomcarteperso": "ÉMISSAIRE DES GALAXIES",
-        "pointsdevie": "100",
-        "forceattaque": "25",
-        "tourattaque": "3",
-        "nomdupouvoir": "Éveil Céleste",
-        "description": "Appelle une énergie cosmique protectrice",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/3.png"
-    },
-    {
-        "id": "P4",
-        "nomcarteperso": "ÉMISSAIRE DES GALAXIES",
-        "pointsdevie": "100",
-        "forceattaque": "25",
-        "tourattaque": "3",
-        "nomdupouvoir": "Éveil Céleste",
-        "description": "Appelle une énergie cosmique protectrice",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/4.png"
-    },
-    {
-        "id": "P5",
-        "nomcarteperso": "MAÎTRE DES SABLES NUMÉRIQUES",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "2",
-        "nomdupouvoir": "Déchirure Temporelle",
-        "description": "Déstabilise le flux du temps",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/5.png"
-    },
-    {
-        "id": "P6",
-        "nomcarteperso": "MAÎTRE DES SABLES NUMÉRIQUES",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "2",
-        "nomdupouvoir": "Déchirure Temporelle",
-        "description": "Déstabilise le flux du temps",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/6.png"
-    },
-    {
-        "id": "P7",
-        "nomcarteperso": "CAMPRIMTRAINE DES FLOTS",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Navigation Transdimensionnelle",
-        "description": "Traverse les dimensions pour surprendre l'adversaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/7.png"
-    },
-    {
-        "id": "P8",
-        "nomcarteperso": "CAMPRIMTRAINE DES FLOTS",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Navigation Transdimensionnelle",
-        "description": "Traverse les dimensions pour surprendre l'adversaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/8.png"
-    },
-    {
-        "id": "P9",
-        "nomcarteperso": "Le Champion du Tonnerre",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Fureur Draconique",
-        "description": "Libère une puissante énergie foudroyante",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/9.png"
-    },
-    {
-        "id": "P10",
-        "nomcarteperso": "Le Champion du Tonnerre",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Fureur Draconique",
-        "description": "Libère une puissante énergie foudroyante",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/10.png"
-    },
-    {
-        "id": "P11",
-        "nomcarteperso": "Gardien des Abysses Oubliées",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "2",
-        "nomdupouvoir": "Marée Bioluminescente",
-        "description": "Inonde le champ de bataille d'une marée lumineuse",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/11.png"
-    },
-    {
-        "id": "P12",
-        "nomcarteperso": "Gardien des Abysses Oubliées",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "2",
-        "nomdupouvoir": "Marée Bioluminescente",
-        "description": "Inonde le champ de bataille d'une marée lumineuse",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/12.png"
-    },
-    {
-        "id": "P13",
-        "nomcarteperso": "Savant du Temps Mécanique",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Archiviste d'Éternité",
-        "description": "Protège par une mémoire temporelle infinie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/13.png"
-    },
-    {
-        "id": "P14",
-        "nomcarteperso": "Savant du Temps Mécanique",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Archiviste d'Éternité",
-        "description": "Protège par une mémoire temporelle infinie",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/14.png"
-    },
-    {
-        "id": "P15",
-        "nomcarteperso": "Le Briseur de Codes",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Virus Disruptif",
-        "description": "Perturbe les systèmes adverses",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/15.png"
-    },
-    {
-        "id": "P16",
-        "nomcarteperso": "Le Briseur de Codes",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Virus Disruptif",
-        "description": "Perturbe les systèmes adverses",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/16.png"
-    },
-    {
-        "id": "P17",
-        "nomcarteperso": "Le Chasseur de Mystères à Vapeur",
-        "pointsdevie": "100",
-        "forceattaque": "25",
-        "tourattaque": "2",
-        "nomdupouvoir": "Chronométrie Détective",
-        "description": "Prévoit les actions adverses",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/17.png"
-    },
-    {
-        "id": "P18",
-        "nomcarteperso": "Le Chasseur de Mystères à Vapeur",
-        "pointsdevie": "100",
-        "forceattaque": "25",
-        "tourattaque": "2",
-        "nomdupouvoir": "Chronométrie Détective",
-        "description": "Prévoit les actions adverses",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/18.png"
-    },
-    {
-        "id": "P19",
-        "nomcarteperso": "Spectre de la Nuit Silencieuse",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Danse des Spectres",
-        "description": "Enveloppe l'adversaire de ténèbres mouvantes",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/19.png"
-    },
-    {
-        "id": "P20",
-        "nomcarteperso": "Spectre de la Nuit Silencieuse",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Danse des Spectres",
-        "description": "Enveloppe l'adversaire de ténèbres mouvantes",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/20.png"
-    },
-    {
-        "id": "P21",
-        "nomcarteperso": "Avatar de la Sylve Éternelle",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Renaissance Florale",
-        "description": "Soigne les blessures par la magie naturelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/21.png"
-    },
-    {
-        "id": "P22",
-        "nomcarteperso": "Avatar de la Sylve Éternelle",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Renaissance Florale",
-        "description": "Soigne les blessures par la magie naturelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/22.png"
-    },
-    {
-        "id": "P23",
-        "nomcarteperso": "L'Errante des Royaumes Éthérés",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Appel des Âmes Perdues",
-        "description": "Invoque les âmes pour perturber l'adversaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/23.png"
-    },
-    {
-        "id": "P24",
-        "nomcarteperso": "L'Errante des Royaumes Éthérés",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Appel des Âmes Perdues",
-        "description": "Invoque les âmes pour perturber l'adversaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/24.png"
-    },
-    {
-        "id": "P25",
-        "nomcarteperso": "Voyageur des Brumes Cosmiques",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Adaptation Planétaire",
-        "description": "S'adapte à toutes les attaques adverses",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/25.png"
-    },
-    {
-        "id": "P26",
-        "nomcarteperso": "Voyageur des Brumes Cosmiques",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Adaptation Planétaire",
-        "description": "S'adapte à toutes les attaques adverses",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/26.png"
-    },
-    {
-        "id": "P27",
-        "nomcarteperso": "Gardien des Songes Fracturés",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Maître des Rêves Distordus",
-        "description": "Contrôle les rêves pour infliger des dégâts psychiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/27.png"
-    },
-    {
-        "id": "P28",
-        "nomcarteperso": "Gardien des Songes Fracturés",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Maître des Rêves Distordus",
-        "description": "Contrôle les rêves pour infliger des dégâts psychiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/28.png"
-    },
-    {
-        "id": "P29",
-        "nomcarteperso": "Seigneur du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Vortex Abyssal",
-        "description": "Crée une tempête de vide",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/29.png"
-    },
-    {
-        "id": "P30",
-        "nomcarteperso": "Seigneur du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Vortex Abyssal",
-        "description": "Crée une tempête de vide",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/30.png"
-    },
-    {
-        "id": "P31",
-        "nomcarteperso": "Messager du Crépuscule",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Ombres Rampantes",
-        "description": "Enveloppe l'adversaire d'ombres",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/31.png"
-    },
-    {
-        "id": "P32",
-        "nomcarteperso": "Messager du Crépuscule",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Ombres Rampantes",
-        "description": "Enveloppe l'adversaire d'ombres",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/32.png"
-    },
-    {
-        "id": "P33",
-        "nomcarteperso": "Arcaniste des Vents",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Ouragan Mystique",
-        "description": "Lance un souffle dévastateur",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/33.png"
-    },
-    {
-        "id": "P34",
-        "nomcarteperso": "Arcaniste des Vents",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Ouragan Mystique",
-        "description": "Lance un souffle dévastateur",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/34.png"
-    },
-    {
-        "id": "P35",
-        "nomcarteperso": "Pyromancien des Cendres",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Flammes du Chaos",
-        "description": "Invoque une explosion ardente",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/35.png"
-    },
-    {
-        "id": "P36",
-        "nomcarteperso": "Pyromancien des Cendres",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Flammes du Chaos",
-        "description": "Invoque une explosion ardente",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/36.png"
-    },
-    {
-        "id": "P37",
-        "nomcarteperso": "Sentinelle du Temps",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Chrono-Barrière",
-        "description": "Erige un mur temporel protecteur",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/37.png"
-    },
-    {
-        "id": "P38",
-        "nomcarteperso": "Sentinelle du Temps",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Chrono-Barrière",
-        "description": "Erige un mur temporel protecteur",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/38.png"
-    },
-    {
-        "id": "P39",
-        "nomcarteperso": "Alchimiste du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Transmutation Obscure",
-        "description": "Altère la matière à volonté",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/39.png"
-    },
-    {
-        "id": "P40",
-        "nomcarteperso": "Alchimiste du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Transmutation Obscure",
-        "description": "Altère la matière à volonté",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/40.png"
-    },
-    {
-        "id": "P41",
-        "nomcarteperso": "Marcheur des Songes",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Rêverie Éthérée",
-        "description": "Endort temporairement l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/41.png"
-    },
-    {
-        "id": "P42",
-        "nomcarteperso": "Marcheur des Songes",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Rêverie Éthérée",
-        "description": "Endort temporairement l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/42.png"
-    },
-    {
-        "id": "P43",
-        "nomcarteperso": "Chevalier du Zénith",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Lame Astrale",
-        "description": "Tranche avec une épée chargée d'énergie stellaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/43.png"
-    },
-    {
-        "id": "P44",
-        "nomcarteperso": "Chevalier du Zénith",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Lame Astrale",
-        "description": "Tranche avec une épée chargée d'énergie stellaire",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/44.png"
-    },
-    {
-        "id": "P45",
-        "nomcarteperso": "Oracle des Vortex",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Prédiction Chaotique",
-        "description": "Anticipe et contre les attaques ennemies",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/45.png"
-    },
-    {
-        "id": "P46",
-        "nomcarteperso": "Oracle des Vortex",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Prédiction Chaotique",
-        "description": "Anticipe et contre les attaques ennemies",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/46.png"
-    },
-    {
-        "id": "P47",
-        "nomcarteperso": "Seigneur des Cendres",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Incandescence Sombre",
-        "description": "Invoque des flammes destructrices",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/47.png"
-    },
-    {
-        "id": "P48",
-        "nomcarteperso": "Seigneur des Cendres",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Incandescence Sombre",
-        "description": "Invoque des flammes destructrices",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/48.png"
-    },
-    {
-        "id": "P49",
-        "nomcarteperso": "Éclaireur des Ruines Perdues",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Souffle des Anciens",
-        "description": "Canalise l'énergie d'anciens vestiges",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/49.png"
-    },
-    {
-        "id": "P50",
-        "nomcarteperso": "Éclaireur des Ruines Perdues",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Souffle des Anciens",
-        "description": "Canalise l'énergie d'anciens vestiges",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/50.png"
-    },
-    {
-        "id": "P51",
-        "nomcarteperso": "Sentinelle du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Ombre Furtive",
-        "description": "Se déplace sans être détecté",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/51.png"
-    },
-    {
-        "id": "P52",
-        "nomcarteperso": "Sentinelle du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Ombre Furtive",
-        "description": "Se déplace sans être détecté",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/52.png"
-    },
-    {
-        "id": "P53",
-        "nomcarteperso": "Chaman des Vents",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Ouragan Céleste",
-        "description": "Déchaîne une tempête de vent",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/53.png"
-    },
-    {
-        "id": "P54",
-        "nomcarteperso": "Chaman des Vents",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Ouragan Céleste",
-        "description": "Déchaîne une tempête de vent",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/54.png"
-    },
-    {
-        "id": "P55",
-        "nomcarteperso": "Maître des Illusions",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Reflet Trompeur",
-        "description": "Crée des copies illusoires",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/55.png"
-    },
-    {
-        "id": "P56",
-        "nomcarteperso": "Maître des Illusions",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Reflet Trompeur",
-        "description": "Crée des copies illusoires",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/56.png"
-    },
-    {
-        "id": "P57",
-        "nomcarteperso": "Gardien de l'Abîme",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Poigne Maudite",
-        "description": "Entrave un ennemi avec des chaînes d'ombre",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/57.png"
-    },
-    {
-        "id": "P58",
-        "nomcarteperso": "Gardien de l'Abîme",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Poigne Maudite",
-        "description": "Entrave un ennemi avec des chaînes d'ombre",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/58.png"
-    },
-    {
-        "id": "P59",
-        "nomcarteperso": "Druide Éternel",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Bénédiction Sylvestre",
-        "description": "Guérit les alliés avec l'énergie de la nature",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/59.png"
-    },
-    {
-        "id": "P60",
-        "nomcarteperso": "Druide Éternel",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Bénédiction Sylvestre",
-        "description": "Guérit les alliés avec l'énergie de la nature",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/60.png"
-    },
-    {
-        "id": "P61",
-        "nomcarteperso": "Champion des Tempêtes",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Déluge Foudroyant",
-        "description": "Lance une pluie d'éclairs",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/61.png"
-    },
-    {
-        "id": "P62",
-        "nomcarteperso": "Champion des Tempêtes",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Déluge Foudroyant",
-        "description": "Lance une pluie d'éclairs",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/62.png"
-    },
-    {
-        "id": "P63",
-        "nomcarteperso": "Alchimiste Dément",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Élixir Chaotique",
-        "description": "Altère l'état des combattants",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/63.png"
-    },
-    {
-        "id": "P64",
-        "nomcarteperso": "Alchimiste Dément",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Élixir Chaotique",
-        "description": "Altère l'état des combattants",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/64.png"
-    },
-    {
-        "id": "P65",
-        "nomcarteperso": "Rôdeur des Ténèbres",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Traque Silencieuse",
-        "description": "Se fond dans l'obscurité pour attaquer",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/65.png"
-    },
-    {
-        "id": "P66",
-        "nomcarteperso": "Rôdeur des Ténèbres",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Traque Silencieuse",
-        "description": "Se fond dans l'obscurité pour attaquer",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/66.png"
-    },
-    {
-        "id": "P67",
-        "nomcarteperso": "Messager Céleste",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Chute Stellaire",
-        "description": "Fait tomber une étoile sur l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/67.png"
-    },
-    {
-        "id": "P68",
-        "nomcarteperso": "Messager Céleste",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Chute Stellaire",
-        "description": "Fait tomber une étoile sur l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/68.png"
-    },
-    {
-        "id": "P69",
-        "nomcarteperso": "Paladin des Lueurs",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Bouclier Radieux",
-        "description": "Protège et repousse les ténèbres",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/69.png"
-    },
-    {
-        "id": "P70",
-        "nomcarteperso": "Paladin des Lueurs",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Bouclier Radieux",
-        "description": "Protège et repousse les ténèbres",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/70.png"
-    },
-    {
-        "id": "P71",
-        "nomcarteperso": "Archon du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Déchirure Cosmique",
-        "description": "Crée une faille dimensionnelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/71.png"
-    },
-    {
-        "id": "P72",
-        "nomcarteperso": "Archon du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Déchirure Cosmique",
-        "description": "Crée une faille dimensionnelle",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/72.png"
-    },
-    {
-        "id": "P73",
-        "nomcarteperso": "Gardienne Astrale",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Éveil Stellaire",
-        "description": "Déploie une énergie céleste protectrice",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/73.png"
-    },
-    {
-        "id": "P74",
-        "nomcarteperso": "Gardienne Astrale",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Éveil Stellaire",
-        "description": "Déploie une énergie céleste protectrice",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/74.png"
-    },
-    {
-        "id": "P75",
-        "nomcarteperso": "Roi Spectral",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Marche Fantomatique",
-        "description": "Traverse la réalité pour surprendre l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/75.png"
-    },
-    {
-        "id": "P76",
-        "nomcarteperso": "Roi Spectral",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Marche Fantomatique",
-        "description": "Traverse la réalité pour surprendre l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/76.png"
-    },
-    {
-        "id": "P77",
-        "nomcarteperso": "Seigneur des Flammes Éternelles",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Incandescence Infernale",
-        "description": "Déchaîne une vague de feu ardente",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/77.png"
-    },
-    {
-        "id": "P78",
-        "nomcarteperso": "Seigneur des Flammes Éternelles",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Incandescence Infernale",
-        "description": "Déchaîne une vague de feu ardente",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/78.png"
-    },
-    {
-        "id": "P79",
-        "nomcarteperso": "Oracle des Marées",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Vague Prophétique",
-        "description": "Prédit l'avenir en contrôlant les marées",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/79.png"
-    },
-    {
-        "id": "P80",
-        "nomcarteperso": "Oracle des Marées",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Vague Prophétique",
-        "description": "Prédit l'avenir en contrôlant les marées",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/80.png"
-    },
-    {
-        "id": "P81",
-        "nomcarteperso": "Chaman des Tempêtes",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Fureur Orageuse",
-        "description": "Déchaîne une tempête électrisante",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/81.png"
-    },
-    {
-        "id": "P82",
-        "nomcarteperso": "Chaman des Tempêtes",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Fureur Orageuse",
-        "description": "Déchaîne une tempête électrisante",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/82.png"
-    },
-    {
-        "id": "P83",
-        "nomcarteperso": "Maître des Ombres",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Voile Nocturne",
-        "description": "Se fond dans les ténèbres pour frapper",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/83.png"
-    },
-    {
-        "id": "P84",
-        "nomcarteperso": "Maître des Ombres",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Voile Nocturne",
-        "description": "Se fond dans les ténèbres pour frapper",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/84.png"
-    },
-    {
-        "id": "P85",
-        "nomcarteperso": "Sentinelle du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Écho du Vide",
-        "description": "Propage des ondes de vide destructrices",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/85.png"
-    },
-    {
-        "id": "P86",
-        "nomcarteperso": "Sentinelle du Néant",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Écho du Vide",
-        "description": "Propage des ondes de vide destructrices",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/86.png"
-    },
-    {
-        "id": "P87",
-        "nomcarteperso": "Avatar de la Nature",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Racines Ancestrales",
-        "description": "Entrave les ennemis avec des lianes magiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/87.png"
-    },
-    {
-        "id": "P88",
-        "nomcarteperso": "Avatar de la Nature",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Racines Ancestrales",
-        "description": "Entrave les ennemis avec des lianes magiques",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/88.png"
-    },
-    {
-        "id": "P89",
-        "nomcarteperso": "Seigneur du Givre",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Blizzard Éternel",
-        "description": "Enveloppe le champ de bataille de glace",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/89.png"
-    },
-    {
-        "id": "P90",
-        "nomcarteperso": "Seigneur du Givre",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Blizzard Éternel",
-        "description": "Enveloppe le champ de bataille de glace",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/90.png"
-    },
-    {
-        "id": "P91",
-        "nomcarteperso": "Champion Céleste",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Rayon Divin",
-        "description": "Canalise une énergie sacrée destructrice",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/91.png"
-    },
-    {
-        "id": "P92",
-        "nomcarteperso": "Champion Céleste",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Rayon Divin",
-        "description": "Canalise une énergie sacrée destructrice",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/92.png"
-    },
-    {
-        "id": "P93",
-        "nomcarteperso": "Reine des Illusions",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Miroir Trompeur",
-        "description": "Crée des clones illusoires pour troubler l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/93.png"
-    },
-    {
-        "id": "P94",
-        "nomcarteperso": "Reine des Illusions",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Miroir Trompeur",
-        "description": "Crée des clones illusoires pour troubler l'ennemi",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/94.png"
-    },
-    {
-        "id": "P95",
-        "nomcarteperso": "Esprit de la Lune",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Lumière Astrale",
-        "description": "Illumine le champ de bataille et affaiblit les ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/95.png"
-    },
-    {
-        "id": "P96",
-        "nomcarteperso": "Esprit de la Lune",
-        "pointsdevie": "100",
-        "forceattaque": "35",
-        "tourattaque": "3",
-        "nomdupouvoir": "Lumière Astrale",
-        "description": "Illumine le champ de bataille et affaiblit les ennemis",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/96.png"
-    },
-    {
-        "id": "P97",
-        "nomcarteperso": "Messager du Chaos",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Tempête Chaotique",
-        "description": "Semer le désordre avec une énergie instable",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/97.png"
-    },
-    {
-        "id": "P98",
-        "nomcarteperso": "Messager du Chaos",
-        "pointsdevie": "100",
-        "forceattaque": "40",
-        "tourattaque": "3",
-        "nomdupouvoir": "Tempête Chaotique",
-        "description": "Semer le désordre avec une énergie instable",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/98.png"
-    },
-    {
-        "id": "P99",
-        "nomcarteperso": "Paladin de l'Aube",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Lumière Rédemptrice",
-        "description": "Réduit les ténèbres avec une aura sacrée",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/99.png"
-    },
-    {
-        "id": "P100",
-        "nomcarteperso": "Paladin de l'Aube",
-        "pointsdevie": "100",
-        "forceattaque": "30",
-        "tourattaque": "2",
-        "nomdupouvoir": "Lumière Rédemptrice",
-        "description": "Réduit les ténèbres avec une aura sacrée",
-        "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/100.png"
-    }
+  {
+    "id": "P1",
+    "nomcarteperso": "ZEPHYR",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Tempête Déchaînée",
+    "description": "Inflige une tempête violente à l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/1.png"
+  },
+  {
+    "id": "P2",
+    "nomcarteperso": "ZEPHYR",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Tempête Déchaînée",
+    "description": "Inflige une tempête violente à l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/2.png"
+  },
+  {
+    "id": "P3",
+    "nomcarteperso": "ÉMISSAIRE DES GALAXIES",
+    "pointsdevie": "100",
+    "forceattaque": "25",
+    "tourattaque": "3",
+    "nomdupouvoir": "Éveil Céleste",
+    "description": "Appelle une énergie cosmique protectrice",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/3.png"
+  },
+  {
+    "id": "P4",
+    "nomcarteperso": "ÉMISSAIRE DES GALAXIES",
+    "pointsdevie": "100",
+    "forceattaque": "25",
+    "tourattaque": "3",
+    "nomdupouvoir": "Éveil Céleste",
+    "description": "Appelle une énergie cosmique protectrice",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/4.png"
+  },
+  {
+    "id": "P5",
+    "nomcarteperso": "MAÎTRE DES SABLES NUMÉRIQUES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "2",
+    "nomdupouvoir": "Déchirure Temporelle",
+    "description": "Déstabilise le flux du temps",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/5.png"
+  },
+  {
+    "id": "P6",
+    "nomcarteperso": "MAÎTRE DES SABLES NUMÉRIQUES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "2",
+    "nomdupouvoir": "Déchirure Temporelle",
+    "description": "Déstabilise le flux du temps",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/6.png"
+  },
+  {
+    "id": "P7",
+    "nomcarteperso": "CAMPRIMTRAINE DES FLOTS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Navigation Transdimensionnelle",
+    "description": "Traverse les dimensions pour surprendre l'adversaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/7.png"
+  },
+  {
+    "id": "P8",
+    "nomcarteperso": "CAMPRIMTRAINE DES FLOTS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Navigation Transdimensionnelle",
+    "description": "Traverse les dimensions pour surprendre l'adversaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/8.png"
+  },
+  {
+    "id": "P9",
+    "nomcarteperso": "LE CHAMPION DU TONNERRE",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Fureur Draconique",
+    "description": "Libère une puissante énergie foudroyante",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/9.png"
+  },
+  {
+    "id": "P10",
+    "nomcarteperso": "LE CHAMPION DU TONNERRE",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Fureur Draconique",
+    "description": "Libère une puissante énergie foudroyante",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/10.png"
+  },
+  {
+    "id": "P11",
+    "nomcarteperso": "GARDIEN DES ABYSSES OUBLIÉES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "2",
+    "nomdupouvoir": "Marée Bioluminescente",
+    "description": "Inonde le champ de bataille d'une marée lumineuse",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/11.png"
+  },
+  {
+    "id": "P12",
+    "nomcarteperso": "GARDIEN DES ABYSSES OUBLIÉES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "2",
+    "nomdupouvoir": "Marée Bioluminescente",
+    "description": "Inonde le champ de bataille d'une marée lumineuse",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/12.png"
+  },
+  {
+    "id": "P13",
+    "nomcarteperso": "SAVANT DU TEMPS MÉCANIQUE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Archiviste d'Éternité",
+    "description": "Protège par une mémoire temporelle infinie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/13.png"
+  },
+  {
+    "id": "P14",
+    "nomcarteperso": "SAVANT DU TEMPS MÉCANIQUE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Archiviste d'Éternité",
+    "description": "Protège par une mémoire temporelle infinie",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/14.png"
+  },
+  {
+    "id": "P15",
+    "nomcarteperso": "LE BRISEUR DE CODES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Virus Disruptif",
+    "description": "Perturbe les systèmes adverses",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/15.png"
+  },
+  {
+    "id": "P16",
+    "nomcarteperso": "LE BRISEUR DE CODES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Virus Disruptif",
+    "description": "Perturbe les systèmes adverses",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/16.png"
+  },
+  {
+    "id": "P17",
+    "nomcarteperso": "LE CHASSEUR MYSTÈRES VAP",
+    "pointsdevie": "100",
+    "forceattaque": "25",
+    "tourattaque": "2",
+    "nomdupouvoir": "Chronométrie Détective",
+    "description": "Prévoit les actions adverses",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/17.png"
+  },
+  {
+    "id": "P18",
+    "nomcarteperso": "LE CHASSEUR MYSTÈRES VAP",
+    "pointsdevie": "100",
+    "forceattaque": "25",
+    "tourattaque": "2",
+    "nomdupouvoir": "Chronométrie Détective",
+    "description": "Prévoit les actions adverses",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/18.png"
+  },
+  {
+    "id": "P19",
+    "nomcarteperso": "SPECTRE DE NUIT SILENCIEUSE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Danse des Spectres",
+    "description": "Enveloppe l'adversaire de ténèbres mouvantes",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/19.png"
+  },
+  {
+    "id": "P20",
+    "nomcarteperso": "SPECTRE DE NUIT SILENCIEUSE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Danse des Spectres",
+    "description": "Enveloppe l'adversaire de ténèbres mouvantes",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/20.png"
+  },
+  {
+    "id": "P21",
+    "nomcarteperso": "AVATAR DE LA SYLVE ÉTERNELLE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Renaissance Florale",
+    "description": "Soigne les blessures par la magie naturelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/21.png"
+  },
+  {
+    "id": "P22",
+    "nomcarteperso": "AVATAR DE LA SYLVE ÉTERNELLE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Renaissance Florale",
+    "description": "Soigne les blessures par la magie naturelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/22.png"
+  },
+  {
+    "id": "P23",
+    "nomcarteperso": "L'ERRANTE DES ROYAUMES ÉTHÉRÉS",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Appel des Âmes Perdues",
+    "description": "Invoque les âmes pour perturber l'adversaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/23.png"
+  },
+  {
+    "id": "P24",
+    "nomcarteperso": "L'ERRANTE DES ROYAUMES ÉTHÉRÉS",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Appel des Âmes Perdues",
+    "description": "Invoque les âmes pour perturber l'adversaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/24.png"
+  },
+  {
+    "id": "P25",
+    "nomcarteperso": "VOYAGEUR DES BRUMES COSMIQUES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Adaptation Planétaire",
+    "description": "S'adapte à toutes les attaques adverses",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/25.png"
+  },
+  {
+    "id": "P26",
+    "nomcarteperso": "VOYAGEUR DES BRUMES COSMIQUES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Adaptation Planétaire",
+    "description": "S'adapte à toutes les attaques adverses",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/26.png"
+  },
+  {
+    "id": "P27",
+    "nomcarteperso": "GARDIEN DES SONGES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Maître des Rêves Distordus",
+    "description": "Contrôle les rêves pour infliger des dégâts psychiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/27.png"
+  },
+  {
+    "id": "P28",
+    "nomcarteperso": "GARDIEN DES SONGES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Maître des Rêves Distordus",
+    "description": "Contrôle les rêves pour infliger des dégâts psychiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/28.png"
+  },
+  {
+    "id": "P29",
+    "nomcarteperso": "SEIGNEUR DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Vortex Abyssal",
+    "description": "Crée une tempête de vide",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/29.png"
+  },
+  {
+    "id": "P30",
+    "nomcarteperso": "SEIGNEUR DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Vortex Abyssal",
+    "description": "Crée une tempête de vide",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/30.png"
+  },
+  {
+    "id": "P31",
+    "nomcarteperso": "MESSAGER DU CRÉPUSCULE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Ombres Rampantes",
+    "description": "Enveloppe l'adversaire d'ombres",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/31.png"
+  },
+  {
+    "id": "P32",
+    "nomcarteperso": "MESSAGER DU CRÉPUSCULE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Ombres Rampantes",
+    "description": "Enveloppe l'adversaire d'ombres",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/32.png"
+  },
+  {
+    "id": "P33",
+    "nomcarteperso": "ARCANISTE DES VENTS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Ouragan Mystique",
+    "description": "Lance un souffle dévastateur",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/33.png"
+  },
+  {
+    "id": "P34",
+    "nomcarteperso": "ARCANISTE DES VENTS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Ouragan Mystique",
+    "description": "Lance un souffle dévastateur",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/34.png"
+  },
+  {
+    "id": "P35",
+    "nomcarteperso": "PYROMANCIEN DES CENDRES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Flammes du Chaos",
+    "description": "Invoque une explosion ardente",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/35.png"
+  },
+  {
+    "id": "P36",
+    "nomcarteperso": "PYROMANCIEN DES CENDRES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Flammes du Chaos",
+    "description": "Invoque une explosion ardente",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/36.png"
+  },
+  {
+    "id": "P37",
+    "nomcarteperso": "SENTINELLE DU TEMPS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Chrono-Barrière",
+    "description": "Erige un mur temporel protecteur",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/37.png"
+  },
+  {
+    "id": "P38",
+    "nomcarteperso": "SENTINELLE DU TEMPS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Chrono-Barrière",
+    "description": "Erige un mur temporel protecteur",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/38.png"
+  },
+  {
+    "id": "P39",
+    "nomcarteperso": "ALCHIMISTE DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Transmutation Obscure",
+    "description": "Altère la matière à volonté",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/39.png"
+  },
+  {
+    "id": "P40",
+    "nomcarteperso": "ALCHIMISTE DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Transmutation Obscure",
+    "description": "Altère la matière à volonté",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/40.png"
+  },
+  {
+    "id": "P41",
+    "nomcarteperso": "MARCHEUR DES SONGES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Rêverie Éthérée",
+    "description": "Endort temporairement l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/41.png"
+  },
+  {
+    "id": "P42",
+    "nomcarteperso": "MARCHEUR DES SONGES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Rêverie Éthérée",
+    "description": "Endort temporairement l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/42.png"
+  },
+  {
+    "id": "P43",
+    "nomcarteperso": "CHEVALIER DU ZÉNITH",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Lame Astrale",
+    "description": "Tranche avec une épée chargée d'énergie stellaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/43.png"
+  },
+  {
+    "id": "P44",
+    "nomcarteperso": "CHEVALIER DU ZÉNITH",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Lame Astrale",
+    "description": "Tranche avec une épée chargée d'énergie stellaire",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/44.png"
+  },
+  {
+    "id": "P45",
+    "nomcarteperso": "ORACLE DES VORTEX",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Prédiction Chaotique",
+    "description": "Anticipe et contre les attaques ennemies",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/45.png"
+  },
+  {
+    "id": "P46",
+    "nomcarteperso": "ORACLE DES VORTEX",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Prédiction Chaotique",
+    "description": "Anticipe et contre les attaques ennemies",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/46.png"
+  },
+  {
+    "id": "P47",
+    "nomcarteperso": "SEIGNEUR DES CENDRES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Incandescence Sombre",
+    "description": "Invoque des flammes destructrices",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/47.png"
+  },
+  {
+    "id": "P48",
+    "nomcarteperso": "SEIGNEUR DES CENDRES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Incandescence Sombre",
+    "description": "Invoque des flammes destructrices",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/48.png"
+  },
+  {
+    "id": "P49",
+    "nomcarteperso": "ÉCLAIREUR DES RUINES PERDUES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Souffle des Anciens",
+    "description": "Canalise l'énergie d'anciens vestiges",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/49.png"
+  },
+  {
+    "id": "P50",
+    "nomcarteperso": "ÉCLAIREUR DES RUINES PERDUES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Souffle des Anciens",
+    "description": "Canalise l'énergie d'anciens vestiges",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/50.png"
+  },
+  {
+    "id": "P51",
+    "nomcarteperso": "SENTINELLE DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Ombre Furtive",
+    "description": "Se déplace sans être détecté",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/51.png"
+  },
+  {
+    "id": "P52",
+    "nomcarteperso": "SENTINELLE DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Ombre Furtive",
+    "description": "Se déplace sans être détecté",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/52.png"
+  },
+  {
+    "id": "P53",
+    "nomcarteperso": "CHAMAN DES VENTS",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Ouragan Céleste",
+    "description": "Déchaîne une tempête de vent",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/53.png"
+  },
+  {
+    "id": "P54",
+    "nomcarteperso": "CHAMAN DES VENTS",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Ouragan Céleste",
+    "description": "Déchaîne une tempête de vent",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/54.png"
+  },
+  {
+    "id": "P55",
+    "nomcarteperso": "MAÎTRE DES ILLUSIONS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Reflet Trompeur",
+    "description": "Crée des copies illusoires",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/55.png"
+  },
+  {
+    "id": "P56",
+    "nomcarteperso": "MAÎTRE DES ILLUSIONS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Reflet Trompeur",
+    "description": "Crée des copies illusoires",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/56.png"
+  },
+  {
+    "id": "P57",
+    "nomcarteperso": "GARDIEN DE L'ABÎME",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Poigne Maudite",
+    "description": "Entrave un ennemi avec des chaînes d'ombre",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/57.png"
+  },
+  {
+    "id": "P58",
+    "nomcarteperso": "GARDIEN DE L'ABÎME",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Poigne Maudite",
+    "description": "Entrave un ennemi avec des chaînes d'ombre",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/58.png"
+  },
+  {
+    "id": "P59",
+    "nomcarteperso": "DRUIDE ÉTERNEL",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Bénédiction Sylvestre",
+    "description": "Guérit les alliés avec l'énergie de la nature",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/59.png"
+  },
+  {
+    "id": "P60",
+    "nomcarteperso": "DRUIDE ÉTERNEL",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Bénédiction Sylvestre",
+    "description": "Guérit les alliés avec l'énergie de la nature",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/60.png"
+  },
+  {
+    "id": "P61",
+    "nomcarteperso": "CHAMPION DES TEMPÊTES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Déluge Foudroyant",
+    "description": "Lance une pluie d'éclairs",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/61.png"
+  },
+  {
+    "id": "P62",
+    "nomcarteperso": "CHAMPION DES TEMPÊTES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Déluge Foudroyant",
+    "description": "Lance une pluie d'éclairs",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/62.png"
+  },
+  {
+    "id": "P63",
+    "nomcarteperso": "ALCHIMISTE DÉMENT",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Élixir Chaotique",
+    "description": "Altère l'état des combattants",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/63.png"
+  },
+  {
+    "id": "P64",
+    "nomcarteperso": "ALCHIMISTE DÉMENT",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Élixir Chaotique",
+    "description": "Altère l'état des combattants",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/64.png"
+  },
+  {
+    "id": "P65",
+    "nomcarteperso": "RÔDEUR DES TÉNÈBRES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Silencieuse",
+    "description": "Se fond dans l'obscurité pour attaquer",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/65.png"
+  },
+  {
+    "id": "P66",
+    "nomcarteperso": "TÉNÈBRES EN SILENCE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Silencieuse",
+    "description": "Se fond dans l'obscurité pour attaquer",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/66.png"
+  },
+  {
+    "id": "P67",
+    "nomcarteperso": "MESSAGER CÉLESTE",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Chute Stellaire",
+    "description": "Fait tomber une étoile sur l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/67.png"
+  },
+  {
+    "id": "P68",
+    "nomcarteperso": "MESSAGER CÉLESTE",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Chute Stellaire",
+    "description": "Fait tomber une étoile sur l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/68.png"
+  },
+  {
+    "id": "P69",
+    "nomcarteperso": "PALADIN DES LUEURS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Bouclier Radieux",
+    "description": "Protège et repousse les ténèbres",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/69.png"
+  },
+  {
+    "id": "P70",
+    "nomcarteperso": "PALADIN DES LUEURS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Bouclier Radieux",
+    "description": "Protège et repousse les ténèbres",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/70.png"
+  },
+  {
+    "id": "P71",
+    "nomcarteperso": "ARCHON DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Déchirure Cosmique",
+    "description": "Crée une faille dimensionnelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/71.png"
+  },
+  {
+    "id": "P72",
+    "nomcarteperso": "ARCHON DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Déchirure Cosmique",
+    "description": "Crée une faille dimensionnelle",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/72.png"
+  },
+  {
+    "id": "P73",
+    "nomcarteperso": "GARDIENNE ASTRALE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Éveil Stellaire",
+    "description": "Déploie une énergie céleste protectrice",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/73.png"
+  },
+  {
+    "id": "P74",
+    "nomcarteperso": "GARDIENNE ASTRALE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Éveil Stellaire",
+    "description": "Déploie une énergie céleste protectrice",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/74.png"
+  },
+  {
+    "id": "P75",
+    "nomcarteperso": "ROI SPECTRAL",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Marche Fantomatique",
+    "description": "Traverse la réalité pour surprendre l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/75.png"
+  },
+  {
+    "id": "P76",
+    "nomcarteperso": "ROI SPECTRAL",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Marche Fantomatique",
+    "description": "Traverse la réalité pour surprendre l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/76.png"
+  },
+  {
+    "id": "P77",
+    "nomcarteperso": "SEIGNEUR DES FLAMMES ÉTERNELLES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Incandescence Infernale",
+    "description": "Déchaîne une vague de feu ardente",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/77.png"
+  },
+  {
+    "id": "P78",
+    "nomcarteperso": "SEIGNEUR DES FLAMMES ÉTERNELLES",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Incandescence Infernale",
+    "description": "Déchaîne une vague de feu ardente",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/78.png"
+  },
+  {
+    "id": "P79",
+    "nomcarteperso": "ORACLE DES MARÉES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Vague Prophétique",
+    "description": "Prédit l'avenir en contrôlant les marées",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/79.png"
+  },
+  {
+    "id": "P80",
+    "nomcarteperso": "ORACLE DES MARÉES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Vague Prophétique",
+    "description": "Prédit l'avenir en contrôlant les marées",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/80.png"
+  },
+  {
+    "id": "P81",
+    "nomcarteperso": "CHAMAN DES TEMPÊTES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Fureur Orageuse",
+    "description": "Déchaîne une tempête électrisante",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/81.png"
+  },
+  {
+    "id": "P82",
+    "nomcarteperso": "CHAMAN DES TEMPÊTES",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Fureur Orageuse",
+    "description": "Déchaîne une tempête électrisante",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/82.png"
+  },
+  {
+    "id": "P83",
+    "nomcarteperso": "MAÎTRE DES OMBRES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Voile Nocturne",
+    "description": "Se fond dans les ténèbres pour frapper",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/83.png"
+  },
+  {
+    "id": "P84",
+    "nomcarteperso": "MAÎTRE DES OMBRES",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Voile Nocturne",
+    "description": "Se fond dans les ténèbres pour frapper",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/84.png"
+  },
+  {
+    "id": "P85",
+    "nomcarteperso": "SENTINELLE DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Écho du Vide",
+    "description": "Propage des ondes de vide destructrices",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/85.png"
+  },
+  {
+    "id": "P86",
+    "nomcarteperso": "SENTINELLE DU NÉANT",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Écho du Vide",
+    "description": "Propage des ondes de vide destructrices",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/86.png"
+  },
+  {
+    "id": "P87",
+    "nomcarteperso": "AVATAR DE LA NATURE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Racines Ancestrales",
+    "description": "Entrave les ennemis avec des lianes magiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/87.png"
+  },
+  {
+    "id": "P88",
+    "nomcarteperso": "AVATAR DE LA NATURE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Racines Ancestrales",
+    "description": "Entrave les ennemis avec des lianes magiques",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/88.png"
+  },
+  {
+    "id": "P89",
+    "nomcarteperso": "SEIGNEUR DU GIVRE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Blizzard Éternel",
+    "description": "Enveloppe le champ de bataille de glace",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/89.png"
+  },
+  {
+    "id": "P90",
+    "nomcarteperso": "SEIGNEUR DU GIVRE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Blizzard Éternel",
+    "description": "Enveloppe le champ de bataille de glace",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/90.png"
+  },
+  {
+    "id": "P91",
+    "nomcarteperso": "CHAMPION CÉLESTE",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Rayon Divin",
+    "description": "Canalise une énergie sacrée destructrice",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/91.png"
+  },
+  {
+    "id": "P92",
+    "nomcarteperso": "CHAMPION CÉLESTE",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Rayon Divin",
+    "description": "Canalise une énergie sacrée destructrice",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/92.png"
+  },
+  {
+    "id": "P93",
+    "nomcarteperso": "REINE DES ILLUSIONS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Miroir Trompeur",
+    "description": "Crée des clones illusoires pour troubler l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/93.png"
+  },
+  {
+    "id": "P94",
+    "nomcarteperso": "REINE DES ILLUSIONS",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Miroir Trompeur",
+    "description": "Crée des clones illusoires pour troubler l'ennemi",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/94.png"
+  },
+  {
+    "id": "P95",
+    "nomcarteperso": "ESPRIT DE LA LUNE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Lumière Astrale",
+    "description": "Illumine le champ de bataille et affaiblit les ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/95.png"
+  },
+  {
+    "id": "P96",
+    "nomcarteperso": "ESPRIT DE LA LUNE",
+    "pointsdevie": "100",
+    "forceattaque": "35",
+    "tourattaque": "3",
+    "nomdupouvoir": "Lumière Astrale",
+    "description": "Illumine le champ de bataille et affaiblit les ennemis",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/96.png"
+  },
+  {
+    "id": "P97",
+    "nomcarteperso": "MESSAGER DU CHAOS",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Tempête Chaotique",
+    "description": "Semer le désordre avec une énergie instable",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/97.png"
+  },
+  {
+    "id": "P98",
+    "nomcarteperso": "MESSAGER DU CHAOS",
+    "pointsdevie": "100",
+    "forceattaque": "40",
+    "tourattaque": "3",
+    "nomdupouvoir": "Tempête Chaotique",
+    "description": "Semer le désordre avec une énergie instable",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/98.png"
+  },
+  {
+    "id": "P99",
+    "nomcarteperso": "PALADIN DE L'AUBE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Lumière Rédemptrice",
+    "description": "Réduit les ténèbres avec une aura sacrée",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/99.png"
+  },
+  {
+    "id": "P100",
+    "nomcarteperso": "PALADIN DE L'AUBE",
+    "pointsdevie": "100",
+    "forceattaque": "30",
+    "tourattaque": "2",
+    "nomdupouvoir": "Lumière Rédemptrice",
+    "description": "Réduit les ténèbres avec une aura sacrée",
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/100.png"
+  }
 ]
