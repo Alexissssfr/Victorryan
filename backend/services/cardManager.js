@@ -1,137 +1,104 @@
 const fs = require("fs");
 const path = require("path");
-const { supabase, getCardImageUrl } = require("../config/supabase");
 
 class Card {
-  constructor(data, type) {
-    this.id = data.id;
-    this.type = type;
-    this.imageUrl = getCardImageUrl(type, data.id);
+  constructor(type, id, stats) {
+    this.type = type; // 'perso' ou 'bonus'
+    this.id = id;
+    this.stats = stats;
+  }
 
-    if (type === "perso") {
-      this.name = data.nomperso;
-      this.baseStats = {
-        health: data.pv,
-        attack: data.force,
-        attackTurns: data.tourattaque,
-      };
-      this.currentStats = { ...this.baseStats };
-      this.activeBonuses = [];
-    } else if (type === "bonus") {
-      this.name = data.nomcartebonus;
-      this.bonusPercentage = data.pourcentagebonus;
-      this.bonusTurns = data.tourbonus;
+  createCardElement() {
+    const cardDiv = document.createElement("div");
+    cardDiv.className = "card";
+    cardDiv.dataset.type = this.type;
+    cardDiv.dataset.id = this.id;
+
+    const img = document.createElement("img");
+    img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/${
+      this.type
+    }/data/images/${this.type}/${this.type === "perso" ? "P" : "B"}${
+      this.id
+    }.png`;
+    img.alt = this.stats.nom;
+    img.onerror = () => {
+      img.src = "placeholder.png";
+    };
+
+    const overlay = document.createElement("div");
+    overlay.className = "card-overlay";
+
+    if (this.type === "perso") {
+      overlay.innerHTML = `
+                <h3>${this.stats.nom}</h3>
+                <p>PV: ${this.stats.pv}</p>
+                <p>Attaque: ${this.stats.attaque}</p>
+                <p>Défense: ${this.stats.defense}</p>
+                <p>${this.stats.description}</p>
+            `;
+    } else {
+      overlay.innerHTML = `
+                <h3>${this.stats.nom}</h3>
+                <p>Effet: ${this.stats.effet}</p>
+                <p>Valeur: ${this.stats.valeur}</p>
+                <p>${this.stats.description}</p>
+            `;
     }
 
-    // Données d'affichage
-    this.nomcarte = type === "perso" ? data.nomcarteperso : data.nomcartebonus;
-    this.description = data.description;
-    this.nomdupouvoir = data.nomdupouvoir;
-  }
-
-  applyBonus(bonusCard) {
-    if (this.type !== "perso" || bonusCard.type !== "bonus") {
-      throw new Error("Invalid card types for bonus application");
-    }
-
-    this.activeBonuses.push({
-      percentage: bonusCard.bonusPercentage,
-      turns: bonusCard.bonusTurns,
-    });
-
-    this.updateStats();
-  }
-
-  updateStats() {
-    if (this.type !== "perso") return;
-
-    let totalBonus = 0;
-    this.activeBonuses = this.activeBonuses.filter((bonus) => {
-      bonus.turns--;
-      if (bonus.turns > 0) {
-        totalBonus += bonus.percentage;
-      }
-      return bonus.turns > 0;
-    });
-
-    this.currentStats.attack = Math.floor(
-      this.baseStats.attack * (1 + totalBonus / 100)
-    );
-  }
-
-  receiveDamage(amount) {
-    if (this.type !== "perso") {
-      throw new Error("Only personnage cards can receive damage");
-    }
-
-    this.currentStats.health = Math.max(0, this.currentStats.health - amount);
-    return this.currentStats.health === 0;
-  }
-
-  canAttack() {
-    if (this.type !== "perso") return false;
-    return this.currentStats.attackTurns > 0;
-  }
-
-  useAttack() {
-    if (!this.canAttack()) {
-      throw new Error("Card cannot attack");
-    }
-    this.currentStats.attackTurns--;
+    cardDiv.appendChild(img);
+    cardDiv.appendChild(overlay);
+    return cardDiv;
   }
 }
 
 class CardManager {
   constructor() {
-    this.personnages = new Map();
-    this.bonus = new Map();
+    this.personnages = [];
+    this.bonus = [];
     this.loadCards();
   }
 
   loadCards() {
     try {
+      const personnagesPath = path.join(
+        __dirname,
+        "../../stock/personnages.json"
+      );
+      const bonusPath = path.join(__dirname, "../../stock/bonus.json");
+
       const personnagesData = JSON.parse(
-        fs.readFileSync(
-          path.join(__dirname, "../../stock/personnages.json"),
-          "utf8"
-        )
+        fs.readFileSync(personnagesPath, "utf8")
       );
-      const bonusData = JSON.parse(
-        fs.readFileSync(path.join(__dirname, "../../stock/bonus.json"), "utf8")
-      );
+      const bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
 
-      personnagesData.forEach((data) => {
-        this.personnages.set(data.id, new Card(data, "perso"));
-      });
-
-      bonusData.forEach((data) => {
-        this.bonus.set(data.id, new Card(data, "bonus"));
-      });
-
-      console.log(
-        `Cartes chargées: ${this.personnages.size} perso, ${this.bonus.size} bonus`
-      );
+      this.personnages = personnagesData.personnages;
+      this.bonus = bonusData.bonus;
     } catch (error) {
       console.error("Erreur lors du chargement des cartes:", error);
     }
   }
 
-  getRandomCards(type, count) {
-    const cards = type === "perso" ? this.personnages : this.bonus;
-    const cardArray = Array.from(cards.values());
-    const result = [];
-
-    for (let i = 0; i < count; i++) {
-      const randomIndex = Math.floor(Math.random() * cardArray.length);
-      result.push(cardArray[randomIndex]);
-    }
-
-    return result;
+  getRandomPersonnage() {
+    const randomIndex = Math.floor(Math.random() * this.personnages.length);
+    const personnage = this.personnages[randomIndex];
+    return new Card("perso", personnage.id, personnage);
   }
 
-  getCard(type, id) {
-    return type === "perso" ? this.personnages.get(id) : this.bonus.get(id);
+  getRandomBonus() {
+    const randomIndex = Math.floor(Math.random() * this.bonus.length);
+    const bonus = this.bonus[randomIndex];
+    return new Card("bonus", bonus.id, bonus);
+  }
+
+  getPersonnageById(id) {
+    const personnage = this.personnages.find((p) => p.id === id);
+    return personnage ? new Card("perso", personnage.id, personnage) : null;
+  }
+
+  getBonusById(id) {
+    const bonus = this.bonus.find((b) => b.id === id);
+    return bonus ? new Card("bonus", bonus.id, bonus) : null;
   }
 }
 
-module.exports = new CardManager();
+module.exports = { Card, CardManager };

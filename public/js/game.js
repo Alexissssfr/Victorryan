@@ -1,8 +1,5 @@
-const { Card, CardManager } = require("./cardManager");
-
 class Game {
   constructor() {
-    this.cardManager = new CardManager();
     this.players = {
       player1: {
         name: "Joueur 1",
@@ -20,6 +17,7 @@ class Game {
     this.currentPlayer = "player1";
     this.selectedCard = null;
     this.gameState = "waiting"; // waiting, playing, finished
+    this.setupEventListeners();
   }
 
   setupEventListeners() {
@@ -31,25 +29,23 @@ class Game {
       .addEventListener("click", () => this.endTurn());
   }
 
-  startGame() {
-    // Distribution des cartes
-    this.players.player1.personnage = this.cardManager.getRandomPersonnage();
-    this.players.player2.personnage = this.cardManager.getRandomPersonnage();
+  async startGame() {
+    try {
+      // Créer une nouvelle partie
+      const response = await fetch("/api/game/create", {
+        method: "POST",
+      });
+      const { gameId } = await response.json();
 
-    // Distribution des cartes bonus
-    for (let i = 0; i < 3; i++) {
-      this.players.player1.bonus.push(this.cardManager.getRandomBonus());
-      this.players.player2.bonus.push(this.cardManager.getRandomBonus());
-    }
+      // Démarrer la partie
+      await fetch(`/api/game/${gameId}/start`, {
+        method: "POST",
+      });
 
-    this.gameState = "playing";
-    this.render();
-  }
-
-  shuffleCards(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+      this.gameState = "playing";
+      this.render();
+    } catch (error) {
+      console.error("Erreur lors du démarrage de la partie:", error);
     }
   }
 
@@ -61,10 +57,10 @@ class Game {
     const player2Hand = document.getElementById("player2Hand");
 
     // Nettoyage des zones
-    player1Board.innerHTML = "";
-    player2Board.innerHTML = "";
-    player1Hand.innerHTML = "";
-    player2Hand.innerHTML = "";
+    player1Board.innerHTML = "<h2>Joueur 1</h2>";
+    player2Board.innerHTML = "<h2>Joueur 2</h2>";
+    player1Hand.innerHTML = "<h2>Main du Joueur 1</h2>";
+    player2Hand.innerHTML = "<h2>Main du Joueur 2</h2>";
 
     // Affichage des personnages
     if (this.players.player1.personnage) {
@@ -124,7 +120,7 @@ class Game {
 
       switch (effect) {
         case "attaque":
-          this.players[targetPlayer].personnage.stats.attaque += value;
+          this.players[targetPlayer].personnage.stats.forceattaque += value;
           break;
         case "pv":
           this.players[targetPlayer].pv = Math.min(
@@ -145,13 +141,25 @@ class Game {
     }
   }
 
-  endTurn() {
+  async endTurn() {
     if (this.gameState !== "playing") return;
 
-    this.currentPlayer =
-      this.currentPlayer === "player1" ? "player2" : "player1";
-    this.selectedCard = null;
-    this.render();
+    try {
+      // Récupérer l'ID de la partie en cours
+      const gameId = window.location.pathname.split("/").pop();
+
+      // Appeler l'API pour terminer le tour
+      await fetch(`/api/game/${gameId}/end-turn`, {
+        method: "POST",
+      });
+
+      this.currentPlayer =
+        this.currentPlayer === "player1" ? "player2" : "player1";
+      this.selectedCard = null;
+      this.render();
+    } catch (error) {
+      console.error("Erreur lors de la fin du tour:", error);
+    }
   }
 
   updateTurnIndicator() {
@@ -162,25 +170,7 @@ class Game {
   }
 }
 
-class GameManager {
-  constructor() {
-    this.games = new Map();
-  }
-
-  createGame() {
-    const gameId = Math.random().toString(36).substring(7);
-    const game = new Game();
-    this.games.set(gameId, game);
-    return gameId;
-  }
-
-  getGame(gameId) {
-    return this.games.get(gameId);
-  }
-
-  removeGame(gameId) {
-    this.games.delete(gameId);
-  }
-}
-
-module.exports = { Game, GameManager };
+// Initialisation du jeu
+window.addEventListener("DOMContentLoaded", () => {
+  window.game = new Game();
+});

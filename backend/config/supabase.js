@@ -5,28 +5,16 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error("Supabase credentials are missing in environment variables");
+  throw new Error("Missing Supabase credentials");
 }
 
 // Création du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Fonction pour obtenir l'URL d'une image de carte
-const getCardImageUrl = (type, cardId) => {
-  // Construire l'URL vers l'image dans le bucket Supabase
-  const bucket = "images";
-  const folder = type; // 'perso' ou 'bonus'
-  const filename = `${type === "perso" ? "P" : "B"}${cardId
-    .toString()
-    .padStart(1, "0")}.png`;
-
-  // Générer l'URL publique
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from(bucket).getPublicUrl(`${folder}/${filename}`);
-
-  return publicUrl;
-};
+function getImageUrl(type, id) {
+  const prefix = type === "perso" ? "P" : "B";
+  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${prefix}${id}.png`;
+}
 
 // Ajouter une fonction pour stocker les SVG
 async function storeCardSVG(gameId, playerId, cardId, svgContent) {
@@ -48,6 +36,6 @@ async function storeCardSVG(gameId, playerId, cardId, svgContent) {
 
 module.exports = {
   supabase,
-  getCardImageUrl,
+  getImageUrl,
   storeCardSVG,
 };
