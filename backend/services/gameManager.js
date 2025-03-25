@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const cardManager = require("./cardManager");
+const { Card } = require("./cardManager");
 
 // Map pour stocker les parties actives en mémoire
 const activeGames = new Map();
@@ -149,3 +150,105 @@ function generateUniqueId() {
   // Générer un UUID v4
   return crypto.randomUUID();
 }
+
+class Game {
+  constructor(gameId) {
+    this.gameId = gameId;
+    this.players = {
+      player1: null,
+      player2: null,
+    };
+    this.currentTurn = 1;
+    this.activePlayer = "player1";
+    this.status = "waiting";
+    this.winner = null;
+    this.cards = {
+      player1: {
+        perso: [],
+        bonus: [],
+      },
+      player2: {
+        perso: [],
+        bonus: [],
+      },
+    };
+  }
+
+  canJoin() {
+    return !this.players.player2;
+  }
+
+  addPlayer(playerId) {
+    if (!this.players.player1) {
+      this.players.player1 = playerId;
+      return "player1";
+    } else if (!this.players.player2) {
+      this.players.player2 = playerId;
+      this.status = "playing";
+      return "player2";
+    }
+    return null;
+  }
+
+  isPlayerTurn(playerId) {
+    const playerRole = this.getPlayerRole(playerId);
+    return playerRole === this.activePlayer;
+  }
+
+  getPlayerRole(playerId) {
+    if (this.players.player1 === playerId) return "player1";
+    if (this.players.player2 === playerId) return "player2";
+    return null;
+  }
+
+  getStateForPlayer(playerId) {
+    const playerRole = this.getPlayerRole(playerId);
+    if (!playerRole) return null;
+
+    return {
+      gameId: this.gameId,
+      currentTurn: this.currentTurn,
+      activePlayer: this.activePlayer,
+      status: this.status,
+      winner: this.winner,
+      cards: {
+        player: this.cards[playerRole],
+        opponent: this.cards[playerRole === "player1" ? "player2" : "player1"],
+      },
+    };
+  }
+
+  endTurn(playerId) {
+    if (!this.isPlayerTurn(playerId)) {
+      throw new Error("Not your turn");
+    }
+
+    this.activePlayer = this.activePlayer === "player1" ? "player2" : "player1";
+    if (this.activePlayer === "player1") {
+      this.currentTurn++;
+    }
+  }
+}
+
+class GameManager {
+  constructor() {
+    this.games = new Map();
+  }
+
+  createGame() {
+    const gameId = Math.random().toString(36).substring(2, 15);
+    const game = new Game(gameId);
+    this.games.set(gameId, game);
+    return game;
+  }
+
+  getGame(gameId) {
+    return this.games.get(gameId);
+  }
+
+  removeGame(gameId) {
+    this.games.delete(gameId);
+  }
+}
+
+module.exports = { Game, GameManager };
