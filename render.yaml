@@ -1,15 +1,11 @@
 services:
   - type: web
-    name: victoryane-game
+    name: card-game
     env: node
-    buildCommand: npm install && cd frontend && npm install && npm run build
-    startCommand: node server.js
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     envVars:
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_KEY
-        sync: false
-      - key: REACT_APP_SUPABASE_URL
-        sync: false
-      - key: REACT_APP_SUPABASE_ANON_KEY
-        sync: false
+      - key: NODE_VERSION
+        value: 18.x
+      - key: NODE_ENV
+        value: production
