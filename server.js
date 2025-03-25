@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const http = require("http");
-const { Server } = require("socket.io");
+const socketIo = require("socket.io");
 require("dotenv").config();
 const crypto = require("crypto");
 const gameCache = require("./backend/services/gameCache");
@@ -10,7 +10,12 @@ const cardManager = require("./backend/services/cardManager");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
 // Configuration des chemins
 const frontendPath = path.join(__dirname, "frontend");
@@ -29,7 +34,7 @@ app.use(cors());
 app.use(express.json());
 
 // Servir les fichiers statiques du frontend
-app.use(express.static(frontendPath));
+app.use(express.static(path.join(__dirname, "frontend/build")));
 
 // Servir les fichiers du dossier stock (pour les images des cartes)
 app.use("/stock", express.static(stockPath));

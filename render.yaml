@@ -1,15 +1,13 @@
 services:
   - type: web
-    name: card-game-frontend
-    env: static
-    buildCommand: npm install && CI=false npm run build
-    staticPublishPath: ./build
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    name: victoryane-game
+    env: node
+    buildCommand: npm install && cd frontend && npm install && npm run build
+    startCommand: node server.js
     envVars:
-      - key: REACT_APP_API_URL
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
         sync: false
       - key: REACT_APP_SUPABASE_URL
         sync: false
