@@ -11,12 +11,22 @@ if (!supabaseUrl || !supabaseKey) {
 // Création du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Fonction utilitaire pour construire l'URL correcte des images
-function getImageUrl(type, id) {
-  // Enlever le "data/images" du chemin
-  const publicKey = process.env.SUPABASE_ANON_KEY;
-  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.png?apikey=${publicKey}`;
-}
+// Fonction pour obtenir l'URL d'une image de carte
+const getCardImageUrl = (type, cardId) => {
+  // Construire l'URL vers l'image dans le bucket Supabase
+  const bucket = "images";
+  const folder = type; // 'perso' ou 'bonus'
+  const filename = `${type === "perso" ? "P" : "B"}${cardId
+    .toString()
+    .padStart(1, "0")}.png`;
+
+  // Générer l'URL publique
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucket).getPublicUrl(`${folder}/${filename}`);
+
+  return publicUrl;
+};
 
 // Ajouter une fonction pour stocker les SVG
 async function storeCardSVG(gameId, playerId, cardId, svgContent) {
@@ -38,6 +48,6 @@ async function storeCardSVG(gameId, playerId, cardId, svgContent) {
 
 module.exports = {
   supabase,
-  getImageUrl,
+  getCardImageUrl,
   storeCardSVG,
 };

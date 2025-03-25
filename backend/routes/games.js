@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const gameManager = require("../services/gameManager")();
+const { authenticatePlayer } = require("../middleware/auth");
 
 /**
  * @route POST /games/create
@@ -15,23 +16,23 @@ router.post("/create", async (req, res) => {
     if (!playerId) {
       return res.status(400).json({
         success: false,
-        message: "L'ID du joueur est requis",
+        error: "playerId requis",
       });
     }
 
     // Créer une nouvelle partie
-    const gameId = await gameManager.createGame(playerId);
+    const game = gameManager.createGame(playerId);
 
     res.json({
       success: true,
-      gameId,
-      message: "Partie créée avec succès",
+      gameId: game.gameId,
+      state: game.getStateForPlayer(playerId),
     });
   } catch (error) {
-    console.error("Erreur lors de la création de la partie:", error);
+    console.error("Erreur création partie:", error);
     res.status(500).json({
       success: false,
-      message: "Erreur lors de la création de la partie",
+      error: error.message,
     });
   }
 });
@@ -44,86 +45,44 @@ router.post("/create", async (req, res) => {
 router.post("/join", async (req, res) => {
   try {
     const { gameId, playerId } = req.body;
+    const game = gameManager.getGame(gameId);
 
-    // Vérifier que l'ID de la partie et l'ID du joueur sont fournis
-    if (!gameId || !playerId) {
+    if (!game) {
+      return res.status(404).json({
+        success: false,
+        error: "Partie non trouvée",
+      });
+    }
+
+    if (!game.canJoin(playerId)) {
       return res.status(400).json({
         success: false,
-        message: "L'ID de la partie et l'ID du joueur sont requis",
+        error: "Impossible de rejoindre la partie",
       });
     }
 
-    // Rejoindre la partie
-    const joined = await gameManager.joinGame(gameId, playerId);
-
-    if (joined) {
-      // Récupérer l'état actuel de la partie
-      const gameState = await gameManager.getGameState(gameId);
-
-      res.json({
-        success: true,
-        joined: true,
-        gameState,
-        message: "Partie rejointe avec succès",
-      });
-    } else {
-      res.status(400).json({
+    const playerRole = game.addPlayer(playerId);
+    if (!playerRole) {
+      return res.status(400).json({
         success: false,
-        joined: false,
-        message:
-          "Impossible de rejoindre la partie. Elle est peut-être complète ou n'existe pas.",
+        error: "Partie complète",
       });
     }
-  } catch (error) {
-    console.error("Erreur lors de la connexion à la partie:", error);
-    res.status(500).json({
-      success: false,
-      message: "Erreur lors de la connexion à la partie",
+
+    // Distribuer les cartes initiales si pas déjà fait
+    if (!game.cards.player1.perso.length) {
+      await game.distributeInitialCards();
+    }
+
+    res.json({
+      success: true,
+      state: game.getStateForPlayer(playerId),
     });
-  }
-});
-
-/**
- * @route POST /games/play
- * @desc Jouer un tour dans une partie
- * @access Public
- */
-router.post("/play", async (req, res) => {
-  try {
-    const { gameId, playerId, actions } = req.body;
-
-    // Vérifier que toutes les informations nécessaires sont fournies
-    if (!gameId || !playerId || !actions) {
-      return res.status(400).json({
-        success: false,
-        message: "L'ID de la partie, l'ID du joueur et les actions sont requis",
-      });
-    }
-
-    // Jouer le tour
-    const success = await gameManager.playTurn(gameId, playerId, actions);
-
-    if (success) {
-      // Récupérer l'état mis à jour de la partie
-      const gameState = await gameManager.getGameState(gameId);
-
-      res.json({
-        success: true,
-        gameState,
-        message: "Tour joué avec succès",
-      });
-    } else {
-      res.status(400).json({
-        success: false,
-        message:
-          "Impossible de jouer le tour. Vérifiez que c'est bien votre tour et que la partie est en cours.",
-      });
-    }
   } catch (error) {
-    console.error("Erreur lors du tour de jeu:", error);
+    console.error("Erreur join partie:", error);
     res.status(500).json({
       success: false,
-      message: "Erreur lors du tour de jeu",
+      error: error.message,
     });
   }
 });
@@ -161,6 +120,118 @@ router.get("/:gameId", async (req, res) => {
       message: "Erreur lors de la récupération de l'état de la partie",
     });
   }
+});
+
+/**
+ * @route GET /games/state/:gameId
+ * @desc Obtenir l'état de la partie
+ * @access Private
+ */
+router.get("/state/:gameId", authenticatePlayer, (req, res) => {
+  const { gameId } = req.params;
+  const { playerId } = req;
+
+  const game = gameManager.getGame(gameId);
+  if (!game) {
+    return res
+      .status(404)
+      .json({ success: false, error: "Partie non trouvée" });
+  }
+
+  const state = game.getStateForPlayer(playerId);
+  if (!state) {
+    return res
+      .status(403)
+      .json({ success: false, error: "Accès non autorisé" });
+  }
+
+  res.json({ success: true, state });
+});
+
+/**
+ * @route POST /games/play-bonus
+ * @desc Jouer une carte bonus
+ * @access Private
+ */
+router.post("/play-bonus", authenticatePlayer, (req, res) => {
+  const { gameId, bonusCardId, targetPersoId } = req.body;
+  const { playerId } = req;
+
+  const game = gameManager.getGame(gameId);
+  if (!game) {
+    return res
+      .status(404)
+      .json({ success: false, error: "Partie non trouvée" });
+  }
+
+  const result = game.playBonus(playerId, bonusCardId, targetPersoId);
+  if (!result.success) {
+    return res.status(400).json({ success: false, error: result.message });
+  }
+
+  res.json({
+    success: true,
+    message: result.message,
+    state: game.getStateForPlayer(playerId),
+  });
+});
+
+/**
+ * @route POST /games/attack
+ * @desc Attaquer avec une carte
+ * @access Private
+ */
+router.post("/attack", authenticatePlayer, (req, res) => {
+  const { gameId, attackerCardId, targetCardId } = req.body;
+  const { playerId } = req;
+
+  const game = gameManager.getGame(gameId);
+  if (!game) {
+    return res
+      .status(404)
+      .json({ success: false, error: "Partie non trouvée" });
+  }
+
+  const result = game.attack(playerId, attackerCardId, targetCardId);
+  if (!result.success) {
+    return res.status(400).json({ success: false, error: result.message });
+  }
+
+  res.json({
+    success: true,
+    message: result.message,
+    damage: result.damage,
+    isDead: result.isDead,
+    state: game.getStateForPlayer(playerId),
+  });
+});
+
+/**
+ * @route POST /games/end-turn
+ * @desc Terminer son tour
+ * @access Private
+ */
+router.post("/end-turn", authenticatePlayer, (req, res) => {
+  const { gameId } = req.body;
+  const { playerId } = req;
+
+  const game = gameManager.getGame(gameId);
+  if (!game) {
+    return res
+      .status(404)
+      .json({ success: false, error: "Partie non trouvée" });
+  }
+
+  const result = game.endTurn(playerId);
+  if (!result.success) {
+    return res.status(400).json({ success: false, error: result.message });
+  }
+
+  res.json({
+    success: true,
+    message: result.message,
+    state: game.getStateForPlayer(playerId),
+  });
 });
 
 module.exports = router;
