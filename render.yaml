@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: card-game
+    name: victorryan-cardgame
     env: node
     buildCommand: npm install
     startCommand: npm start
@@ -11,3 +11,4 @@ services:
         sync: false
       - key: SUPABASE_KEY
         sync: false
+    healthCheckPath: /health
