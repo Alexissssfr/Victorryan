@@ -21,19 +21,21 @@
       .game-info {
         text-align: center;
         margin-bottom: 20px;
-        padding: 10px;
+        padding: 15px;
         background-color: #2d2d2d;
-        border-radius: 5px;
+        border-radius: 10px;
       }
 
       .game-code {
         color: #e5b13a;
-        font-size: 1.2em;
+        font-size: 1.5em;
         font-weight: bold;
+        margin-bottom: 10px;
       }
 
       .turn-info {
         color: #4caf50;
+        font-size: 1.2em;
         margin-top: 10px;
       }
 
@@ -47,54 +49,82 @@
         flex: 1;
         padding: 15px;
         background-color: #2d2d2d;
-        border-radius: 5px;
+        border-radius: 10px;
         margin: 0 10px;
       }
 
       .player-info h2 {
         color: #e5b13a;
         margin-top: 0;
+        text-align: center;
       }
 
       .stats {
         display: flex;
-        gap: 10px;
+        gap: 15px;
         align-items: center;
-        margin: 5px 0;
+        margin: 10px 0;
+        justify-content: center;
       }
 
-      .stats img {
-        width: 20px;
-        height: 20px;
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
-      .board {
+      .stat-icon {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        font-weight: bold;
+        font-size: 18px;
+      }
+
+      .board-container {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
       }
 
       .player-board {
         flex: 1;
         padding: 20px;
         background-color: #2d2d2d;
-        border-radius: 5px;
+        border-radius: 10px;
         margin: 0 10px;
-        min-height: 300px;
+        min-height: 400px;
+      }
+
+      .player-board h3 {
+        text-align: center;
+        color: #e5b13a;
+        margin-top: 0;
+        margin-bottom: 20px;
       }
 
       .card {
         position: relative;
         height: 300px;
+        width: 200px;
         border-radius: 10px;
         overflow: hidden;
         background-color: #1a1a1a;
-        margin-bottom: 10px;
+        margin: 0 auto 20px;
         cursor: pointer;
-        transition: transform 0.3s;
+        transition: transform 0.3s, box-shadow 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       }
 
       .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+      }
+
+      .card.selected {
+        border: 3px solid #e5b13a;
         transform: translateY(-5px);
       }
 
@@ -110,7 +140,7 @@
         left: 0;
         right: 0;
         background: rgba(0, 0, 0, 0.8);
-        padding: 10px;
+        padding: 15px;
         transform: translateY(100%);
         transition: transform 0.3s;
       }
@@ -119,25 +149,89 @@
         transform: translateY(0);
       }
 
-      .bonus-cards {
+      .card-title {
+        color: #e5b13a;
+        margin: 0 0 10px;
+        font-size: 16px;
+        text-align: center;
+      }
+
+      .card-stats {
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .card-description {
+        font-size: 12px;
+        font-style: italic;
+        margin-top: 5px;
+        opacity: 0.8;
+      }
+
+      .character-selection {
         display: flex;
-        gap: 10px;
         flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
         margin-top: 20px;
       }
 
+      .character-card {
+        width: 120px;
+        height: 180px;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s;
+        position: relative;
+      }
+
+      .character-card:hover {
+        transform: scale(1.05);
+      }
+
+      .character-card.active {
+        border: 2px solid #e5b13a;
+      }
+
+      .character-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .character-name {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 5px;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .bonus-cards {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 30px;
+      }
+
       .bonus-card {
-        width: 150px;
-        height: 200px;
+        width: 120px;
+        height: 180px;
       }
 
       .controls {
         text-align: center;
-        margin-top: 20px;
+        margin-top: 30px;
+        margin-bottom: 30px;
       }
 
-      button {
-        padding: 10px 20px;
+      .control-btn {
+        padding: 12px 25px;
         font-size: 16px;
         background-color: #4caf50;
         color: white;
@@ -145,102 +239,515 @@
         border-radius: 5px;
         cursor: pointer;
         transition: background-color 0.3s;
+        margin: 0 10px;
       }
 
-      button:hover {
+      .control-btn:hover {
         background-color: #45a049;
       }
 
-      button:disabled {
+      .control-btn:disabled {
         background-color: #cccccc;
         cursor: not-allowed;
+      }
+
+      .login-container {
+        max-width: 500px;
+        margin: 100px auto;
+        padding: 30px;
+        background-color: #2d2d2d;
+        border-radius: 10px;
+        text-align: center;
+      }
+
+      .login-title {
+        color: #e5b13a;
+        margin-bottom: 30px;
+      }
+
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .form-group {
+        text-align: left;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        background-color: #3d3d3d;
+        color: white;
+        font-size: 16px;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+      }
+
+      .message {
+        margin-top: 20px;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+      }
+
+      .message.error {
+        background-color: rgba(255, 0, 0, 0.1);
+        color: #ff5555;
+      }
+
+      .message.success {
+        background-color: rgba(0, 255, 0, 0.1);
+        color: #55ff55;
+      }
+
+      .hidden {
+        display: none;
       }
     </style>
   </head>
   <body>
-    <div class="container">
+    <div id="login-screen" class="login-container">
+      <h1 class="login-title">Victor Ryan - Jeu de Cartes</h1>
+      <div class="login-form">
+        <div class="form-group">
+          <label for="gameId">Code de Partie</label>
+          <input
+            type="text"
+            id="gameId"
+            placeholder="Entrez un code de partie"
+            autocomplete="off"
+          />
+        </div>
+        <div class="form-actions">
+          <button id="createGameBtn" class="control-btn">
+            Créer une partie
+          </button>
+          <button id="joinGameBtn" class="control-btn">
+            Rejoindre une partie
+          </button>
+        </div>
+        <div id="login-message" class="message hidden"></div>
+      </div>
+    </div>
+
+    <div id="game-screen" class="container hidden">
       <div class="game-info">
-        <div>Code partie: <span id="gameCode" class="game-code">-</span></div>
-        <div class="turn-info">Tour: <span id="turnNumber">1</span></div>
+        <div class="game-code">
+          Partie: <span id="game-code-display">-</span>
+        </div>
+        <div class="turn-info">
+          Tour <span id="turn-number">1</span> -
+          <span id="current-player">Votre tour</span>
+        </div>
       </div>
 
       <div class="player-stats">
         <div class="player-info">
           <h2>Adversaire</h2>
           <div class="stats">
-            <span>❤️</span> <span id="opponentHP">525</span> <span>🎴</span>
-            <span id="opponentCards">5</span> <span>🌟</span>
-            <span id="opponentBonus">0</span>
+            <div class="stat-item">
+              <div class="stat-icon">❤️</div>
+              <div id="opponent-hp" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">🎴</div>
+              <div id="opponent-cards" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">🌟</div>
+              <div id="opponent-bonus" class="stat-value">0</div>
+            </div>
           </div>
         </div>
         <div class="player-info">
-          <h2>Joueur</h2>
+          <h2>Vous</h2>
           <div class="stats">
-            <span>❤️</span> <span id="playerHP">490</span> <span>🎴</span>
-            <span id="playerCards">5</span> <span>🌟</span>
-            <span id="playerBonus">0</span>
+            <div class="stat-item">
+              <div class="stat-icon">❤️</div>
+              <div id="player-hp" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">🎴</div>
+              <div id="player-cards" class="stat-value">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">🌟</div>
+              <div id="player-bonus" class="stat-value">0</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="board">
-        <div id="opponentBoard" class="player-board">
-          <h3>Cartes adversaire</h3>
-          <div id="opponentCharacter"></div>
+      <div class="board-container">
+        <div class="player-board">
+          <h3>Carte Adverse</h3>
+          <div id="opponent-active-card"></div>
+
+          <h3>Cartes Adverses</h3>
+          <div
+            id="opponent-character-selection"
+            class="character-selection"
+          ></div>
         </div>
-        <div id="playerBoard" class="player-board">
-          <h3>Vos cartes</h3>
-          <div id="playerCharacter"></div>
-          <div class="bonus-cards" id="playerBonusCards"></div>
+
+        <div class="player-board">
+          <h3>Votre Carte Active</h3>
+          <div id="player-active-card"></div>
+
+          <h3>Vos Personnages</h3>
+          <div
+            id="player-character-selection"
+            class="character-selection"
+          ></div>
+
+          <h3>Vos Cartes Bonus</h3>
+          <div id="player-bonus-cards" class="bonus-cards"></div>
         </div>
       </div>
 
       <div class="controls">
-        <button id="endTurnBtn">Fin du tour</button>
+        <button id="end-turn-btn" class="control-btn">Terminer le Tour</button>
       </div>
+
+      <div id="game-message" class="message hidden"></div>
     </div>
 
     <script>
+      // État global du jeu
       let gameState = null;
-      let playerId = "player1"; // À adapter selon le joueur
+      let playerId =
+        localStorage.getItem("victorryan_player_id") || generatePlayerId();
 
-      // Fonction pour créer une carte
-      function createCard(type, data, isOpponent = false) {
+      // Initialisation des éléments DOM
+      document.addEventListener("DOMContentLoaded", () => {
+        initLoginScreen();
+      });
+
+      // Génère un ID de joueur unique
+      function generatePlayerId() {
+        const id = "player-" + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("victorryan_player_id", id);
+        return id;
+      }
+
+      // Initialise l'écran de connexion
+      function initLoginScreen() {
+        document
+          .getElementById("createGameBtn")
+          .addEventListener("click", createGame);
+        document
+          .getElementById("joinGameBtn")
+          .addEventListener("click", joinGame);
+
+        // Vérifier si une partie est en cours
+        const currentGameId = localStorage.getItem("victorryan_game_id");
+        if (currentGameId) {
+          document.getElementById("gameId").value = currentGameId;
+          showLoginMessage(
+            "Vous avez une partie en cours. Rejoingnez-la ou créez-en une nouvelle.",
+            "success"
+          );
+        }
+      }
+
+      // Crée une nouvelle partie
+      async function createGame() {
+        try {
+          hideLoginMessage();
+
+          const response = await fetch("/api/game/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok)
+            throw new Error("Erreur lors de la création de la partie");
+
+          const data = await response.json();
+          document.getElementById("gameId").value = data.gameId;
+          showLoginMessage(
+            `Partie créée ! Code: ${data.gameId}. Attendez qu'un autre joueur rejoigne.`,
+            "success"
+          );
+
+          // Sauvegarder le code de partie
+          localStorage.setItem("victorryan_game_id", data.gameId);
+
+          // Rejoindre automatiquement la partie
+          joinGame();
+        } catch (error) {
+          showLoginMessage(`Erreur: ${error.message}`, "error");
+        }
+      }
+
+      // Rejoint une partie existante
+      async function joinGame() {
+        try {
+          hideLoginMessage();
+
+          const gameId = document
+            .getElementById("gameId")
+            .value.trim()
+            .toUpperCase();
+          if (!gameId) {
+            showLoginMessage("Veuillez entrer un code de partie", "error");
+            return;
+          }
+
+          // Démarrer la partie
+          const startResponse = await fetch(`/api/game/${gameId}/start`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!startResponse.ok && startResponse.status !== 404) {
+            throw new Error("Erreur lors du démarrage de la partie");
+          }
+
+          // Charger l'état de la partie
+          const stateResponse = await fetch(
+            `/api/game/${gameId}/state/${playerId}`
+          );
+
+          if (!stateResponse.ok) {
+            throw new Error("Erreur lors du chargement de la partie");
+          }
+
+          gameState = await stateResponse.json();
+
+          // Sauvegarder le code de partie
+          localStorage.setItem("victorryan_game_id", gameId);
+
+          // Afficher l'écran de jeu
+          document.getElementById("login-screen").classList.add("hidden");
+          document.getElementById("game-screen").classList.remove("hidden");
+
+          // Initialiser le jeu
+          initGame(gameState);
+
+          // Mise à jour périodique
+          setInterval(updateGameState, 3000);
+        } catch (error) {
+          showLoginMessage(`Erreur: ${error.message}`, "error");
+        }
+      }
+
+      // Initialise le jeu
+      function initGame(state) {
+        console.log("Initialisation du jeu avec état:", state);
+
+        // Afficher le code de partie
+        document.getElementById("game-code-display").textContent = state.gameId;
+
+        // Mettre à jour le tour
+        updateTurnInfo(state);
+
+        // Mettre à jour les stats
+        updatePlayerStats(state);
+
+        // Afficher les cartes
+        renderCards(state);
+
+        // Ajouter les événements
+        document
+          .getElementById("end-turn-btn")
+          .addEventListener("click", endTurn);
+
+        // Mettre à jour l'UI
+        updateUI(state);
+      }
+
+      // Met à jour l'état du jeu
+      async function updateGameState() {
+        if (!gameState) return;
+
+        try {
+          const response = await fetch(
+            `/api/game/${gameState.gameId}/state/${playerId}`
+          );
+          if (!response.ok)
+            throw new Error("Erreur lors de la mise à jour de l'état");
+
+          const newState = await response.json();
+
+          // Mettre à jour uniquement si l'état a changé
+          if (JSON.stringify(gameState) !== JSON.stringify(newState)) {
+            gameState = newState;
+            updateUI(gameState);
+          }
+        } catch (error) {
+          console.error("Erreur de mise à jour:", error);
+        }
+      }
+
+      // Met à jour l'interface utilisateur
+      function updateUI(state) {
+        updateTurnInfo(state);
+        updatePlayerStats(state);
+        renderCards(state);
+
+        // Activer/désactiver les contrôles
+        document.getElementById("end-turn-btn").disabled =
+          state.currentPlayer !== playerId;
+      }
+
+      // Met à jour les informations de tour
+      function updateTurnInfo(state) {
+        document.getElementById("turn-number").textContent = state.turn;
+
+        const isMyturn = state.currentPlayer === playerId;
+        document.getElementById("current-player").textContent = isMyturn
+          ? "Votre tour"
+          : "Tour adverse";
+        document.getElementById("current-player").style.color = isMyturn
+          ? "#4CAF50"
+          : "#ff5555";
+      }
+
+      // Met à jour les statistiques des joueurs
+      function updatePlayerStats(state) {
+        // Stats joueur
+        document.getElementById("player-hp").textContent = state.you.pv;
+        document.getElementById("player-cards").textContent = state.you.cartes;
+        document.getElementById("player-bonus").textContent = state.you.bonus;
+
+        // Stats adversaire
+        document.getElementById("opponent-hp").textContent = state.opponent.pv;
+        document.getElementById("opponent-cards").textContent =
+          state.opponent.cartes;
+        document.getElementById("opponent-bonus").textContent =
+          state.opponent.bonus;
+      }
+
+      // Affiche les cartes
+      function renderCards(state) {
+        // Carte active du joueur
+        const playerActiveCard = document.getElementById("player-active-card");
+        playerActiveCard.innerHTML = "";
+        if (state.you.personnage) {
+          playerActiveCard.appendChild(
+            createCardElement("perso", state.you.personnage, false)
+          );
+        }
+
+        // Carte active de l'adversaire
+        const opponentActiveCard = document.getElementById(
+          "opponent-active-card"
+        );
+        opponentActiveCard.innerHTML = "";
+        if (state.opponent.personnage) {
+          opponentActiveCard.appendChild(
+            createCardElement("perso", state.opponent.personnage, true)
+          );
+        }
+
+        // Personnages du joueur
+        const playerCharacters = document.getElementById(
+          "player-character-selection"
+        );
+        playerCharacters.innerHTML = "";
+        if (state.you.personnages) {
+          state.you.personnages.forEach((character) => {
+            const isActive =
+              state.you.personnage && character.id === state.you.personnage.id;
+            const card = createCharacterCard(character, isActive);
+            card.addEventListener("click", () =>
+              changeActiveCharacter(character.id)
+            );
+            playerCharacters.appendChild(card);
+          });
+        }
+
+        // Personnages de l'adversaire
+        const opponentCharacters = document.getElementById(
+          "opponent-character-selection"
+        );
+        opponentCharacters.innerHTML = "";
+        if (state.opponent.personnages) {
+          state.opponent.personnages.forEach((character) => {
+            const isActive =
+              state.opponent.personnage &&
+              character.id === state.opponent.personnage.id;
+            opponentCharacters.appendChild(
+              createCharacterCard(character, isActive, true)
+            );
+          });
+        }
+
+        // Cartes bonus du joueur
+        const playerBonusCards = document.getElementById("player-bonus-cards");
+        playerBonusCards.innerHTML = "";
+        if (state.you.cartesBonus) {
+          state.you.cartesBonus.forEach((bonus) => {
+            const card = createCardElement("bonus", bonus, false, true);
+            card.addEventListener("click", () => useBonus(bonus));
+            playerBonusCards.appendChild(card);
+          });
+        }
+      }
+
+      // Crée un élément de carte
+      function createCardElement(
+        type,
+        data,
+        isOpponent = false,
+        isBonus = false
+      ) {
         const card = document.createElement("div");
-        card.className = `card ${type === "bonus" ? "bonus-card" : ""}`;
+        card.className = `card ${isBonus ? "bonus-card" : ""}`;
 
         const img = document.createElement("img");
-        fetch(`/api/image/${type}/${data.id}`)
-          .then((response) => response.json())
-          .then((imageData) => {
-            img.src = imageData.url;
-          })
-          .catch(() => {
-            img.src =
-              "https://via.placeholder.com/200x300?text=Image+non+disponible";
-          });
+        const imgUrl = `/api/image/${type}/${data.id}`;
+
+        // Fetch l'URL directement plutôt que via une requête API
+        img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/${type}/${data.id}.png`;
+        img.alt = data.nom || data.nomcarteperso || type;
+        img.onerror = () => {
+          img.src = `https://via.placeholder.com/200x300?text=${type}+${data.id}`;
+        };
 
         const overlay = document.createElement("div");
         overlay.className = "card-overlay";
 
         if (type === "perso") {
           overlay.innerHTML = `
-            <h3>${data.nomcarteperso}</h3>
-            <p>PV: ${data.pointsdevie}</p>
-            <p>Attaque: ${data.forceattaque}</p>
-            <p>Tour: ${data.tourattaque}</p>
-            <p>Pouvoir: ${data.nomdupouvoir}</p>
+            <h3 class="card-title">${
+              data.nom || data.nomcarteperso || "Personnage"
+            }</h3>
+            <div class="card-stats">PV: ${data.pointsdevie}</div>
+            <div class="card-stats">Attaque: ${data.forceattaque}</div>
+            <div class="card-stats">Pouvoir: ${
+              data.pouvoir || data.nomdupouvoir || "-"
+            }</div>
+            <div class="card-description">${data.description || ""}</div>
           `;
         } else {
           overlay.innerHTML = `
-            <h3>${data.nom}</h3>
-            <p>Effet: ${data.bonuspourcentage || data.effet}</p>
-            <p>Tours: ${data.toursbonus}</p>
+            <h3 class="card-title">${data.nom}</h3>
+            <div class="card-stats">Bonus: ${
+              data.pourcentagebonus || data.bonuspourcentage || "-"
+            }%</div>
+            <div class="card-stats">Pouvoir: ${data.pouvoir || "-"}</div>
+            <div class="card-description">${data.description || ""}</div>
           `;
-
-          if (!isOpponent) {
-            card.onclick = () => useBonus(data);
-          }
         }
 
         card.appendChild(img);
@@ -248,53 +755,62 @@
         return card;
       }
 
-      // Fonction pour mettre à jour l'interface
-      function updateUI(state) {
-        document.getElementById("gameCode").textContent = state.gameId;
-        document.getElementById("turnNumber").textContent = state.turn;
+      // Crée une carte de personnage pour la sélection
+      function createCharacterCard(
+        character,
+        isActive = false,
+        isOpponent = false
+      ) {
+        const card = document.createElement("div");
+        card.className = `character-card ${isActive ? "active" : ""}`;
 
-        // Mise à jour des stats
-        document.getElementById("playerHP").textContent = state.you.pv;
-        document.getElementById("playerCards").textContent = state.you.cartes;
-        document.getElementById("playerBonus").textContent = state.you.bonus;
+        const img = document.createElement("img");
+        img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/${character.id}.png`;
+        img.alt = character.nom || "Personnage";
+        img.onerror = () => {
+          img.src = `https://via.placeholder.com/120x180?text=${character.id}`;
+        };
 
-        document.getElementById("opponentHP").textContent = state.opponent.pv;
-        document.getElementById("opponentCards").textContent =
-          state.opponent.cartes;
-        document.getElementById("opponentBonus").textContent =
-          state.opponent.bonus;
+        const name = document.createElement("div");
+        name.className = "character-name";
+        name.textContent = character.nom;
 
-        // Mise à jour des cartes
-        const playerCharacter = document.getElementById("playerCharacter");
-        const opponentCharacter = document.getElementById("opponentCharacter");
-        const playerBonusCards = document.getElementById("playerBonusCards");
-
-        playerCharacter.innerHTML = "";
-        opponentCharacter.innerHTML = "";
-        playerBonusCards.innerHTML = "";
-
-        if (state.you.personnage) {
-          playerCharacter.appendChild(
-            createCard("perso", state.you.personnage)
-          );
-        }
-
-        if (state.opponent.personnage) {
-          opponentCharacter.appendChild(
-            createCard("perso", state.opponent.personnage, true)
-          );
-        }
-
-        state.you.cartesBonus.forEach((bonus) => {
-          playerBonusCards.appendChild(createCard("bonus", bonus));
-        });
-
-        // Gestion du bouton de fin de tour
-        document.getElementById("endTurnBtn").disabled =
-          state.currentPlayer !== playerId;
+        card.appendChild(img);
+        card.appendChild(name);
+        return card;
       }
 
-      // Fonction pour utiliser une carte bonus
+      // Change le personnage actif
+      async function changeActiveCharacter(characterId) {
+        if (!gameState || gameState.currentPlayer !== playerId) return;
+
+        try {
+          const response = await fetch(
+            `/api/game/${gameState.gameId}/change-character`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                playerId,
+                characterId,
+              }),
+            }
+          );
+
+          if (!response.ok)
+            throw new Error("Erreur lors du changement de personnage");
+
+          // Mise à jour immédiate
+          await updateGameState();
+        } catch (error) {
+          console.error("Erreur:", error);
+          showGameMessage(`Erreur: ${error.message}`, "error");
+        }
+      }
+
+      // Utilise une carte bonus
       async function useBonus(bonusCard) {
         if (!gameState || gameState.currentPlayer !== playerId) return;
 
@@ -310,15 +826,18 @@
             }),
           });
 
-          if (response.ok) {
-            await updateGameState();
-          }
+          if (!response.ok)
+            throw new Error("Erreur lors de l'utilisation du bonus");
+
+          // Mise à jour immédiate
+          await updateGameState();
         } catch (error) {
-          console.error("Erreur lors de l'utilisation du bonus:", error);
+          console.error("Erreur:", error);
+          showGameMessage(`Erreur: ${error.message}`, "error");
         }
       }
 
-      // Fonction pour terminer le tour
+      // Termine le tour
       async function endTurn() {
         if (!gameState || gameState.currentPlayer !== playerId) return;
 
@@ -327,43 +846,47 @@
             `/api/game/${gameState.gameId}/end-turn`,
             {
               method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
             }
           );
 
-          if (response.ok) {
-            await updateGameState();
-          }
+          if (!response.ok) throw new Error("Erreur lors de la fin du tour");
+
+          // Mise à jour immédiate
+          await updateGameState();
         } catch (error) {
-          console.error("Erreur lors de la fin du tour:", error);
+          console.error("Erreur:", error);
+          showGameMessage(`Erreur: ${error.message}`, "error");
         }
       }
 
-      // Fonction pour mettre à jour l'état du jeu
-      async function updateGameState() {
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const gameId = urlParams.get("gameId");
-
-          if (!gameId) return;
-
-          const response = await fetch(`/api/game/${gameId}/state/${playerId}`);
-          if (response.ok) {
-            gameState = await response.json();
-            updateUI(gameState);
-          }
-        } catch (error) {
-          console.error("Erreur lors de la mise à jour de l'état:", error);
-        }
+      // Affiche un message dans l'écran de connexion
+      function showLoginMessage(message, type = "error") {
+        const messageEl = document.getElementById("login-message");
+        messageEl.textContent = message;
+        messageEl.className = `message ${type}`;
+        messageEl.classList.remove("hidden");
       }
 
-      // Initialisation
-      document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("endTurnBtn").onclick = endTurn;
+      // Cache le message de l'écran de connexion
+      function hideLoginMessage() {
+        document.getElementById("login-message").classList.add("hidden");
+      }
 
-        // Mise à jour périodique de l'état
-        updateGameState();
-        setInterval(updateGameState, 2000);
-      });
+      // Affiche un message dans l'écran de jeu
+      function showGameMessage(message, type = "error") {
+        const messageEl = document.getElementById("game-message");
+        messageEl.textContent = message;
+        messageEl.className = `message ${type}`;
+        messageEl.classList.remove("hidden");
+
+        // Masquer automatiquement après 5 secondes
+        setTimeout(() => {
+          messageEl.classList.add("hidden");
+        }, 5000);
+      }
     </script>
   </body>
 </html>

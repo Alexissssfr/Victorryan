@@ -32,22 +32,85 @@ class GameState {
 
   // Distribuer les cartes initiales
   async dealInitialCards(personnages, bonus) {
+    // Vérifier si nous avons des données
+    if (!personnages || !personnages.length || !bonus || !bonus.length) {
+      console.error(
+        "Pas de données de cartes disponibles pour la distribution !"
+      );
+      return false;
+    }
+
+    console.log(
+      `Distribution de cartes: ${personnages.length} personnages, ${bonus.length} bonus`
+    );
+
     // Mélanger les cartes
     const shuffledPersonnages = [...personnages].sort(
       () => Math.random() - 0.5
     );
     const shuffledBonus = [...bonus].sort(() => Math.random() - 0.5);
 
-    // Distribuer les personnages
-    this.players.player1.personnage = shuffledPersonnages[0];
-    this.players.player2.personnage = shuffledPersonnages[1];
+    // Distribuer les personnages (5 pour chaque joueur)
+    this.players.player1.personnages = shuffledPersonnages.slice(0, 5);
+    this.players.player2.personnages = shuffledPersonnages.slice(5, 10);
 
-    // Distribuer les bonus
-    this.players.player1.cartesBonus = shuffledBonus.slice(0, 3);
-    this.players.player2.cartesBonus = shuffledBonus.slice(3, 6);
+    // On choisit 1 personnage actif pour chaque joueur
+    this.players.player1.personnage = this.players.player1.personnages[0];
+    this.players.player2.personnage = this.players.player2.personnages[0];
+
+    // Log pour débogage
+    console.log("Personnage actif joueur 1:", this.players.player1.personnage);
+    console.log("Personnage actif joueur 2:", this.players.player2.personnage);
+
+    // Distribuer les bonus (5 pour chaque joueur)
+    this.players.player1.cartesBonus = shuffledBonus.slice(0, 5);
+    this.players.player2.cartesBonus = shuffledBonus.slice(5, 10);
+
+    // Sauvegarder l'état de la partie dans un fichier JSON
+    this.saveGameStateToFile();
 
     this.status = "playing";
     return true;
+  }
+
+  // Sauvegarder l'état de la partie dans un fichier JSON
+  saveGameStateToFile() {
+    try {
+      // Créer le dossier gameStates s'il n'existe pas
+      const gameStatesDir = path.join(__dirname, "gameStates");
+      if (!fs.existsSync(gameStatesDir)) {
+        fs.mkdirSync(gameStatesDir, { recursive: true });
+      }
+
+      // Chemin du fichier de sauvegarde
+      const filePath = path.join(gameStatesDir, `${this.gameId}.json`);
+
+      // Sauvegarder l'état complet
+      fs.writeFileSync(
+        filePath,
+        JSON.stringify(
+          {
+            gameId: this.gameId,
+            players: this.players,
+            currentTurn: this.currentTurn,
+            currentPlayer: this.currentPlayer,
+            status: this.status,
+            timestamp: new Date().toISOString(),
+          },
+          null,
+          2
+        )
+      );
+
+      console.log(
+        `État de la partie ${this.gameId} sauvegardé dans ${filePath}`
+      );
+    } catch (error) {
+      console.error(
+        `Erreur lors de la sauvegarde de l'état de la partie ${this.gameId}:`,
+        error
+      );
+    }
   }
 
   // Obtenir l'état actuel pour un joueur
@@ -63,6 +126,7 @@ class GameState {
         cartes: this.players[playerId].cartes,
         bonus: this.players[playerId].bonus,
         personnage: this.players[playerId].personnage,
+        personnages: this.players[playerId].personnages || [],
         cartesBonus: this.players[playerId].cartesBonus,
       },
       opponent: {
@@ -70,7 +134,12 @@ class GameState {
         cartes: this.players[opponent].cartes,
         bonus: this.players[opponent].bonus,
         personnage: this.players[opponent].personnage,
-        cartesBonus: this.players[opponent].cartesBonus.length, // On n'envoie que le nombre de cartes, pas leur contenu
+        personnages:
+          this.players[opponent].personnages?.map((p) => ({
+            id: p.id,
+            nom: p.nom,
+          })) || [],
+        cartesBonus: this.players[opponent].cartesBonus?.length || 0, // On n'envoie que le nombre de cartes, pas leur contenu
       },
     };
   }
@@ -88,23 +157,54 @@ class GameState {
 
     player.cartesBonus.splice(bonusIndex, 1);
 
-    // Appliquer l'effet du bonus
-    switch (bonusCard.effet) {
-      case "attaque":
-        if (player.personnage) {
-          player.personnage.forceattaque += bonusCard.valeur;
-        }
-        break;
-      case "pv":
-        player.pv = Math.min(1000, player.pv + bonusCard.valeur);
-        break;
-      case "defense":
-        if (player.personnage) {
-          player.personnage.defense =
-            (player.personnage.defense || 0) + bonusCard.valeur;
-        }
-        break;
+    // Appliquer l'effet du bonus selon le type de bonus
+    if (bonusCard.pourcentagebonus) {
+      if (player.personnage) {
+        // Augmenter la force d'attaque du personnage
+        player.personnage.forceattaque = Math.round(
+          player.personnage.forceattaque *
+            (1 + bonusCard.pourcentagebonus / 100)
+        );
+      }
+    } else if (bonusCard.effet) {
+      switch (bonusCard.effet) {
+        case "attaque":
+          if (player.personnage) {
+            player.personnage.forceattaque += bonusCard.valeur;
+          }
+          break;
+        case "pv":
+          player.pv = Math.min(1000, player.pv + bonusCard.valeur);
+          break;
+        case "defense":
+          if (player.personnage) {
+            player.personnage.defense =
+              (player.personnage.defense || 0) + bonusCard.valeur;
+          }
+          break;
+      }
     }
+
+    // Sauvegarder l'état après l'application du bonus
+    this.saveGameStateToFile();
+
+    return true;
+  }
+
+  // Changer de personnage actif
+  changeActiveCharacter(playerId, characterId) {
+    const player = this.players[playerId];
+    if (!player || !player.personnages) return false;
+
+    // Trouver le personnage dans la liste
+    const character = player.personnages.find((p) => p.id === characterId);
+    if (!character) return false;
+
+    // Changer le personnage actif
+    player.personnage = character;
+
+    // Sauvegarder l'état
+    this.saveGameStateToFile();
 
     return true;
   }
@@ -114,6 +214,10 @@ class GameState {
     this.currentPlayer =
       this.currentPlayer === "player1" ? "player2" : "player1";
     this.currentTurn++;
+
+    // Sauvegarder l'état après le changement de tour
+    this.saveGameStateToFile();
+
     return true;
   }
 }
@@ -147,25 +251,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// Liste des fichiers pour le débogage
-try {
-  console.log("Contenu du répertoire racine:");
-  fs.readdirSync(__dirname).forEach((file) => {
-    console.log(file);
-  });
-
-  // Vérifier si le dossier stock existe
-  const stockPath = path.join(__dirname, "stock");
-  if (fs.existsSync(stockPath)) {
-    console.log("Contenu du répertoire stock:");
-    fs.readdirSync(stockPath).forEach((file) => {
-      console.log(file);
-    });
-  } else {
-    console.error("Le répertoire 'stock' n'existe pas!");
+// Création du dossier pour les états de jeu s'il n'existe pas
+const gameStatesDir = path.join(__dirname, "gameStates");
+if (!fs.existsSync(gameStatesDir)) {
+  try {
+    fs.mkdirSync(gameStatesDir, { recursive: true });
+    console.log(`Dossier de sauvegarde des parties créé: ${gameStatesDir}`);
+  } catch (error) {
+    console.error(
+      `Erreur lors de la création du dossier ${gameStatesDir}:`,
+      error
+    );
   }
-} catch (error) {
-  console.error("Erreur lors de la lecture des répertoires:", error);
 }
 
 // Chargement des données des cartes
@@ -201,9 +298,11 @@ function getImageUrl(type, id) {
     console.warn("AVERTISSEMENT: URL Supabase non définie pour les images");
     return `https://via.placeholder.com/200x300?text=${type}+${id}`;
   }
-  return `${supabaseUrl}/storage/v1/object/public/images/${type}/data/images/${type}/${
-    type === "perso" ? "P" : "B"
-  }${id}.png`;
+
+  // Formater l'URL selon les exemples donnés
+  // Exemples : https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P1.png
+  //           https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B1.png
+  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.png`;
 }
 
 // Routes API
@@ -212,12 +311,12 @@ app.get("/api/cards/personnages", (req, res) => {
   if (personnages.length === 0) {
     return res.json([
       {
-        id: 1,
-        nomcarteperso: "Personnage Exemple",
+        id: "P1",
+        nom: "Personnage Exemple",
         pointsdevie: 100,
         forceattaque: 10,
         tourattaque: 1,
-        nomdupouvoir: "Pouvoir Exemple",
+        pouvoir: "Pouvoir Exemple",
         description: "Ceci est un exemple de personnage",
       },
     ]);
@@ -230,9 +329,9 @@ app.get("/api/cards/bonus", (req, res) => {
   if (bonus.length === 0) {
     return res.json([
       {
-        id: 100,
+        id: "B1",
         nom: "Bonus Exemple",
-        bonuspourcentage: "+10%",
+        pourcentagebonus: 10,
         toursbonus: 2,
         description: "Ceci est un exemple de bonus",
       },
@@ -248,9 +347,10 @@ app.get("/api/image/:type/:id", (req, res) => {
 });
 
 app.post("/api/game/create", (req, res) => {
-  const gameId = Math.random().toString(36).substring(7);
+  const gameId = Math.random().toString(36).substring(7).toUpperCase();
   const game = new GameState(gameId);
   activeGames.set(gameId, game);
+  console.log(`Nouvelle partie créée: ${gameId}`);
   res.json({ gameId });
 });
 
@@ -260,6 +360,7 @@ app.post("/api/game/:gameId/start", async (req, res) => {
     return res.status(404).json({ error: "Partie non trouvée" });
   }
 
+  console.log(`Démarrage de la partie ${req.params.gameId}`);
   await game.dealInitialCards(personnages, bonus);
   res.json({ success: true });
 });
@@ -282,7 +383,25 @@ app.post("/api/game/:gameId/bonus", (req, res) => {
     return res.status(404).json({ error: "Partie non trouvée" });
   }
 
+  console.log(
+    `Joueur ${playerId} utilise la carte bonus ${bonusCard.id} dans la partie ${gameId}`
+  );
   const success = game.applyBonus(playerId, bonusCard);
+  res.json({ success });
+});
+
+app.post("/api/game/:gameId/change-character", (req, res) => {
+  const { gameId } = req.params;
+  const { playerId, characterId } = req.body;
+  const game = activeGames.get(gameId);
+  if (!game) {
+    return res.status(404).json({ error: "Partie non trouvée" });
+  }
+
+  console.log(
+    `Joueur ${playerId} change de personnage actif pour ${characterId} dans la partie ${gameId}`
+  );
+  const success = game.changeActiveCharacter(playerId, characterId);
   res.json({ success });
 });
 
@@ -293,8 +412,46 @@ app.post("/api/game/:gameId/end-turn", (req, res) => {
     return res.status(404).json({ error: "Partie non trouvée" });
   }
 
+  console.log(`Fin du tour dans la partie ${gameId}`);
   game.nextTurn();
   res.json({ success: true });
+});
+
+// Route pour charger une partie existante depuis un fichier
+app.get("/api/game/:gameId/load", (req, res) => {
+  const { gameId } = req.params;
+
+  try {
+    const filePath = path.join(__dirname, "gameStates", `${gameId}.json`);
+    if (!fs.existsSync(filePath)) {
+      return res
+        .status(404)
+        .json({ error: "Sauvegarde de partie non trouvée" });
+    }
+
+    const savedState = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const game = new GameState(gameId);
+
+    // Restaurer l'état
+    game.players = savedState.players;
+    game.currentTurn = savedState.currentTurn;
+    game.currentPlayer = savedState.currentPlayer;
+    game.status = savedState.status;
+
+    // Ajouter la partie à la map active
+    activeGames.set(gameId, game);
+
+    console.log(`Partie ${gameId} chargée depuis le fichier`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error(`Erreur lors du chargement de la partie ${gameId}:`, error);
+    res
+      .status(500)
+      .json({
+        error: "Erreur lors du chargement de la partie",
+        message: error.message,
+      });
+  }
 });
 
 // Route principale
