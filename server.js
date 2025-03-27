@@ -5,6 +5,122 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const fs = require("fs");
 
+// Classe pour gérer l'état d'une partie
+class GameState {
+  constructor(gameId) {
+    this.gameId = gameId;
+    this.players = {
+      player1: {
+        pv: 525,
+        cartes: 5,
+        bonus: 0,
+        personnage: null,
+        cartesBonus: [],
+      },
+      player2: {
+        pv: 490,
+        cartes: 5,
+        bonus: 0,
+        personnage: null,
+        cartesBonus: [],
+      },
+    };
+    this.currentTurn = 1;
+    this.currentPlayer = "player1";
+    this.status = "waiting"; // waiting, playing, finished
+  }
+
+  // Distribuer les cartes initiales
+  async dealInitialCards(personnages, bonus) {
+    // Mélanger les cartes
+    const shuffledPersonnages = [...personnages].sort(
+      () => Math.random() - 0.5
+    );
+    const shuffledBonus = [...bonus].sort(() => Math.random() - 0.5);
+
+    // Distribuer les personnages
+    this.players.player1.personnage = shuffledPersonnages[0];
+    this.players.player2.personnage = shuffledPersonnages[1];
+
+    // Distribuer les bonus
+    this.players.player1.cartesBonus = shuffledBonus.slice(0, 3);
+    this.players.player2.cartesBonus = shuffledBonus.slice(3, 6);
+
+    this.status = "playing";
+    return true;
+  }
+
+  // Obtenir l'état actuel pour un joueur
+  getStateForPlayer(playerId) {
+    const opponent = playerId === "player1" ? "player2" : "player1";
+    return {
+      gameId: this.gameId,
+      turn: this.currentTurn,
+      currentPlayer: this.currentPlayer,
+      status: this.status,
+      you: {
+        pv: this.players[playerId].pv,
+        cartes: this.players[playerId].cartes,
+        bonus: this.players[playerId].bonus,
+        personnage: this.players[playerId].personnage,
+        cartesBonus: this.players[playerId].cartesBonus,
+      },
+      opponent: {
+        pv: this.players[opponent].pv,
+        cartes: this.players[opponent].cartes,
+        bonus: this.players[opponent].bonus,
+        personnage: this.players[opponent].personnage,
+        cartesBonus: this.players[opponent].cartesBonus.length, // On n'envoie que le nombre de cartes, pas leur contenu
+      },
+    };
+  }
+
+  // Appliquer un bonus
+  applyBonus(playerId, bonusCard) {
+    const player = this.players[playerId];
+    if (!player || !bonusCard) return false;
+
+    // Trouver et retirer la carte bonus de la main du joueur
+    const bonusIndex = player.cartesBonus.findIndex(
+      (card) => card.id === bonusCard.id
+    );
+    if (bonusIndex === -1) return false;
+
+    player.cartesBonus.splice(bonusIndex, 1);
+
+    // Appliquer l'effet du bonus
+    switch (bonusCard.effet) {
+      case "attaque":
+        if (player.personnage) {
+          player.personnage.forceattaque += bonusCard.valeur;
+        }
+        break;
+      case "pv":
+        player.pv = Math.min(1000, player.pv + bonusCard.valeur);
+        break;
+      case "defense":
+        if (player.personnage) {
+          player.personnage.defense =
+            (player.personnage.defense || 0) + bonusCard.valeur;
+        }
+        break;
+    }
+
+    return true;
+  }
+
+  // Passer au tour suivant
+  nextTurn() {
+    this.currentPlayer =
+      this.currentPlayer === "player1" ? "player2" : "player1";
+    this.currentTurn++;
+    return true;
+  }
+}
+
+// Map pour stocker les parties en cours
+const activeGames = new Map();
+
 // Vérification des variables d'environnement
 console.log("Démarrage du serveur...");
 console.log("Répertoire courant:", __dirname);
@@ -131,6 +247,56 @@ app.get("/api/image/:type/:id", (req, res) => {
   res.json({ url: imageUrl });
 });
 
+app.post("/api/game/create", (req, res) => {
+  const gameId = Math.random().toString(36).substring(7);
+  const game = new GameState(gameId);
+  activeGames.set(gameId, game);
+  res.json({ gameId });
+});
+
+app.post("/api/game/:gameId/start", async (req, res) => {
+  const game = activeGames.get(req.params.gameId);
+  if (!game) {
+    return res.status(404).json({ error: "Partie non trouvée" });
+  }
+
+  await game.dealInitialCards(personnages, bonus);
+  res.json({ success: true });
+});
+
+app.get("/api/game/:gameId/state/:playerId", (req, res) => {
+  const { gameId, playerId } = req.params;
+  const game = activeGames.get(gameId);
+  if (!game) {
+    return res.status(404).json({ error: "Partie non trouvée" });
+  }
+
+  res.json(game.getStateForPlayer(playerId));
+});
+
+app.post("/api/game/:gameId/bonus", (req, res) => {
+  const { gameId } = req.params;
+  const { playerId, bonusCard } = req.body;
+  const game = activeGames.get(gameId);
+  if (!game) {
+    return res.status(404).json({ error: "Partie non trouvée" });
+  }
+
+  const success = game.applyBonus(playerId, bonusCard);
+  res.json({ success });
+});
+
+app.post("/api/game/:gameId/end-turn", (req, res) => {
+  const { gameId } = req.params;
+  const game = activeGames.get(gameId);
+  if (!game) {
+    return res.status(404).json({ error: "Partie non trouvée" });
+  }
+
+  game.nextTurn();
+  res.json({ success: true });
+});
+
 // Route principale
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
@@ -146,6 +312,7 @@ app.get("/health", (req, res) => {
       personnages: personnages.length,
       bonus: bonus.length,
     },
+    activeGames: activeGames.size,
   });
 });
 
