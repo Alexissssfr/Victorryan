@@ -241,8 +241,6 @@ if (!supabaseUrl || !supabaseKey) {
   console.log("SUPABASE_KEY défini:", !!supabaseKey);
 }
 
-const supabase = createClient(supabaseUrl || "", supabaseKey || "");
-
 // Initialisation du serveur Express
 const app = express();
 const PORT = process.env.PORT || 3000;
