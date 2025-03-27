@@ -251,6 +251,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Importer les routes API
+const apiRoutes = require("./backend/server-routes");
+
+// Ajouter les routes API
+app.use("/api", apiRoutes);
+
 // Création du dossier pour les états de jeu s'il n'existe pas
 const gameStatesDir = path.join(__dirname, "gameStates");
 if (!fs.existsSync(gameStatesDir)) {
