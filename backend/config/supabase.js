@@ -34,6 +34,8 @@ async function storeCardSVG(gameId, playerId, cardId, svgContent) {
   }
 }
 
+console.log("========== DÉMARRAGE SERVER.JS VERSION PRINCIPALE ==========");
+
 module.exports = {
   supabase,
   getImageUrl,

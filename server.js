@@ -4,6 +4,7 @@ const path = require("path");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const fs = require("fs");
+const { supabase, getImageUrl } = require("./backend/config/supabase"); // Importer le module Supabase
 
 // Classe pour gérer l'état d'une partie
 class GameState {
@@ -296,23 +297,6 @@ try {
   }
 } catch (error) {
   console.error("Erreur lors du chargement des cartes:", error);
-}
-
-// Fonction pour obtenir l'URL d'une image dans Supabase
-function getImageUrl(type, id) {
-  if (!supabaseUrl) {
-    console.warn("AVERTISSEMENT: URL Supabase non définie pour les images");
-    return `https://via.placeholder.com/200x300?text=${type}+${id}`;
-  }
-
-  // Formater l'URL selon les exemples donnés
-  // Formater correctement l'ID en ajoutant le préfixe si nécessaire
-  const formattedId = id.startsWith(type === "perso" ? "P" : "B")
-    ? id
-    : `${type === "perso" ? "P" : "B"}${id}`;
-
-  // Construire l'URL complète avec le bon format
-  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${formattedId}.png`;
 }
 
 // Routes API
