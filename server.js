@@ -300,9 +300,13 @@ function getImageUrl(type, id) {
   }
 
   // Formater l'URL selon les exemples donnés
-  // Exemples : https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P1.png
-  //           https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B1.png
-  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${id}.png`;
+  // Formater correctement l'ID en ajoutant le préfixe si nécessaire
+  const formattedId = id.startsWith(type === "perso" ? "P" : "B")
+    ? id
+    : `${type === "perso" ? "P" : "B"}${id}`;
+
+  // Construire l'URL complète avec le bon format
+  return `${supabaseUrl}/storage/v1/object/public/images/${type}/${formattedId}.png`;
 }
 
 // Routes API
@@ -445,12 +449,10 @@ app.get("/api/game/:gameId/load", (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error(`Erreur lors du chargement de la partie ${gameId}:`, error);
-    res
-      .status(500)
-      .json({
-        error: "Erreur lors du chargement de la partie",
-        message: error.message,
-      });
+    res.status(500).json({
+      error: "Erreur lors du chargement de la partie",
+      message: error.message,
+    });
   }
 });
 

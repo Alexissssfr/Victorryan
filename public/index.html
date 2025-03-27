@@ -715,13 +715,17 @@
         card.className = `card ${isBonus ? "bonus-card" : ""}`;
 
         const img = document.createElement("img");
-        const imgUrl = `/api/image/${type}/${data.id}`;
+        // Formater correctement l'ID avec le préfixe approprié
+        const formattedId = data.id.startsWith(type === "perso" ? "P" : "B")
+          ? data.id
+          : `${type === "perso" ? "P" : "B"}${data.id}`;
 
-        // Fetch l'URL directement plutôt que via une requête API
-        img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/${type}/${data.id}.png`;
-        img.alt = data.nom || data.nomcarteperso || type;
+        // URL directe vers Supabase
+        img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/${type}/${formattedId}.png`;
+        img.alt = data.nom || data.nomcarteperso || data.nomcartebonus || type;
         img.onerror = () => {
-          img.src = `https://via.placeholder.com/200x300?text=${type}+${data.id}`;
+          console.error(`Erreur de chargement d'image: ${img.src}`);
+          img.src = `https://via.placeholder.com/200x300?text=${type}+${formattedId}`;
         };
 
         const overlay = document.createElement("div");
@@ -741,11 +745,16 @@
           `;
         } else {
           overlay.innerHTML = `
-            <h3 class="card-title">${data.nom}</h3>
+            <h3 class="card-title">${
+              data.nom || data.nomcartebonus || "Bonus"
+            }</h3>
             <div class="card-stats">Bonus: ${
-              data.pourcentagebonus || data.bonuspourcentage || "-"
+              data.pourcentagebonus || "-"
             }%</div>
-            <div class="card-stats">Pouvoir: ${data.pouvoir || "-"}</div>
+            <div class="card-stats">Tours: ${data.tourbonus || "-"}</div>
+            <div class="card-stats">Pouvoir: ${
+              data.pouvoir || data.nomdupouvoir || "-"
+            }</div>
             <div class="card-description">${data.description || ""}</div>
           `;
         }
@@ -765,15 +774,22 @@
         card.className = `character-card ${isActive ? "active" : ""}`;
 
         const img = document.createElement("img");
-        img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/${character.id}.png`;
-        img.alt = character.nom || "Personnage";
+        // Formater correctement l'ID avec le préfixe approprié
+        const formattedId = character.id.startsWith("P")
+          ? character.id
+          : `P${character.id}`;
+
+        img.src = `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/${formattedId}.png`;
+        img.alt = character.nom || character.nomcarteperso || "Personnage";
         img.onerror = () => {
-          img.src = `https://via.placeholder.com/120x180?text=${character.id}`;
+          console.error(`Erreur de chargement d'image: ${img.src}`);
+          img.src = `https://via.placeholder.com/120x180?text=${formattedId}`;
         };
 
         const name = document.createElement("div");
         name.className = "character-name";
-        name.textContent = character.nom;
+        name.textContent =
+          character.nom || character.nomcarteperso || "Personnage";
 
         card.appendChild(img);
         card.appendChild(name);
