@@ -2,6 +2,8 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
+const path = require("path");
+const fs = require("fs");
 const { createGame, joinGame, activeGames } = require("./gameManager");
 
 const app = express();
@@ -9,88 +11,253 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
-// Route pour créer une nouvelle partie
+// Configuration de base de données en mémoire
+const activeGames = new Map();
+
+// Charger les données des cartes (assurez-vous que ces fichiers existent)
+let personnagesData = [];
+let bonusData = [];
+
+try {
+  const personnagesPath = path.join(__dirname, "stock/personnages.json");
+  const bonusPath = path.join(__dirname, "stock/bonus.json");
+
+  if (fs.existsSync(personnagesPath) && fs.existsSync(bonusPath)) {
+    personnagesData = JSON.parse(fs.readFileSync(personnagesPath, "utf-8"));
+    bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf-8"));
+    console.log("Données des cartes chargées avec succès.");
+  } else {
+    console.error("Fichiers de cartes introuvables. Vérifiez les chemins.");
+  }
+} catch (error) {
+  console.error("Erreur lors du chargement des données de cartes:", error);
+}
+
+// Fonction utilitaire pour mélanger un tableau
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Fonction pour générer un ID unique
+function generateUniqueId() {
+  return Math.random().toString(36).substring(2, 10);
+}
+
+// Fonction pour initialiser les cartes d'un joueur
+function initializePlayerCards() {
+  // Vérifier si les données sont disponibles
+  if (personnagesData.length === 0 || bonusData.length === 0) {
+    console.error(
+      "Données de cartes non disponibles pour initialiser les cartes du joueur."
+    );
+    return { personnages: [], bonus: [] };
+  }
+
+  const personnages = shuffleArray(personnagesData)
+    .slice(0, 5)
+    .map((card) => ({ ...card }));
+
+  const bonus = shuffleArray(bonusData)
+    .slice(0, 5)
+    .map((card) => ({ ...card }));
+
+  return { personnages, bonus };
+}
+
+// Routes API
+
+// Page d'accueil
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// Créer une nouvelle partie
 app.post("/api/games", (req, res) => {
   try {
-    const gameId = createGame();
-    res.json({ gameId });
+    const gameId = generateUniqueId();
+
+    activeGames.set(gameId, {
+      id: gameId,
+      players: {},
+      gameState: "waiting",
+      currentTurn: null,
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log(`Nouvelle partie créée avec l'ID: ${gameId}`);
+    res.json({ success: true, gameId });
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
     res.status(500).json({
-      error: "Erreur interne du serveur lors de la création de la partie.",
+      success: false,
+      error: "Erreur lors de la création de la partie",
     });
   }
 });
 
-// Route pour rejoindre une partie existante
+// Rejoindre une partie
 app.post("/api/games/:gameId/join", (req, res) => {
-  const { gameId } = req.params;
-  const { playerName } = req.body;
-
-  if (!playerName) {
-    return res.status(400).json({ error: "Le nom du joueur est requis." });
-  }
-
   try {
-    const { playerId, game } = joinGame(gameId, playerName);
+    const { gameId } = req.params;
+    const { playerName } = req.body;
 
-    io.to(gameId).emit("playerJoined", {
-      playerId: playerId,
-      playerName: playerName,
-      playerCount: Object.keys(game.players).length,
+    if (!playerName) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Le nom du joueur est requis" });
+    }
+
+    if (!activeGames.has(gameId)) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Partie non trouvée" });
+    }
+
+    const game = activeGames.get(gameId);
+
+    // Vérifier si la partie est pleine
+    if (Object.keys(game.players).length >= 2) {
+      return res
+        .status(403)
+        .json({ success: false, error: "La partie est pleine" });
+    }
+
+    const playerId = generateUniqueId();
+    const playerCards = initializePlayerCards();
+
+    // Initialiser l'état du joueur
+    game.players[playerId] = {
+      id: playerId,
+      name: playerName,
+      hand: playerCards,
+      charactersState: {},
+    };
+
+    // Initialiser l'état des personnages du joueur
+    playerCards.personnages.forEach((card) => {
+      game.players[playerId].charactersState[card.id] = {
+        currentHealth: card.PV || 100,
+        currentAttack: card.force_attaque || 30,
+        currentTurns: card.tours_attaque || 2,
+        activeBonus: [],
+      };
     });
 
-    if (game.gameState === "playing") {
-      io.to(gameId).emit("gameStart", game);
+    // Définir le premier joueur si c'est le premier à rejoindre
+    if (Object.keys(game.players).length === 1) {
+      game.currentTurn = playerId;
     }
 
-    res.json({ gameId, playerId });
-  } catch (error) {
-    console.error(`Erreur pour rejoindre la partie ${gameId}:`, error);
-    if (error.message === "Partie non trouvée") {
-      res.status(404).json({ error: error.message });
-    } else if (error.message === "La partie est pleine") {
-      res.status(403).json({ error: error.message });
-    } else {
-      res
-        .status(500)
-        .json({ error: "Erreur interne du serveur pour rejoindre la partie." });
+    // Marquer le jeu comme "en cours" si deux joueurs ont rejoint
+    if (Object.keys(game.players).length === 2) {
+      game.gameState = "playing";
     }
+
+    console.log(
+      `Joueur ${playerName} (ID: ${playerId}) a rejoint la partie ${gameId}`
+    );
+    res.json({ success: true, gameId, playerId });
+  } catch (error) {
+    console.error("Erreur lors de la connexion à la partie:", error);
+    res
+      .status(500)
+      .json({ success: false, error: "Erreur interne du serveur" });
   }
 });
 
-// Configuration WebSocket pour la communication en temps réel
+// Obtenir l'état actuel d'une partie
+app.get("/api/games/:gameId", (req, res) => {
+  const { gameId } = req.params;
+
+  if (!activeGames.has(gameId)) {
+    return res
+      .status(404)
+      .json({ success: false, error: "Partie non trouvée" });
+  }
+
+  // Renvoyer une copie pour éviter les modifications directes
+  const gameState = JSON.parse(JSON.stringify(activeGames.get(gameId)));
+  res.json({ success: true, game: gameState });
+});
+
+// Configuration WebSocket
 io.on("connection", (socket) => {
   console.log(`Nouvelle connexion WebSocket: ${socket.id}`);
 
+  // Rejoindre une salle de jeu
   socket.on("joinGameRoom", ({ gameId, playerId }) => {
-    const game = activeGames.get(gameId);
-    if (!game || !game.players[playerId]) {
-      console.error(
-        `Tentative de connexion invalide à la salle: Game ${gameId}, Player ${playerId}`
-      );
-      socket.emit(
-        "error",
-        "Impossible de rejoindre la salle de jeu. Partie ou joueur invalide."
-      );
+    console.log(
+      `Tentative de rejoindre la salle ${gameId} pour le joueur ${playerId}`
+    );
+
+    if (!activeGames.has(gameId)) {
+      socket.emit("error", { message: "Partie non trouvée" });
       return;
     }
 
-    console.log(`WebSocket: Joueur ${playerId} rejoint la salle ${gameId}`);
+    const game = activeGames.get(gameId);
+
+    if (!game.players[playerId]) {
+      socket.emit("error", { message: "Joueur non trouvé dans cette partie" });
+      return;
+    }
+
+    // Associer l'ID du socket au joueur
+    game.players[playerId].socketId = socket.id;
+    game.players[playerId].connected = true;
+
+    // Rejoindre la salle du jeu
     socket.join(gameId);
+    console.log(
+      `Socket ${socket.id} (Joueur ${playerId}) a rejoint la salle ${gameId}`
+    );
 
-    socket.emit("gameJoined", game);
+    // Envoyer l'état du jeu au joueur qui vient de se connecter
+    socket.emit("gameJoined", {
+      gameId,
+      playerId,
+      game: JSON.parse(JSON.stringify(game)), // Copie pour éviter les références circulaires
+    });
 
-    socket.to(gameId).emit("playerReconnected", {
-      playerId: playerId,
+    // Informer les autres joueurs de la salle
+    socket.to(gameId).emit("playerConnected", {
+      playerId,
       playerName: game.players[playerId].name,
     });
 
+    // Si tous les joueurs sont connectés et que la partie est prête à commencer
+    const allPlayersConnected = Object.values(game.players).every(
+      (p) => p.connected
+    );
+    if (
+      game.gameState === "playing" &&
+      Object.keys(game.players).length === 2 &&
+      allPlayersConnected
+    ) {
+      io.to(gameId).emit("gameReady", {
+        game: JSON.parse(JSON.stringify(game)),
+        startingPlayer: game.currentTurn,
+      });
+    }
+
+    // Gérer la déconnexion
     socket.on("disconnect", () => {
       console.log(`Joueur ${playerId} déconnecté de la partie ${gameId}`);
-      socket.to(gameId).emit("playerLeft", { playerId });
+
+      if (game && game.players[playerId]) {
+        game.players[playerId].connected = false;
+        game.players[playerId].socketId = null;
+
+        // Informer l'autre joueur
+        socket.to(gameId).emit("playerDisconnected", { playerId });
+      }
     });
   });
 });
