@@ -2,7 +2,7 @@
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const { createGame, joinGame } = require("./gameManager");
+const { createGame, joinGame, activeGames } = require("./gameManager");
 
 const app = express();
 const server = http.createServer(app);
@@ -11,16 +11,16 @@ const io = socketIo(server);
 app.use(express.json());
 app.use(express.static("public"));
 
-// Ajout d'un stockage en mémoire pour les parties actives
-const activeGames = new Map();
-
 // Route pour créer une nouvelle partie
 app.post("/api/games", (req, res) => {
   try {
     const gameId = createGame();
     res.json({ gameId });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Erreur lors de la création de la partie:", error);
+    res.status(500).json({
+      error: "Erreur interne du serveur lors de la création de la partie.",
+    });
   }
 });
 
@@ -29,57 +29,73 @@ app.post("/api/games/:gameId/join", (req, res) => {
   const { gameId } = req.params;
   const { playerName } = req.body;
 
+  if (!playerName) {
+    return res.status(400).json({ error: "Le nom du joueur est requis." });
+  }
+
   try {
-    const playerId = joinGame(gameId, playerName);
+    const { playerId, game } = joinGame(gameId, playerName);
+
+    io.to(gameId).emit("playerJoined", {
+      playerId: playerId,
+      playerName: playerName,
+      playerCount: Object.keys(game.players).length,
+    });
+
+    if (game.gameState === "playing") {
+      io.to(gameId).emit("gameStart", game);
+    }
+
     res.json({ gameId, playerId });
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    console.error(`Erreur pour rejoindre la partie ${gameId}:`, error);
+    if (error.message === "Partie non trouvée") {
+      res.status(404).json({ error: error.message });
+    } else if (error.message === "La partie est pleine") {
+      res.status(403).json({ error: error.message });
+    } else {
+      res
+        .status(500)
+        .json({ error: "Erreur interne du serveur pour rejoindre la partie." });
+    }
   }
 });
 
-// Fonction pour générer un ID unique
-function generateUniqueId() {
-  return Math.random().toString(36).substring(2, 10);
-}
-
 // Configuration WebSocket pour la communication en temps réel
 io.on("connection", (socket) => {
-  console.log("Nouvelle connexion WebSocket");
+  console.log(`Nouvelle connexion WebSocket: ${socket.id}`);
 
-  socket.on("joinGame", ({ gameId, playerId }) => {
-    if (!activeGames.has(gameId)) {
-      socket.emit("error", "Partie non trouvée");
+  socket.on("joinGameRoom", ({ gameId, playerId }) => {
+    const game = activeGames.get(gameId);
+    if (!game || !game.players[playerId]) {
+      console.error(
+        `Tentative de connexion invalide à la salle: Game ${gameId}, Player ${playerId}`
+      );
+      socket.emit(
+        "error",
+        "Impossible de rejoindre la salle de jeu. Partie ou joueur invalide."
+      );
       return;
     }
 
+    console.log(`WebSocket: Joueur ${playerId} rejoint la salle ${gameId}`);
     socket.join(gameId);
-    socket.to(gameId).emit("playerJoined", { playerId });
 
-    const gameState = activeGames.get(gameId);
-    socket.emit("gameState", gameState);
+    socket.emit("gameJoined", game);
+
+    socket.to(gameId).emit("playerReconnected", {
+      playerId: playerId,
+      playerName: game.players[playerId].name,
+    });
+
+    socket.on("disconnect", () => {
+      console.log(`Joueur ${playerId} déconnecté de la partie ${gameId}`);
+      socket.to(gameId).emit("playerLeft", { playerId });
+    });
   });
-
-  // Autres événements de jeu...
 });
-
-function getPlayerName(gameId, playerId) {
-  const game = activeGames.get(gameId);
-  if (!game) return null;
-
-  const player = game.players.find((p) => p.id === playerId);
-  return player ? player.name : null;
-}
 
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
 });
-
-// Si ce fichier est le point d'entrée, rediriger vers le vrai serveur
-if (require.main === module) {
-  try {
-    require("./backend/server.js");
-  } catch (error) {
-    console.log("Utilisation du serveur direct sans backend/ directory");
-  }
-}
