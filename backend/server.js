@@ -3,6 +3,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
 const gameRoutes = require("./routes/gameRoutes");
 const cardRoutes = require("./routes/cardRoutes");
 const gameManager = require("./services/gameManager");
@@ -18,9 +19,18 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
-// Configurer les routes
+// Servir les fichiers statiques du frontend
+app.use(express.static(path.join(__dirname, "../frontend/public")));
+app.use("/src", express.static(path.join(__dirname, "../frontend/src")));
+
+// Configurer les routes de l'API
 app.use("/api/games", gameRoutes);
 app.use("/api/cards", cardRoutes);
+
+// Route principale qui renvoie le fichier index.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/public/index.html"));
+});
 
 // Configurer Socket.io
 const io = new Server(server, {
