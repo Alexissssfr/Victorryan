@@ -81,3 +81,10 @@ export function setupWebSocket(gameId, playerId, onGameUpdate) {
 
   return socket;
 }
+
+const elements = {
+  // ... autres éléments
+  createGameBtn: document.getElementById("createGameBtn"),
+  confirmJoinBtn: document.getElementById("confirmJoinBtn"),
+  // ... reste du code
+};
