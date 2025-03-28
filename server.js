@@ -4,14 +4,17 @@ const socketIo = require("socket.io");
 const path = require("path");
 const fs = require("fs");
 
-// Initialisation de base
+// Initialisation
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Configuration de base
+// Configuration
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
+
+// Log au démarrage pour s'assurer que le dossier public est correctement configuré
+console.log("Dossier public configuré:", path.join(__dirname, "public"));
 
 // Données en mémoire pour les parties
 const games = new Map();
@@ -83,12 +86,17 @@ function distributeCards() {
   };
 }
 
-// Page d'accueil
+// Route de base
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Créer une partie
+// Vérification de l'état du serveur
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Routes API
 app.post("/api/games", (req, res) => {
   const gameId = generateId();
   games.set(gameId, {
@@ -103,7 +111,6 @@ app.post("/api/games", (req, res) => {
   res.json({ success: true, gameId });
 });
 
-// Rejoindre une partie
 app.post("/api/games/:id/join", (req, res) => {
   const gameId = req.params.id;
   const { name } = req.body;
@@ -278,8 +285,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// Démarrer le serveur
+// Démarrage du serveur
 const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
 });
