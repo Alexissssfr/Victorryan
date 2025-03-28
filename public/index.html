@@ -7,9 +7,10 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
+        background-color: #f5f5f5;
       }
       .container {
         margin-top: 20px;
@@ -23,17 +24,111 @@
         color: white;
         border: none;
         cursor: pointer;
+        border-radius: 4px;
+        margin: 5px;
+      }
+      button:hover {
+        background-color: #45a049;
       }
       input {
         padding: 8px;
         margin-bottom: 10px;
         width: 100%;
+        border-radius: 4px;
+        border: 1px solid #ddd;
       }
       .game-id {
         background-color: #f1f1f1;
         padding: 10px;
         margin: 10px 0;
         border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Styles pour les cartes */
+      .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .card {
+        width: 150px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+        cursor: pointer;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .card.selected {
+        border: 2px solid #4caf50;
+      }
+
+      .card-title {
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .card-image {
+        width: 100%;
+        height: 100px;
+        background-size: cover;
+        background-position: center;
+        margin-bottom: 8px;
+        border-radius: 4px;
+      }
+
+      .card-stats {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .personnage-card {
+        background-color: #e8f5e9;
+      }
+
+      .bonus-card {
+        background-color: #e3f2fd;
+      }
+
+      .opponent-card {
+        background-color: #fff3e0;
+      }
+
+      .player-section {
+        background-color: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .game-status {
+        background-color: #333;
+        color: white;
+        padding: 10px;
+        text-align: center;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
       }
     </style>
   </head>
@@ -74,19 +169,28 @@
 
     <!-- Écran de jeu -->
     <div id="gameScreen" class="hidden">
-      <h2>Partie en cours</h2>
-      <div id="gameStatus"></div>
-      <div class="container">
-        <div id="yourCards">
-          <h3>Vos cartes</h3>
-          <div id="cardContainer"></div>
-        </div>
-        <div id="opponentCards">
-          <h3>Cartes adverses</h3>
-          <div id="opponentCardContainer"></div>
-        </div>
+      <div class="game-status" id="gameStatus">En attente...</div>
+
+      <div class="player-section">
+        <h3>Vos personnages</h3>
+        <div class="cards-container" id="yourCharacters"></div>
       </div>
-      <button id="endTurnBtn" class="hidden">Terminer le tour</button>
+
+      <div class="player-section">
+        <h3>Vos bonus</h3>
+        <div class="cards-container" id="yourBonus"></div>
+      </div>
+
+      <div class="player-section">
+        <h3>Personnages adverses</h3>
+        <div class="cards-container" id="opponentCharacters"></div>
+      </div>
+
+      <div class="actions">
+        <button id="attackBtn" class="hidden">Attaquer</button>
+        <button id="playBonusBtn" class="hidden">Jouer bonus</button>
+        <button id="endTurnBtn" class="hidden">Terminer le tour</button>
+      </div>
     </div>
 
     <div id="messages"></div>
@@ -109,14 +213,26 @@
         const copyGameIdBtn = document.getElementById("copyGameIdBtn");
         const gameStatus = document.getElementById("gameStatus");
         const endTurnBtn = document.getElementById("endTurnBtn");
+        const attackBtn = document.getElementById("attackBtn");
+        const playBonusBtn = document.getElementById("playBonusBtn");
         const messages = document.getElementById("messages");
 
+        // DOM Elements pour les cartes
+        const yourCharacters = document.getElementById("yourCharacters");
+        const yourBonus = document.getElementById("yourBonus");
+        const opponentCharacters =
+          document.getElementById("opponentCharacters");
+
         // Game State
-        let currentGame = {
+        let gameState = {
           gameId: null,
           playerId: null,
           playerName: null,
           isMyTurn: false,
+          gameData: null,
+          selectedCharacter: null,
+          selectedBonus: null,
+          targetCharacter: null,
         };
 
         // Socket.io
@@ -138,6 +254,207 @@
           messages.scrollTop = messages.scrollHeight;
         }
 
+        // Fonction pour afficher les cartes des joueurs
+        function renderCards() {
+          if (!gameState.gameData) return;
+
+          const game = gameState.gameData;
+          const player = game.players[gameState.playerId];
+
+          if (!player || !player.cards) {
+            console.log("Données du joueur non disponibles");
+            return;
+          }
+
+          // Trouver l'adversaire
+          let opponent = null;
+          for (const id in game.players) {
+            if (id !== gameState.playerId) {
+              opponent = game.players[id];
+              break;
+            }
+          }
+
+          // Afficher vos cartes personnages
+          yourCharacters.innerHTML = "";
+          player.cards.personnages.forEach((card) => {
+            const cardEl = createCharacterCard(
+              card,
+              player.charactersState[card.id],
+              false
+            );
+            cardEl.addEventListener("click", () =>
+              selectYourCharacter(card.id)
+            );
+            if (card.id === gameState.selectedCharacter) {
+              cardEl.classList.add("selected");
+            }
+            yourCharacters.appendChild(cardEl);
+          });
+
+          // Afficher vos cartes bonus
+          yourBonus.innerHTML = "";
+          player.cards.bonus.forEach((card) => {
+            const cardEl = createBonusCard(card);
+            cardEl.addEventListener("click", () => selectBonus(card.id));
+            if (card.id === gameState.selectedBonus) {
+              cardEl.classList.add("selected");
+            }
+            yourBonus.appendChild(cardEl);
+          });
+
+          // Afficher les cartes personnages de l'adversaire
+          opponentCharacters.innerHTML = "";
+          if (opponent && opponent.cards) {
+            opponent.cards.personnages.forEach((card) => {
+              const cardEl = createCharacterCard(
+                card,
+                opponent.charactersState[card.id],
+                true
+              );
+              if (gameState.isMyTurn && gameState.selectedCharacter) {
+                cardEl.addEventListener("click", () =>
+                  selectOpponentCharacter(card.id)
+                );
+              }
+              if (card.id === gameState.targetCharacter) {
+                cardEl.classList.add("selected");
+              }
+              opponentCharacters.appendChild(cardEl);
+            });
+          }
+
+          // Mettre à jour les boutons d'action
+          updateActionButtons();
+        }
+
+        function createCharacterCard(card, state, isOpponent) {
+          const cardEl = document.createElement("div");
+          cardEl.className = `card ${
+            isOpponent ? "opponent-card" : "personnage-card"
+          }`;
+          cardEl.dataset.id = card.id;
+
+          const health = state ? state.currentHealth : card.PV;
+          const attack = state ? state.currentAttack : card.force_attaque;
+          const turns = state ? state.currentTurns : card.tours_attaque;
+
+          let imageHtml = "";
+          if (card.fond) {
+            imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
+          }
+
+          cardEl.innerHTML = `
+            <div class="card-title">${card.nom || "Personnage"}</div>
+            ${imageHtml}
+            <div class="card-stats">
+              <div>PV: ${health}</div>
+              <div>Attaque: ${attack}</div>
+              <div>Tours: ${turns}</div>
+            </div>
+          `;
+
+          return cardEl;
+        }
+
+        function createBonusCard(card) {
+          const cardEl = document.createElement("div");
+          cardEl.className = "card bonus-card";
+          cardEl.dataset.id = card.id;
+
+          let imageHtml = "";
+          if (card.fond) {
+            imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
+          }
+
+          cardEl.innerHTML = `
+            <div class="card-title">${card.nom || "Bonus"}</div>
+            ${imageHtml}
+            <div class="card-stats">
+              <div>Effet: ${card.effet || "-"}</div>
+              <div>Pourcentage: ${card.pourcentage || "0"}%</div>
+              <div>Tours: ${card.tours || "1"}</div>
+            </div>
+          `;
+
+          return cardEl;
+        }
+
+        function selectYourCharacter(cardId) {
+          if (!gameState.isMyTurn) return;
+
+          if (gameState.selectedCharacter === cardId) {
+            gameState.selectedCharacter = null;
+          } else {
+            gameState.selectedCharacter = cardId;
+          }
+
+          updateActionButtons();
+          renderCards();
+        }
+
+        function selectOpponentCharacter(cardId) {
+          if (!gameState.isMyTurn || !gameState.selectedCharacter) return;
+
+          if (gameState.targetCharacter === cardId) {
+            gameState.targetCharacter = null;
+          } else {
+            gameState.targetCharacter = cardId;
+
+            // Si on a sélectionné un personnage à attaquer, on peut proposer d'attaquer
+            if (gameState.selectedCharacter && gameState.targetCharacter) {
+              attackBtn.classList.remove("hidden");
+            }
+          }
+
+          renderCards();
+        }
+
+        function selectBonus(cardId) {
+          if (!gameState.isMyTurn) return;
+
+          if (gameState.selectedBonus === cardId) {
+            gameState.selectedBonus = null;
+          } else {
+            gameState.selectedBonus = cardId;
+          }
+
+          updateActionButtons();
+          renderCards();
+        }
+
+        function updateActionButtons() {
+          if (gameState.isMyTurn) {
+            endTurnBtn.classList.remove("hidden");
+
+            // Le bouton d'attaque est visible seulement si un personnage est sélectionné et une cible
+            attackBtn.classList.toggle(
+              "hidden",
+              !(gameState.selectedCharacter && gameState.targetCharacter)
+            );
+
+            // Le bouton pour jouer un bonus est visible seulement si un bonus et un personnage sont sélectionnés
+            playBonusBtn.classList.toggle(
+              "hidden",
+              !(gameState.selectedBonus && gameState.selectedCharacter)
+            );
+          } else {
+            endTurnBtn.classList.add("hidden");
+            attackBtn.classList.add("hidden");
+            playBonusBtn.classList.add("hidden");
+          }
+        }
+
+        function updateGameStatus() {
+          if (gameState.gameData && gameState.gameData.status === "playing") {
+            gameStatus.textContent = gameState.isMyTurn
+              ? "C'est votre tour!"
+              : "Au tour de l'adversaire";
+          } else {
+            gameStatus.textContent = "En attente d'un adversaire...";
+          }
+        }
+
         // Event handlers
         createGameBtn.addEventListener("click", () => {
           fetch("/api/games", {
@@ -146,7 +463,7 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                currentGame.gameId = data.gameId;
+                gameState.gameId = data.gameId;
                 gameIdDisplay.textContent = data.gameId;
                 showScreen("created");
               } else {
@@ -179,27 +496,78 @@
             return;
           }
 
-          joinGame(currentGame.gameId, name);
+          joinGame(gameState.gameId, name);
         });
 
         copyGameIdBtn.addEventListener("click", () => {
           navigator.clipboard
-            .writeText(currentGame.gameId)
+            .writeText(gameState.gameId)
             .then(() => showMessage("ID copié!"))
             .catch(() => showMessage("Erreur de copie", true));
         });
 
         endTurnBtn.addEventListener("click", () => {
-          if (!currentGame.isMyTurn) return;
+          if (!gameState.isMyTurn) return;
 
           socket.emit("endTurn", {
-            gameId: currentGame.gameId,
-            playerId: currentGame.playerId,
+            gameId: gameState.gameId,
+            playerId: gameState.playerId,
           });
 
-          currentGame.isMyTurn = false;
-          endTurnBtn.classList.add("hidden");
-          updateGameStatus();
+          // Réinitialiser les sélections
+          gameState.selectedCharacter = null;
+          gameState.selectedBonus = null;
+          gameState.targetCharacter = null;
+        });
+
+        attackBtn.addEventListener("click", () => {
+          if (
+            !gameState.isMyTurn ||
+            !gameState.selectedCharacter ||
+            !gameState.targetCharacter
+          )
+            return;
+
+          socket.emit("attackCharacter", {
+            gameId: gameState.gameId,
+            playerId: gameState.playerId,
+            attackerId: gameState.selectedCharacter,
+            targetId: gameState.targetCharacter,
+          });
+
+          showMessage(
+            `Attaque avec ${gameState.selectedCharacter} sur ${gameState.targetCharacter}`
+          );
+
+          // Réinitialiser les sélections après l'attaque
+          gameState.selectedCharacter = null;
+          gameState.targetCharacter = null;
+          renderCards();
+        });
+
+        playBonusBtn.addEventListener("click", () => {
+          if (
+            !gameState.isMyTurn ||
+            !gameState.selectedBonus ||
+            !gameState.selectedCharacter
+          )
+            return;
+
+          socket.emit("playBonus", {
+            gameId: gameState.gameId,
+            playerId: gameState.playerId,
+            bonusId: gameState.selectedBonus,
+            targetCharacterId: gameState.selectedCharacter,
+          });
+
+          showMessage(
+            `Bonus ${gameState.selectedBonus} joué sur ${gameState.selectedCharacter}`
+          );
+
+          // Réinitialiser les sélections après avoir joué un bonus
+          gameState.selectedBonus = null;
+          gameState.selectedCharacter = null;
+          renderCards();
         });
 
         // Game functions
@@ -216,9 +584,14 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                currentGame.gameId = data.gameId;
-                currentGame.playerId = data.playerId;
-                currentGame.playerName = playerName;
+                gameState.gameId = data.gameId;
+                gameState.playerId = data.playerId;
+                gameState.playerName = playerName;
+
+                // Sauvegarder dans localStorage
+                localStorage.setItem("gameId", data.gameId);
+                localStorage.setItem("playerId", data.playerId);
+                localStorage.setItem("playerName", playerName);
 
                 // Connexion socket
                 document.getElementById("waitingMessage").textContent =
@@ -239,12 +612,6 @@
             });
         }
 
-        function updateGameStatus() {
-          gameStatus.textContent = currentGame.isMyTurn
-            ? "C'est votre tour!"
-            : "Au tour de l'adversaire";
-        }
-
         // Socket.io Events
         socket.on("connect", () => {
           console.log("Connecté au serveur");
@@ -255,18 +622,16 @@
         });
 
         socket.on("gameState", (data) => {
-          const game = data.game;
-          currentGame.isMyTurn = game.currentTurn === currentGame.playerId;
+          console.log("État du jeu reçu:", data);
 
-          if (game.status === "playing") {
+          gameState.gameData = data.game;
+          gameState.isMyTurn =
+            gameState.gameData.currentTurn === gameState.playerId;
+
+          if (gameState.gameData.status === "playing") {
             showScreen("game");
             updateGameStatus();
-
-            if (currentGame.isMyTurn) {
-              endTurnBtn.classList.remove("hidden");
-            } else {
-              endTurnBtn.classList.add("hidden");
-            }
+            renderCards();
           }
         });
 
@@ -274,17 +639,38 @@
           showMessage(`${data.playerName} a rejoint la partie`);
         });
 
-        socket.on("turnChanged", (data) => {
-          currentGame.isMyTurn = data.currentTurn === currentGame.playerId;
-          updateGameStatus();
+        socket.on("gameReady", (data) => {
+          console.log("Partie prête:", data);
+          gameState.gameData = data.game;
+          gameState.isMyTurn = data.startingPlayer === gameState.playerId;
 
-          if (currentGame.isMyTurn) {
-            endTurnBtn.classList.remove("hidden");
+          showScreen("game");
+          updateGameStatus();
+          renderCards();
+
+          showMessage("La partie commence!");
+        });
+
+        socket.on("turnChanged", (data) => {
+          gameState.isMyTurn = data.currentTurn === gameState.playerId;
+          updateGameStatus();
+          updateActionButtons();
+
+          if (gameState.isMyTurn) {
             showMessage("C'est votre tour!");
           } else {
-            endTurnBtn.classList.add("hidden");
             showMessage("Au tour de l'adversaire");
           }
+        });
+
+        socket.on("bonusPlayed", (data) => {
+          showMessage(`Un bonus a été joué sur un personnage`);
+          // On pourrait mettre à jour l'état du jeu ici
+        });
+
+        socket.on("characterAttacked", (data) => {
+          showMessage(`Une attaque a été effectuée`);
+          // On pourrait mettre à jour l'état du jeu ici
         });
 
         socket.on("playerLeft", (data) => {
@@ -301,9 +687,9 @@
             "Partie en cours trouvée. Voulez-vous la rejoindre?"
           );
           if (rejoin) {
-            currentGame.gameId = savedGameId;
-            currentGame.playerId = savedPlayerId;
-            currentGame.playerName = savedPlayerName;
+            gameState.gameId = savedGameId;
+            gameState.playerId = savedPlayerId;
+            gameState.playerName = savedPlayerName;
 
             showScreen("waiting");
             document.getElementById("waitingMessage").textContent =

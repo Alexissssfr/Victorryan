@@ -16,9 +16,98 @@ app.use(express.static("public"));
 // Données en mémoire pour les parties
 const games = new Map();
 
+// Charger les données des cartes (ou créer des données de test si les fichiers n'existent pas)
+let personnagesData = [];
+let bonusData = [];
+
+try {
+  // Essayer de charger depuis des fichiers
+  const personnagesPath = path.join(__dirname, "stock", "personnages.json");
+  const bonusPath = path.join(__dirname, "stock", "bonus.json");
+
+  if (fs.existsSync(personnagesPath) && fs.existsSync(bonusPath)) {
+    personnagesData = JSON.parse(fs.readFileSync(personnagesPath, "utf-8"));
+    bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf-8"));
+    console.log("Données des cartes chargées depuis les fichiers JSON");
+  } else {
+    // Créer des données de test
+    console.log("Fichiers de cartes non trouvés, création de données de test");
+
+    // Créer 20 cartes personnages de test
+    for (let i = 1; i <= 20; i++) {
+      personnagesData.push({
+        id: `P${i}`,
+        nom: `Personnage ${i}`,
+        PV: Math.floor(Math.random() * 50) + 50, // PV entre 50 et 100
+        force_attaque: Math.floor(Math.random() * 20) + 20, // Force entre 20 et 40
+        tours_attaque: Math.floor(Math.random() * 3) + 1, // 1 à 3 tours d'attaque
+        description: `Description du personnage ${i}`,
+        fond: `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P${i}.png`,
+      });
+    }
+
+    // Créer 20 cartes bonus de test
+    for (let i = 1; i <= 20; i++) {
+      bonusData.push({
+        id: `B${i}`,
+        nom: `Bonus ${i}`,
+        effet: `Effet ${i}`,
+        pourcentage: Math.floor(Math.random() * 30) + 10, // 10% à 40%
+        tours: Math.floor(Math.random() * 3) + 1, // 1 à 3 tours
+        description: `Description du bonus ${i}`,
+        fond: `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B${i}.png`,
+      });
+    }
+  }
+} catch (error) {
+  console.error("Erreur lors du chargement des données de cartes:", error);
+  // Créer quelques données de test minimales
+  personnagesData = Array(20)
+    .fill()
+    .map((_, i) => ({
+      id: `P${i + 1}`,
+      nom: `Personnage ${i + 1}`,
+      PV: 100,
+      force_attaque: 30,
+      tours_attaque: 2,
+      description: "Personnage de test",
+    }));
+
+  bonusData = Array(20)
+    .fill()
+    .map((_, i) => ({
+      id: `B${i + 1}`,
+      nom: `Bonus ${i + 1}`,
+      effet: "Augmentation d'attaque",
+      pourcentage: 20,
+      tours: 2,
+      description: "Bonus de test",
+    }));
+}
+
 // Fonctions utilitaires
 function generateId() {
   return Math.random().toString(36).substring(2, 8);
+}
+
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+function distributeCards() {
+  // Mélanger et sélectionner 5 cartes de chaque type
+  const personnages = shuffleArray(personnagesData).slice(0, 5);
+  const bonus = shuffleArray(bonusData).slice(0, 5);
+
+  return {
+    personnages: personnages.map((card) => ({ ...card })), // Copie pour éviter le partage
+    bonus: bonus.map((card) => ({ ...card })),
+  };
 }
 
 // Page d'accueil
@@ -63,14 +152,23 @@ app.post("/api/games/:id/join", (req, res) => {
   }
 
   const playerId = generateId();
+  const cards = distributeCards();
 
+  // Initialiser l'état du joueur avec ses cartes
   game.players[playerId] = {
     id: playerId,
     name: name,
-    cards: {
-      characters: [],
-      bonuses: [],
-    },
+    cards: cards,
+    // Initialiser l'état des personnages
+    charactersState: cards.personnages.reduce((acc, card) => {
+      acc[card.id] = {
+        currentHealth: card.PV,
+        currentAttack: card.force_attaque,
+        currentTurns: card.tours_attaque,
+        activeBonus: [],
+      };
+      return acc;
+    }, {}),
   };
 
   // Premier joueur devient le joueur actif
@@ -108,11 +206,13 @@ io.on("connection", (socket) => {
     // Connexion réussie
     socket.join(gameId);
     game.players[playerId].socketId = socket.id;
+    game.players[playerId].connected = true;
     console.log(`Joueur ${playerId} connecté à la salle ${gameId}`);
 
     // Informer le joueur de l'état actuel
     socket.emit("gameState", {
       game: JSON.parse(JSON.stringify(game)),
+      playerId: playerId,
     });
 
     // Informer les autres joueurs
@@ -120,6 +220,17 @@ io.on("connection", (socket) => {
       playerId: playerId,
       playerName: game.players[playerId].name,
     });
+
+    // Si tous les joueurs sont connectés et la partie est en cours
+    if (
+      game.status === "playing" &&
+      Object.values(game.players).every((p) => p.connected)
+    ) {
+      io.to(gameId).emit("gameReady", {
+        game: JSON.parse(JSON.stringify(game)),
+        startingPlayer: game.currentTurn,
+      });
+    }
 
     // Gérer les déconnexions
     socket.on("disconnect", () => {
@@ -151,6 +262,45 @@ io.on("connection", (socket) => {
     // Informer tous les joueurs
     io.to(gameId).emit("turnChanged", {
       currentTurn: game.currentTurn,
+    });
+  });
+
+  // Action: jouer une carte bonus
+  socket.on("playBonus", ({ gameId, playerId, bonusId, targetCharacterId }) => {
+    if (!games.has(gameId)) return;
+
+    const game = games.get(gameId);
+
+    if (game.currentTurn !== playerId) {
+      socket.emit("error", { message: "Pas votre tour" });
+      return;
+    }
+
+    // Logique pour appliquer le bonus
+    // (pour l'exemple, simplement notifier tout le monde)
+    io.to(gameId).emit("bonusPlayed", {
+      playerId,
+      bonusId,
+      targetCharacterId,
+    });
+  });
+
+  // Action: attaquer un personnage
+  socket.on("attackCharacter", ({ gameId, playerId, attackerId, targetId }) => {
+    if (!games.has(gameId)) return;
+
+    const game = games.get(gameId);
+
+    if (game.currentTurn !== playerId) {
+      socket.emit("error", { message: "Pas votre tour" });
+      return;
+    }
+
+    // Logique pour effectuer l'attaque
+    // (pour l'exemple, simplement notifier tout le monde)
+    io.to(gameId).emit("characterAttacked", {
+      attackerId,
+      targetId,
     });
   });
 });
