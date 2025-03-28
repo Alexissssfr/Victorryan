@@ -53,9 +53,9 @@ async function drawInitialCards() {
       loadCardData("bonus"),
     ]);
 
-    // Sélectionner aléatoirement 3 personnages et 2 bonus
-    const personnages = getRandomElements(allPersonnages, 3);
-    const bonus = getRandomElements(allBonus, 2);
+    // Sélectionner aléatoirement 5 personnages et 5 bonus (au lieu de 3 et 2)
+    const personnages = getRandomElements(allPersonnages, 5);
+    const bonus = getRandomElements(allBonus, 5);
 
     return {
       personnages,

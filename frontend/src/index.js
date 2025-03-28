@@ -49,6 +49,39 @@ function init() {
 
   // Désactiver les boutons d'action par défaut
   toggleActionButtons(false);
+
+  // Activer le mode debug si nécessaire (window.DEBUG = true dans la console pour l'activer)
+  setupDebugging();
+}
+
+/**
+ * Configure les outils de débogage
+ */
+function setupDebugging() {
+  // Exposer l'état de l'application et les fonctions de débogage sur window
+  window.appState = appState;
+  window.debugGame = {
+    showState: () => console.log("État actuel du jeu:", appState),
+    logPlayerCards: () => {
+      if (appState.game.state && appState.game.playerKey) {
+        console.log(
+          "Cartes du joueur:",
+          appState.game.state[appState.game.playerKey].cards
+        );
+      } else {
+        console.log("Aucune partie en cours");
+      }
+    },
+    forceUpdate: () => {
+      if (appState.game.gameBoard) {
+        appState.game.gameBoard.update();
+        console.log("Mise à jour forcée du plateau de jeu");
+      }
+    },
+    resetGame: resetGame,
+  };
+
+  console.log("Mode debug disponible via window.debugGame");
 }
 
 // Mise en place des écouteurs d'événements
@@ -73,17 +106,24 @@ function setupEventListeners() {
 
 // Fonction pour afficher les messages d'erreur
 function showError(message) {
+  console.error("ERREUR:", message);
+
   if (elements.errorMessage) {
     elements.errorMessage.textContent = message;
     elements.errorMessage.style.display = "block";
 
-    // Cacher le message après 5 secondes
+    // Scroll jusqu'au message d'erreur
+    elements.errorMessage.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    // Cacher le message après 8 secondes
     setTimeout(() => {
       elements.errorMessage.style.display = "none";
-    }, 5000);
+    }, 8000);
   } else {
     // Fallback si l'élément n'est pas disponible
-    console.error("Message d'erreur:", message);
     alert(message);
   }
 }
@@ -111,49 +151,21 @@ async function handleCreateGame() {
     appState.game.id = response.gameId;
     appState.player.id = playerName;
 
-    // Afficher l'ID de la partie avec mise en évidence
-    elements.gameIdDisplay.textContent = response.gameId;
-
-    // Créer un bouton pour copier l'ID
-    const copyButton = document.createElement("button");
-    copyButton.className = "btn btn-primary mt-2 mb-3 ms-2";
-    copyButton.textContent = "Copier le code";
-    copyButton.onclick = function () {
-      navigator.clipboard
-        .writeText(response.gameId)
-        .then(() => {
-          copyButton.textContent = "Code copié !";
-          setTimeout(() => {
-            copyButton.textContent = "Copier le code";
-          }, 2000);
-        })
-        .catch((err) => {
-          console.error("Erreur lors de la copie: ", err);
-          showError("Impossible de copier le code");
-        });
-    };
-
-    // Ajouter le bouton juste à côté du code de partie
-    const idContainer = elements.waitingRoom.querySelector("p");
-    if (idContainer) {
-      // Vider le container pour être sûr qu'il n'y a pas de boutons précédents
-      while (idContainer.childNodes.length > 1) {
-        idContainer.removeChild(idContainer.lastChild);
-      }
-      idContainer.appendChild(copyButton);
-    }
-
-    // Afficher une instruction claire pour le partage
-    const shareInstructions = document.createElement("p");
-    shareInstructions.innerHTML =
-      "<strong>Partagez ce code avec votre adversaire et attendez qu'il rejoigne la partie.</strong>";
-    shareInstructions.className = "mt-3";
-    elements.waitingRoom.appendChild(shareInstructions);
-
-    elements.waitingRoom.style.display = "block";
-
     // Configurer WebSocket
     setupWebSocket(appState.game.id, handleGameUpdate);
+
+    // Obtenir l'état initial du jeu
+    const gameState = await api.getGameState(response.gameId);
+    appState.game.state = gameState;
+
+    // Déterminer les clés joueur/adversaire
+    appState.game.playerKey = "player1";
+    appState.game.opponentKey = "player2";
+
+    // Passer en mode d'affichage d'attente spécial pour le créateur
+    showWaitingForOpponent(response.gameId);
+
+    console.log("Partie créée avec succès, en attente d'un adversaire");
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
     showError(
@@ -165,6 +177,59 @@ async function handleCreateGame() {
     elements.createGameBtn.disabled = false;
     elements.createGameBtn.textContent = "Créer une partie";
   }
+}
+
+/**
+ * Affiche l'écran d'attente pour le créateur de la partie
+ * @param {string} gameId - ID de la partie
+ */
+function showWaitingForOpponent(gameId) {
+  // Cacher l'écran de lobby
+  elements.lobbyView.style.display = "none";
+
+  // Afficher l'écran d'attente
+  elements.waitingRoom.style.display = "block";
+
+  // Afficher l'ID de la partie et créer un bouton pour copier
+  elements.gameIdDisplay.textContent = gameId;
+
+  // Créer un bouton pour copier le code
+  const copyButton = document.createElement("button");
+  copyButton.className = "btn btn-primary mt-2 mb-3 ms-2";
+  copyButton.textContent = "Copier le code";
+  copyButton.onclick = function () {
+    navigator.clipboard
+      .writeText(gameId)
+      .then(() => {
+        copyButton.textContent = "Code copié !";
+        setTimeout(() => {
+          copyButton.textContent = "Copier le code";
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error("Erreur lors de la copie:", err);
+        showError("Impossible de copier le code");
+      });
+  };
+
+  // Ajouter le bouton à côté du code
+  const idContainer = elements.waitingRoom.querySelector("p");
+  if (idContainer) {
+    // Vider le container d'abord
+    while (idContainer.childNodes.length > 1) {
+      idContainer.removeChild(idContainer.lastChild);
+    }
+    idContainer.appendChild(copyButton);
+  }
+
+  // Ajouter un message d'instructions
+  const instructions = document.createElement("p");
+  instructions.innerHTML =
+    "<strong>En attente d'un adversaire...</strong><br>Partagez ce code pour que votre adversaire puisse vous rejoindre.";
+  instructions.className = "mt-3";
+
+  // Ajouter les instructions à l'écran d'attente
+  elements.waitingRoom.appendChild(instructions);
 }
 
 // Gestionnaire pour rejoindre une partie
@@ -228,6 +293,7 @@ function determinePlayerKeys() {
 
 // Gestionnaire des mises à jour du jeu via WebSocket
 function handleGameUpdate(gameState) {
+  console.log("Mise à jour de l'état du jeu reçue:", gameState);
   appState.game.state = gameState;
 
   // Déterminer les clés du joueur si pas encore fait
@@ -240,25 +306,47 @@ function handleGameUpdate(gameState) {
     elements.waitingRoom.style.display === "block" &&
     gameState.status === "playing"
   ) {
+    console.log(
+      "Le second joueur a rejoint la partie. Passage à l'écran de jeu."
+    );
     showGameView();
   }
 
   // Vérifier si c'est le tour du joueur
   appState.game.isMyTurn = gameState.currentTurn === appState.game.playerKey;
 
-  // Mettre à jour l'indicateur de tour
-  updateTurnIndicator();
-
-  // Mettre à jour l'affichage des cartes
-  renderCards();
-
-  // Gérer les boutons d'action
-  toggleActionButtons(appState.game.isMyTurn);
+  // Mettre à jour l'interface
+  updateGameInterface();
 
   // Vérifier si la partie est terminée
   if (gameState.status === "finished") {
     handleGameOver(gameState);
   }
+}
+
+/**
+ * Met à jour l'interface du jeu avec l'état actuel
+ */
+function updateGameInterface() {
+  // Mettre à jour l'indicateur de tour
+  updateTurnIndicator();
+
+  // Mettre à jour l'affichage des cartes
+  if (appState.game.gameBoard) {
+    appState.game.gameBoard.update();
+  } else {
+    // Si le gameBoard n'existe pas encore, créons-le
+    appState.game.gameBoard = new GameBoard(
+      appState,
+      elements,
+      handleCardSelect,
+      handleTargetSelect
+    );
+    appState.game.gameBoard.update();
+  }
+
+  // Gérer les boutons d'action en fonction du tour
+  toggleActionButtons(appState.game.isMyTurn);
 }
 
 // Affiche la vue du jeu

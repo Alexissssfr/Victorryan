@@ -1,5 +1,5 @@
 /**
- * Classe représentant une carte du jeu
+ * Classe représentant une carte de jeu
  */
 export class Card {
   /**
@@ -11,95 +11,155 @@ export class Card {
     this.data = data;
     this.type = type;
     this.selected = false;
+    this.disabled = false;
     this.element = null;
   }
 
   /**
-   * Rend la carte sous forme d'élément DOM
-   * @param {Function} onClick - Fonction à appeler lors du clic sur la carte
-   * @param {object} stats - Statistiques actuelles de la carte
+   * Génère l'élément DOM pour la carte
+   * @param {Function} onClick - Fonction à appeler lors du clic
+   * @param {object} stats - Statistiques de la carte (santé, attaque, tours)
    * @param {Array} activeBonus - Bonus actifs sur la carte
-   * @returns {HTMLElement} - Élément DOM représentant la carte
+   * @returns {HTMLElement} - Élément DOM de la carte
    */
-  render(onClick, stats = null, activeBonus = []) {
-    // Créer le conteneur de la carte
+  render(onClick, stats, activeBonus = []) {
+    // Créer le conteneur principal
     const container = document.createElement("div");
     container.className = "card-container";
 
-    // Si la carte est sélectionnée, ajouter la classe correspondante
-    if (this.selected) {
-      container.classList.add("selected-card");
-    }
-
-    // Créer l'élément de la carte
+    // Créer l'élément de carte
     const cardElement = document.createElement("div");
     cardElement.className = "card";
+    cardElement.dataset.id = this.data.id;
+    cardElement.dataset.type = this.type;
 
     // Créer l'image de la carte
-    const img = document.createElement("img");
-    img.src = this.data.fond;
-    img.alt =
+    const image = document.createElement("img");
+    image.src = this.data.fond;
+    image.alt =
       this.type === "personnage"
-        ? this.data.nomcarteperso
+        ? this.data.nompersonnage
         : this.data.nomcartebonus;
+    cardElement.appendChild(image);
 
-    // Ajouter l'image à la carte
-    cardElement.appendChild(img);
+    // Si c'est une carte personnage avec des stats, afficher les stats
+    if (this.type === "personnage" && stats) {
+      // Créer un overlay pour les stats
+      const statsOverlay = document.createElement("div");
+      statsOverlay.className = "card-stats-overlay";
 
-    // Si des statistiques sont fournies, les afficher
-    if (stats) {
-      const statsElement = document.createElement("div");
-      statsElement.className = "card-stats";
+      // Titre (nom du personnage)
+      const title = document.createElement("div");
+      title.className = "card-title";
+      title.textContent = this.data.nompersonnage;
+      statsOverlay.appendChild(title);
 
-      if (this.type === "personnage") {
-        statsElement.innerHTML = `
-          <div>PV: ${stats.health || this.data.pv}</div>
-          <div>Attaque: ${stats.attack || this.data.force}</div>
-          <div>Tours: ${stats.turns || this.data.tours}</div>
-        `;
-      } else {
-        statsElement.innerHTML = `
-          <div>Bonus: ${this.data.pourcentagebonus}%</div>
-          <div>Tours: ${this.data.tourbonus}</div>
-          <div>${this.data.nomdupouvoir}</div>
-        `;
+      // Barre de PV
+      const healthBar = document.createElement("div");
+      healthBar.className = "health-bar";
+
+      const healthBarInner = document.createElement("div");
+      healthBarInner.className = "health-bar-inner";
+      const healthPercent = Math.max(
+        0,
+        Math.min(100, (stats.health / parseInt(this.data.pv)) * 100)
+      );
+      healthBarInner.style.width = `${healthPercent}%`;
+
+      const healthText = document.createElement("span");
+      healthText.className = "health-text";
+      healthText.textContent = `PV: ${stats.health}/${this.data.pv}`;
+
+      healthBar.appendChild(healthBarInner);
+      healthBar.appendChild(healthText);
+      statsOverlay.appendChild(healthBar);
+
+      // Statistiques principales
+      const statsContainer = document.createElement("div");
+      statsContainer.className = "card-stats-container";
+
+      // Attaque
+      const attackStat = document.createElement("div");
+      attackStat.className = "stat attack";
+      attackStat.innerHTML = `<span>Attaque: ${stats.attack}</span>`;
+      statsContainer.appendChild(attackStat);
+
+      // Tours
+      const turnsStat = document.createElement("div");
+      turnsStat.className = "stat turns";
+      turnsStat.innerHTML = `<span>Tours: ${stats.turns}</span>`;
+      statsContainer.appendChild(turnsStat);
+
+      statsOverlay.appendChild(statsContainer);
+
+      // Bonus actifs
+      if (activeBonus && activeBonus.length > 0) {
+        const bonusContainer = document.createElement("div");
+        bonusContainer.className = "active-bonus";
+
+        const bonusTitle = document.createElement("div");
+        bonusTitle.className = "bonus-title";
+        bonusTitle.textContent = "Bonus actifs:";
+        bonusContainer.appendChild(bonusTitle);
+
+        activeBonus.forEach((bonus) => {
+          const bonusItem = document.createElement("div");
+          bonusItem.className = "bonus-item";
+          bonusItem.textContent = `${bonus.nom} (+${bonus.pourcentage}%, ${bonus.tours} tours)`;
+          bonusContainer.appendChild(bonusItem);
+        });
+
+        statsOverlay.appendChild(bonusContainer);
       }
 
-      cardElement.appendChild(statsElement);
+      cardElement.appendChild(statsOverlay);
     }
 
-    // Ajouter les bonus actifs si fournis
-    if (activeBonus.length > 0 && this.type === "personnage") {
-      const bonusElement = document.createElement("div");
-      bonusElement.className = "card-bonus";
-      bonusElement.innerHTML = "<div>Bonus actifs:</div>";
+    // Si c'est une carte bonus, afficher sa description
+    if (this.type === "bonus") {
+      const bonusOverlay = document.createElement("div");
+      bonusOverlay.className = "bonus-overlay";
 
-      activeBonus.forEach((bonus) => {
-        const bonusItem = document.createElement("div");
-        bonusItem.className = "bonus-item";
-        bonusItem.textContent = `${bonus.nom} (${bonus.pourcentage}%, ${bonus.tours}t)`;
-        bonusElement.appendChild(bonusItem);
-      });
+      const bonusTitle = document.createElement("div");
+      bonusTitle.className = "bonus-title";
+      bonusTitle.textContent = this.data.nomcartebonus;
+      bonusOverlay.appendChild(bonusTitle);
 
-      cardElement.appendChild(bonusElement);
+      const bonusEffect = document.createElement("div");
+      bonusEffect.className = "bonus-effect";
+      bonusEffect.textContent = `+${this.data.pourcentagebonus}% pendant ${this.data.tourbonus} tours`;
+      bonusOverlay.appendChild(bonusEffect);
+
+      cardElement.appendChild(bonusOverlay);
     }
 
-    // Ajouter l'élément carte au conteneur
-    container.appendChild(cardElement);
-
-    // Ajouter l'écouteur d'événement pour le clic
+    // Ajouter l'événement de clic
     if (onClick) {
-      container.addEventListener("click", () => onClick(this));
+      cardElement.addEventListener("click", () => {
+        if (!this.disabled) {
+          onClick(this);
+        }
+      });
     }
 
-    // Stocker l'élément DOM pour référence future
-    this.element = container;
+    // Définir les états visuels
+    if (this.selected) {
+      cardElement.classList.add("selected-card");
+    }
+
+    if (this.disabled) {
+      cardElement.classList.add("disabled-card");
+    }
+
+    // Stocker la référence à l'élément
+    this.element = cardElement;
+    container.appendChild(cardElement);
 
     return container;
   }
 
   /**
-   * Sélectionne ou désélectionne la carte
+   * Définit l'état de sélection de la carte
    * @param {boolean} selected - État de sélection
    */
   setSelected(selected) {
@@ -115,10 +175,12 @@ export class Card {
   }
 
   /**
-   * Désactive la carte (par exemple, quand elle n'a plus de tours d'attaque)
+   * Définit l'état de désactivation de la carte
    * @param {boolean} disabled - État de désactivation
    */
   setDisabled(disabled) {
+    this.disabled = disabled;
+
     if (this.element) {
       if (disabled) {
         this.element.classList.add("disabled-card");
