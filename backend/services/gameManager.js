@@ -346,6 +346,59 @@ function saveGameState(gameId, gameState) {
   activeGames.set(gameId, gameState);
 }
 
+/**
+ * Met à jour le statut de connexion d'un joueur
+ * @param {string} gameId - ID de la partie
+ * @param {string} playerId - ID du joueur
+ * @param {boolean} isConnected - Status de connexion
+ * @returns {Object} État mis à jour du jeu
+ */
+function updatePlayerConnection(gameId, playerId, isConnected) {
+  const game = getGame(gameId);
+
+  if (!game) {
+    console.log(
+      `Partie ${gameId} non trouvée pour la mise à jour de connexion`
+    );
+    return null;
+  }
+
+  // Vérifier si le joueur fait partie de cette partie
+  let playerKey = null;
+  if (game.state.player1?.id === playerId) {
+    playerKey = "player1";
+  } else if (game.state.player2?.id === playerId) {
+    playerKey = "player2";
+  }
+
+  if (!playerKey) {
+    console.log(`Joueur ${playerId} non trouvé dans la partie ${gameId}`);
+    return null;
+  }
+
+  // Mettre à jour le statut de connexion
+  if (!game.state[playerKey].connectionStatus) {
+    game.state[playerKey].connectionStatus = {};
+  }
+
+  const previousStatus = game.state[playerKey].connectionStatus.isConnected;
+  game.state[playerKey].connectionStatus = {
+    isConnected,
+    lastUpdate: new Date().toISOString(),
+  };
+
+  // Log uniquement si le statut a changé
+  if (previousStatus !== isConnected) {
+    console.log(
+      `Joueur ${playerId} ${
+        isConnected ? "connecté" : "déconnecté"
+      } dans la partie ${gameId}`
+    );
+  }
+
+  return game.state;
+}
+
 module.exports = {
   createGame,
   joinGame,
@@ -354,4 +407,5 @@ module.exports = {
   attack,
   endTurn,
   saveGameState,
+  updatePlayerConnection,
 };

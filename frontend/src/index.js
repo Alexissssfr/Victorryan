@@ -50,6 +50,9 @@ function init() {
   // Désactiver les boutons d'action par défaut
   toggleActionButtons(false);
 
+  // Configurer la reconnexion WebSocket automatique
+  setupWebSocketReconnection();
+
   // Activer le mode debug si nécessaire (window.DEBUG = true dans la console pour l'activer)
   setupDebugging();
 }
@@ -82,6 +85,95 @@ function setupDebugging() {
   };
 
   console.log("Mode debug disponible via window.debugGame");
+}
+
+/**
+ * Configure la reconnexion automatique des WebSockets
+ */
+function setupWebSocketReconnection() {
+  window.addEventListener("online", function () {
+    console.log(
+      "Connexion réseau rétablie, tentative de reconnexion WebSocket..."
+    );
+    reconnectWebSocket();
+  });
+
+  // Vérifier l'état de la connexion toutes les 30 secondes
+  setInterval(checkWebSocketConnection, 30000);
+}
+
+/**
+ * Vérifie l'état de la connexion WebSocket et tente une reconnexion si nécessaire
+ */
+function checkWebSocketConnection() {
+  if (appState.game.id && !isWebSocketConnected()) {
+    console.log("Connexion WebSocket perdue, tentative de reconnexion...");
+    reconnectWebSocket();
+  }
+}
+
+/**
+ * Vérifie si la connexion WebSocket est active
+ * @returns {boolean} - true si la connexion est active, false sinon
+ */
+function isWebSocketConnected() {
+  // Vérification basée sur l'état du socket actuel
+  const socket = window.gameSocket?.socket;
+  return socket && socket.connected;
+}
+
+/**
+ * Tente de reconnecter le WebSocket et de rejoindre la partie en cours
+ */
+function reconnectWebSocket() {
+  if (!appState.game.id) return;
+
+  // Reconfigurer le WebSocket
+  setupWebSocket(appState.game.id, appState.player.id, handleGameUpdate);
+
+  // Afficher un message à l'utilisateur
+  showNotification("Reconnexion au serveur...", "info");
+}
+
+/**
+ * Affiche une notification à l'utilisateur
+ * @param {string} message - Le message à afficher
+ * @param {string} type - Le type de notification (info, success, error, warning)
+ */
+function showNotification(message, type = "info") {
+  // Si l'élément de notification n'existe pas, on le crée
+  let notificationElement = document.getElementById("notification");
+  if (!notificationElement) {
+    notificationElement = document.createElement("div");
+    notificationElement.id = "notification";
+    notificationElement.style.position = "fixed";
+    notificationElement.style.top = "20px";
+    notificationElement.style.right = "20px";
+    notificationElement.style.padding = "10px 20px";
+    notificationElement.style.borderRadius = "5px";
+    notificationElement.style.color = "white";
+    notificationElement.style.zIndex = "1000";
+    notificationElement.style.transition = "opacity 0.5s";
+    document.body.appendChild(notificationElement);
+  }
+
+  // Définir le style selon le type
+  const bgColors = {
+    info: "#007bff",
+    success: "#28a745",
+    error: "#dc3545",
+    warning: "#ffc107",
+  };
+
+  notificationElement.style.backgroundColor = bgColors[type] || bgColors.info;
+  notificationElement.textContent = message;
+  notificationElement.style.opacity = "1";
+
+  // Faire disparaître la notification après 3 secondes
+  clearTimeout(window.notificationTimeout);
+  window.notificationTimeout = setTimeout(() => {
+    notificationElement.style.opacity = "0";
+  }, 3000);
 }
 
 // Mise en place des écouteurs d'événements
@@ -135,24 +227,26 @@ function generateRandomName() {
   return `${prefix[Math.floor(Math.random() * prefix.length)]}_${suffix}`;
 }
 
-// Gestionnaire de création de partie
-async function handleCreateGame() {
+// Créer une nouvelle partie
+async function createGame() {
+  const playerName = prompt("Entrez votre nom:", "Joueur1");
+  if (!playerName) return;
+
+  // Désactiver le bouton pendant le traitement
+  elements.createGameBtn.disabled = true;
+  elements.createGameBtn.textContent = "Création en cours...";
+
   try {
-    // Désactiver le bouton pendant la création
-    elements.createGameBtn.disabled = true;
-    elements.createGameBtn.textContent = "Création en cours...";
-
-    // Générer un nom aléatoire au lieu d'utiliser le champ
-    const playerName = generateRandomName();
-
+    // Créer une partie sur le serveur
     const response = await api.createGame(playerName);
+    console.log("Réponse API:", response);
 
-    appState.player.name = playerName;
+    // Définir l'ID de la partie et du joueur
     appState.game.id = response.gameId;
     appState.player.id = playerName;
 
     // Configurer WebSocket
-    setupWebSocket(appState.game.id, handleGameUpdate);
+    setupWebSocket(appState.game.id, appState.player.id, handleGameUpdate);
 
     // Obtenir l'état initial du jeu
     const gameState = await api.getGameState(response.gameId);
@@ -179,46 +273,101 @@ async function handleCreateGame() {
   }
 }
 
+// Rejoindre une partie existante
+async function joinGame() {
+  const gameIdValue = elements.gameId.value.trim().toUpperCase();
+  if (gameIdValue.length === 0) {
+    showError("Veuillez entrer l'identifiant de la partie");
+    return;
+  }
+
+  const playerName = prompt("Entrez votre nom:", "Joueur2");
+  if (!playerName) return;
+
+  // Désactiver le bouton pendant le traitement
+  elements.confirmJoinBtn.disabled = true;
+  elements.confirmJoinBtn.textContent = "Connexion en cours...";
+
+  try {
+    // Rejoindre une partie
+    const response = await api.joinGame(gameIdValue, playerName);
+    console.log("Réponse API:", response);
+
+    // Définir l'ID de la partie et du joueur
+    appState.game.id = gameIdValue;
+    appState.player.id = playerName;
+
+    // Configurer WebSocket
+    setupWebSocket(appState.game.id, appState.player.id, handleGameUpdate);
+
+    // Obtenir l'état du jeu
+    const gameState = await api.getGameState(gameIdValue);
+    appState.game.state = gameState;
+
+    // Déterminer les clés joueur/adversaire
+    appState.game.playerKey = "player2";
+    appState.game.opponentKey = "player1";
+
+    // Afficher l'écran de jeu
+    showGameView();
+
+    console.log("Partie rejointe avec succès");
+  } catch (error) {
+    console.error("Erreur lors de la connexion à la partie:", error);
+    showError(
+      "Erreur lors de la connexion à la partie: " +
+        (error.message || "Connexion au serveur impossible")
+    );
+  } finally {
+    // Réactiver le bouton
+    elements.confirmJoinBtn.disabled = false;
+    elements.confirmJoinBtn.textContent = "Rejoindre";
+  }
+}
+
 /**
  * Affiche l'écran d'attente pour le créateur de la partie
  * @param {string} gameId - ID de la partie
  */
 function showWaitingForOpponent(gameId) {
-  // Cacher l'écran de lobby
-  elements.lobbyView.style.display = "none";
+  console.log("Affichage de l'écran d'attente avec le code:", gameId);
 
-  // Afficher l'écran d'attente
-  elements.waitingRoom.style.display = "block";
-
-  // Afficher l'ID de la partie et créer un bouton pour copier
+  // Afficher clairement le code de partie
   elements.gameIdDisplay.textContent = gameId;
 
-  // Créer un bouton pour copier le code
-  const copyButton = document.createElement("button");
-  copyButton.className = "btn btn-primary mt-2 mb-3 ms-2";
-  copyButton.textContent = "Copier le code";
-  copyButton.onclick = function () {
-    navigator.clipboard
-      .writeText(gameId)
-      .then(() => {
-        copyButton.textContent = "Code copié !";
-        setTimeout(() => {
-          copyButton.textContent = "Copier le code";
-        }, 2000);
-      })
-      .catch((err) => {
-        console.error("Erreur lors de la copie:", err);
-        showError("Impossible de copier le code");
-      });
-  };
+  // Vider les autres contenus possibles du waiting room
+  while (elements.waitingRoom.childNodes.length > 3) {
+    elements.waitingRoom.removeChild(elements.waitingRoom.lastChild);
+  }
 
-  // Ajouter le bouton à côté du code
+  // Réinitialiser le contenu du paragraphe avec le code de partie
   const idContainer = elements.waitingRoom.querySelector("p");
   if (idContainer) {
-    // Vider le container d'abord
-    while (idContainer.childNodes.length > 1) {
-      idContainer.removeChild(idContainer.lastChild);
-    }
+    // Conserver uniquement le texte et le span, supprimer tout autre élément
+    const textNode = idContainer.firstChild;
+    const spanElement = elements.gameIdDisplay;
+    idContainer.innerHTML = "";
+    idContainer.appendChild(textNode);
+    idContainer.appendChild(spanElement);
+
+    // Créer un bouton pour copier le code
+    const copyButton = document.createElement("button");
+    copyButton.className = "btn btn-primary mt-2 mb-3 ms-2";
+    copyButton.textContent = "Copier le code";
+    copyButton.onclick = function () {
+      navigator.clipboard
+        .writeText(gameId)
+        .then(() => {
+          copyButton.textContent = "Code copié !";
+          setTimeout(() => {
+            copyButton.textContent = "Copier le code";
+          }, 2000);
+        })
+        .catch((err) => {
+          console.error("Erreur lors de la copie:", err);
+          showError("Impossible de copier le code");
+        });
+    };
     idContainer.appendChild(copyButton);
   }
 
@@ -227,73 +376,27 @@ function showWaitingForOpponent(gameId) {
   instructions.innerHTML =
     "<strong>En attente d'un adversaire...</strong><br>Partagez ce code pour que votre adversaire puisse vous rejoindre.";
   instructions.className = "mt-3";
-
-  // Ajouter les instructions à l'écran d'attente
   elements.waitingRoom.appendChild(instructions);
-}
 
-// Gestionnaire pour rejoindre une partie
-async function handleJoinGame() {
-  const gameId = elements.gameId.value.trim();
-
-  if (!gameId) {
-    showError("Veuillez entrer le code de la partie");
-    return;
-  }
-
-  try {
-    elements.confirmJoinBtn.disabled = true;
-    elements.confirmJoinBtn.textContent = "Connexion...";
-
-    // Générer un nom aléatoire pour le second joueur également
-    const playerName = generateRandomName();
-
-    const response = await api.joinGame(gameId, playerName);
-
-    appState.player.name = playerName;
-    appState.game.id = gameId;
-    appState.player.id = playerName;
-    appState.game.state = response.gameState;
-
-    // Configurer WebSocket
-    setupWebSocket(appState.game.id, handleGameUpdate);
-
-    // Déterminer les clés joueur/adversaire
-    determinePlayerKeys();
-
-    // Passer à la vue du jeu
-    showGameView();
-  } catch (error) {
-    console.error("Erreur lors de la connexion à la partie:", error);
-    showError(
-      "Erreur lors de la connexion à la partie: " +
-        (error.message || "Code de partie invalide ou introuvable")
-    );
-  } finally {
-    elements.confirmJoinBtn.disabled = false;
-    elements.confirmJoinBtn.textContent = "Confirmer";
-  }
-}
-
-// Détermine les clés du joueur et de l'adversaire
-function determinePlayerKeys() {
-  const state = appState.game.state;
-
-  if (state.player1 && state.player1.id === appState.player.id) {
-    appState.game.playerKey = "player1";
-    appState.game.opponentKey = "player2";
-  } else {
-    appState.game.playerKey = "player2";
-    appState.game.opponentKey = "player1";
-  }
-
-  // Vérifier si c'est le tour du joueur
-  appState.game.isMyTurn = state.currentTurn === appState.game.playerKey;
+  // Cacher l'écran de lobby et afficher l'écran d'attente
+  elements.lobbyView.style.display = "none";
+  elements.gameView.style.display = "none";
+  elements.waitingRoom.style.display = "block";
+  elements.gameIdDisplay.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+  });
 }
 
 // Gestionnaire des mises à jour du jeu via WebSocket
 function handleGameUpdate(gameState) {
   console.log("Mise à jour de l'état du jeu reçue:", gameState);
+
+  // Stocker l'état précédent pour comparer
+  const previousState = appState.game.state;
+  const previousTurn = previousState ? previousState.currentTurn : null;
+
+  // Mettre à jour l'état du jeu
   appState.game.state = gameState;
 
   // Déterminer les clés du joueur si pas encore fait
@@ -313,7 +416,19 @@ function handleGameUpdate(gameState) {
   }
 
   // Vérifier si c'est le tour du joueur
+  const wasMyTurn = appState.game.isMyTurn;
   appState.game.isMyTurn = gameState.currentTurn === appState.game.playerKey;
+
+  // Si le tour vient de changer, notifier l'utilisateur
+  if (previousTurn && previousTurn !== gameState.currentTurn) {
+    if (appState.game.isMyTurn) {
+      // C'est maintenant mon tour
+      notifyTurnChange(true);
+    } else if (wasMyTurn) {
+      // Ce n'est plus mon tour
+      notifyTurnChange(false);
+    }
+  }
 
   // Mettre à jour l'interface
   updateGameInterface();
@@ -325,28 +440,76 @@ function handleGameUpdate(gameState) {
 }
 
 /**
- * Met à jour l'interface du jeu avec l'état actuel
+ * Notifie l'utilisateur d'un changement de tour
+ * @param {boolean} isMyTurn - Indique si c'est maintenant le tour du joueur
+ */
+function notifyTurnChange(isMyTurn) {
+  const message = isMyTurn
+    ? "C'est votre tour !"
+    : "C'est maintenant le tour de votre adversaire";
+
+  // Animation de l'indicateur de tour
+  elements.turnIndicator.style.animation = "none";
+  setTimeout(() => {
+    elements.turnIndicator.style.animation = "pulse 2s infinite";
+  }, 10);
+
+  // Afficher une notification si le navigateur le supporte
+  if ("Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification(message);
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification(message);
+        }
+      });
+    }
+  }
+
+  // Jouer un son si c'est votre tour (à implémenter plus tard)
+  if (isMyTurn) {
+    console.log("🔔 C'est votre tour!");
+  }
+}
+
+/**
+ * Met à jour l'interface du jeu en fonction de l'état actuel
  */
 function updateGameInterface() {
   // Mettre à jour l'indicateur de tour
-  updateTurnIndicator();
+  elements.turnIndicator.textContent = appState.game.isMyTurn
+    ? "C'est votre tour"
+    : "Tour de l'adversaire";
 
-  // Mettre à jour l'affichage des cartes
-  if (appState.game.gameBoard) {
-    appState.game.gameBoard.update();
-  } else {
-    // Si le gameBoard n'existe pas encore, créons-le
+  // Mettre à jour le style de l'indicateur de tour
+  elements.turnIndicator.style.backgroundColor = appState.game.isMyTurn
+    ? "#007bff"
+    : "#6c757d";
+
+  // Activer/désactiver les boutons d'action
+  toggleActionButtons(appState.game.isMyTurn);
+
+  // Actualiser l'affichage des cartes
+  refreshCardsDisplay();
+}
+
+/**
+ * Rafraîchit l'affichage des cartes du joueur et de l'adversaire
+ */
+function refreshCardsDisplay() {
+  // Si le gameBoard n'existe pas encore, créons-le
+  if (!appState.game.gameBoard) {
     appState.game.gameBoard = new GameBoard(
       appState,
       elements,
       handleCardSelect,
       handleTargetSelect
     );
-    appState.game.gameBoard.update();
   }
 
-  // Gérer les boutons d'action en fonction du tour
-  toggleActionButtons(appState.game.isMyTurn);
+  // Mettre à jour l'affichage des cartes
+  appState.game.gameBoard.update();
 }
 
 // Affiche la vue du jeu

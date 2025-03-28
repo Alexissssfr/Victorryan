@@ -1,9 +1,10 @@
 /**
  * Configure la connexion WebSocket pour le jeu
  * @param {string} gameId - ID de la partie
+ * @param {string} playerId - ID du joueur
  * @param {Function} onGameUpdate - Callback appelé quand l'état du jeu est mis à jour
  */
-export function setupWebSocket(gameId, onGameUpdate) {
+export function setupWebSocket(gameId, playerId, onGameUpdate) {
   // L'URL du serveur WebSocket
   const socketUrl =
     window.location.hostname === "localhost"
@@ -26,9 +27,9 @@ export function setupWebSocket(gameId, onGameUpdate) {
   socket.on("connect", () => {
     console.log("Connecté au serveur WebSocket:", socket.id);
 
-    // Rejoindre la salle de la partie
-    socket.emit("join_game", gameId);
-    console.log(`Rejoint la partie ${gameId}`);
+    // Rejoindre la salle de la partie avec l'ID du joueur
+    socket.emit("join_game", { gameId, playerId });
+    console.log(`Rejoint la partie ${gameId} en tant que joueur ${playerId}`);
   });
 
   // Événement de tentative de connexion
@@ -69,7 +70,7 @@ export function setupWebSocket(gameId, onGameUpdate) {
     );
 
     // Rejoindre à nouveau la salle de la partie après reconnexion
-    socket.emit("join_game", gameId);
+    socket.emit("join_game", { gameId, playerId });
   });
 
   return socket;

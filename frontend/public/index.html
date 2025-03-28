@@ -249,8 +249,10 @@
         background-color: #f8f9fa;
         padding: 20px;
         border-radius: 10px;
-        margin-top: 20px;
+        margin: 50px auto;
+        max-width: 600px;
         text-align: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
 
       .error-message {
@@ -295,10 +297,10 @@
       <div class="container mt-4">
         <h1 class="text-center mb-4">Jeu de Cartes VictorRyan</h1>
 
+        <div id="errorMessage" class="error-message"></div>
+
         <div id="lobby-view" class="lobby-container">
           <h2 class="text-center mb-4">Lobby</h2>
-
-          <div id="errorMessage" class="error-message"></div>
 
           <div class="lobby-buttons">
             <button id="createGameBtn" class="btn btn-primary btn-lg">
@@ -324,22 +326,18 @@
               </div>
             </div>
           </div>
+        </div>
 
-          <div
-            id="waitingRoom"
-            style="display: none"
-            class="text-center waiting-room"
-          >
-            <h3>En attente d'un autre joueur...</h3>
-            <p class="mt-4">
-              Code de la partie:
-              <span id="gameIdDisplay" class="game-id-display"></span>
-            </p>
-            <p class="text-muted">
-              Partagez ce code avec votre adversaire pour qu'il puisse vous
-              rejoindre.
-            </p>
-          </div>
+        <div id="waitingRoom" style="display: none" class="waiting-room">
+          <h3>En attente d'un autre joueur...</h3>
+          <p class="mt-4">
+            Code de la partie:
+            <span id="gameIdDisplay" class="game-id-display"></span>
+          </p>
+          <p class="text-muted">
+            Partagez ce code avec votre adversaire pour qu'il puisse vous
+            rejoindre.
+          </p>
         </div>
 
         <div id="game-view" style="display: none">

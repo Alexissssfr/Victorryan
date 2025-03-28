@@ -68,9 +68,42 @@ io.on("connection", (socket) => {
   console.log(`Nouveau client connecté: ${socket.id}`);
 
   // Rejoindre une partie
-  socket.on("join_game", (gameId) => {
+  socket.on("join_game", (data) => {
+    // Accepter à la fois le format objet et le format chaîne pour rétrocompatibilité
+    const gameId = typeof data === "object" ? data.gameId : data;
+    const playerId = typeof data === "object" ? data.playerId : null;
+
+    if (!gameId) {
+      socket.emit("error", { message: "ID de partie manquant" });
+      return;
+    }
+
     socket.join(gameId);
-    console.log(`Client ${socket.id} a rejoint la partie ${gameId}`);
+    console.log(
+      `Client ${socket.id} a rejoint la partie ${gameId}${
+        playerId ? ` en tant que joueur ${playerId}` : ""
+      }`
+    );
+
+    // Si l'ID du joueur est fourni, mettre à jour le statut de connexion
+    if (playerId) {
+      try {
+        const gameState = gameManager.updatePlayerConnection(
+          gameId,
+          playerId,
+          true
+        );
+        if (gameState) {
+          // Émettre une mise à jour de l'état de jeu à tous les clients dans cette partie
+          io.to(gameId).emit("game_update", gameState);
+        }
+      } catch (error) {
+        console.error(
+          `Erreur lors de la mise à jour de la connexion: ${error.message}`
+        );
+        socket.emit("error", { message: error.message });
+      }
+    }
   });
 
   // Jouer une carte
@@ -116,6 +149,34 @@ io.on("connection", (socket) => {
   // Déconnexion
   socket.on("disconnect", () => {
     console.log(`Client déconnecté: ${socket.id}`);
+
+    // Récupérer les parties où ce socket était actif
+    const socketRooms = Array.from(socket.rooms || []);
+    const gameIds = socketRooms.filter((room) => room !== socket.id);
+
+    // Récupérer l'ID du joueur s'il est disponible dans le socket
+    const playerId = socket.playerId;
+
+    if (playerId && gameIds.length > 0) {
+      // Marquer le joueur comme déconnecté dans toutes les parties
+      gameIds.forEach((gameId) => {
+        try {
+          const gameState = gameManager.updatePlayerConnection(
+            gameId,
+            playerId,
+            false
+          );
+          if (gameState) {
+            // Informer les autres joueurs de la déconnexion
+            io.to(gameId).emit("game_update", gameState);
+          }
+        } catch (error) {
+          console.error(
+            `Erreur lors de la mise à jour de la déconnexion: ${error.message}`
+          );
+        }
+      });
+    }
   });
 });
 
