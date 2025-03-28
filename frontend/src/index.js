@@ -69,16 +69,32 @@ function setupEventListeners() {
   elements.backToLobbyBtn.addEventListener("click", resetGame);
 }
 
+// Fonction pour afficher les messages d'erreur
+function showError(message) {
+  const errorElement = document.getElementById("errorMessage");
+  errorElement.textContent = message;
+  errorElement.style.display = "block";
+
+  // Cacher le message après 5 secondes
+  setTimeout(() => {
+    errorElement.style.display = "none";
+  }, 5000);
+}
+
 // Gestionnaire de création de partie
 async function handleCreateGame() {
   const playerName = elements.playerName.value.trim();
 
   if (!playerName) {
-    alert("Veuillez entrer votre nom");
+    showError("Veuillez entrer votre nom");
     return;
   }
 
   try {
+    // Désactiver le bouton pendant la création
+    elements.createGameBtn.disabled = true;
+    elements.createGameBtn.textContent = "Création en cours...";
+
     const response = await api.createGame(playerName);
 
     appState.player.name = playerName;
@@ -87,6 +103,32 @@ async function handleCreateGame() {
 
     // Afficher l'ID de la partie
     elements.gameIdDisplay.textContent = response.gameId;
+
+    // Créer un bouton pour copier l'ID
+    const copyButton = document.createElement("button");
+    copyButton.className = "btn btn-outline-primary mt-2 mb-3 ms-2";
+    copyButton.textContent = "Copier l'ID";
+    copyButton.onclick = function () {
+      navigator.clipboard
+        .writeText(response.gameId)
+        .then(() => {
+          copyButton.textContent = "Copié !";
+          setTimeout(() => {
+            copyButton.textContent = "Copier l'ID";
+          }, 2000);
+        })
+        .catch((err) => {
+          console.error("Erreur lors de la copie: ", err);
+          showError("Impossible de copier l'ID");
+        });
+    };
+
+    // Ajouter le bouton après l'affichage de l'ID
+    const idContainer = elements.waitingRoom.querySelector("p");
+    if (idContainer) {
+      idContainer.appendChild(copyButton);
+    }
+
     elements.waitingRoom.style.display = "block";
     elements.joinGameForm.style.display = "none";
 
@@ -94,7 +136,14 @@ async function handleCreateGame() {
     setupWebSocket(appState.game.id, handleGameUpdate);
   } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
-    alert("Erreur lors de la création de la partie");
+    showError(
+      "Erreur lors de la création de la partie: " +
+        (error.message || "Connexion au serveur impossible")
+    );
+  } finally {
+    // Réactiver le bouton
+    elements.createGameBtn.disabled = false;
+    elements.createGameBtn.textContent = "Créer une partie";
   }
 }
 
@@ -104,11 +153,14 @@ async function handleJoinGame() {
   const gameId = elements.gameId.value.trim();
 
   if (!playerName || !gameId) {
-    alert("Veuillez entrer votre nom et l'ID de la partie");
+    showError("Veuillez entrer votre nom et l'ID de la partie");
     return;
   }
 
   try {
+    elements.confirmJoinBtn.disabled = true;
+    elements.confirmJoinBtn.textContent = "Connexion...";
+
     const response = await api.joinGame(gameId, playerName);
 
     appState.player.name = playerName;
@@ -126,7 +178,13 @@ async function handleJoinGame() {
     showGameView();
   } catch (error) {
     console.error("Erreur lors de la connexion à la partie:", error);
-    alert("Erreur lors de la connexion à la partie");
+    showError(
+      "Erreur lors de la connexion à la partie: " +
+        (error.message || "Partie introuvable")
+    );
+  } finally {
+    elements.confirmJoinBtn.disabled = false;
+    elements.confirmJoinBtn.textContent = "Confirmer";
   }
 }
 

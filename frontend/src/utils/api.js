@@ -1,5 +1,8 @@
 // URL de base de l'API
-const API_BASE_URL = "/api";
+const API_BASE_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:3000/api"
+    : "/api";
 
 /**
  * Fonction pour appeler l'API avec fetch
@@ -16,6 +19,8 @@ async function callApi(endpoint, method = "GET", data = null) {
     headers: {
       "Content-Type": "application/json",
     },
+    // Ajouter credentials pour les requêtes CORS
+    credentials: "include",
   };
 
   if (data) {
@@ -26,7 +31,9 @@ async function callApi(endpoint, method = "GET", data = null) {
     const response = await fetch(url, options);
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Erreur inconnue" }));
       throw new Error(errorData.error || "Une erreur est survenue");
     }
 

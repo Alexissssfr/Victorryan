@@ -116,6 +116,34 @@
       .action-buttons button {
         margin: 0 10px;
       }
+
+      .game-id-display {
+        font-size: 24px;
+        font-weight: bold;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        display: inline-block;
+      }
+
+      .waiting-room {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .error-message {
+        color: #dc3545;
+        font-weight: bold;
+        padding: 10px;
+        margin: 10px 0;
+        background-color: #f8d7da;
+        border-radius: 5px;
+        display: none;
+      }
     </style>
   </head>
   <body>
@@ -125,6 +153,8 @@
 
         <div id="lobby-view" class="lobby-container">
           <h2 class="text-center mb-4">Lobby</h2>
+
+          <div id="errorMessage" class="error-message"></div>
 
           <div class="mb-3">
             <label for="playerName" class="form-label">Votre nom</label>
@@ -158,9 +188,16 @@
             </button>
           </div>
 
-          <div id="waitingRoom" style="display: none" class="text-center">
+          <div
+            id="waitingRoom"
+            style="display: none"
+            class="text-center waiting-room"
+          >
             <h3>En attente d'un autre joueur...</h3>
-            <p>ID de la partie: <span id="gameIdDisplay"></span></p>
+            <p>
+              ID de la partie:
+              <span id="gameIdDisplay" class="game-id-display"></span>
+            </p>
             <p>
               Partagez cet ID avec votre adversaire pour qu'il puisse vous
               rejoindre.

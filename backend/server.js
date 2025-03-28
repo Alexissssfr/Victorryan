@@ -15,9 +15,22 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// Configurer CORS
-app.use(cors());
+// Configurer CORS avec options avancées
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
+
+// Middleware pour logger les requêtes
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 // Servir les fichiers statiques du frontend
 app.use(express.static(path.join(__dirname, "../frontend/public")));
@@ -32,11 +45,21 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/public/index.html"));
 });
 
+// Middleware de gestion d'erreurs
+app.use((err, req, res, next) => {
+  console.error("Erreur serveur:", err.stack);
+  res.status(500).json({
+    error: "Une erreur est survenue sur le serveur",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+});
+
 // Configurer Socket.io
 const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
