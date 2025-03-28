@@ -58,7 +58,7 @@
 
       .card {
         width: 180px;
-        height: 280px;
+        height: 300px;
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 10px;
@@ -86,7 +86,7 @@
         background-size: contain;
         background-position: center;
         background-repeat: no-repeat;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
       }
 
       .card-overlay {
@@ -94,8 +94,8 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background-color: rgba(255, 255, 255, 0.8);
-        padding: 5px;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 8px;
         border-top: 1px solid #ddd;
       }
 
@@ -171,6 +171,27 @@
       .turn-indicator {
         font-weight: bold;
         color: #4caf50;
+      }
+
+      /* Ajouter une classe pour agrandir la carte au survol */
+      .card-zoom {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(2);
+        z-index: 1000;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Ajoutez un fond semi-transparent quand une carte est zoomée */
+      .overlay-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 999;
       }
     </style>
   </head>
@@ -389,16 +410,34 @@
           }`;
           cardEl.dataset.id = card.id;
 
-          // Valeurs à afficher, en tenant compte des modifications d'état
-          const health = state ? state.currentHealth : card.PV;
-          const attack = state ? state.currentAttack : card.force_attaque;
-          const turns = state ? state.currentTurns : card.tours_attaque;
+          // Récupérer les valeurs correctes, avec état actuel ou valeurs de base
+          // Utiliser les noms de propriétés corrects des données reçues
+          const health =
+            state && state.currentHealth !== undefined
+              ? state.currentHealth
+              : card.pointsdevie
+              ? parseInt(card.pointsdevie)
+              : 100;
 
-          // Vérifier si des bonus sont actifs sur cette carte
+          const attack =
+            state && state.currentAttack !== undefined
+              ? state.currentAttack
+              : card.forceattaque
+              ? parseInt(card.forceattaque)
+              : 30;
+
+          const turns =
+            state && state.currentTurns !== undefined
+              ? state.currentTurns
+              : card.tourattaque
+              ? parseInt(card.tourattaque)
+              : 2;
+
+          // Vérifier si des bonus sont actifs
           const activeBonus =
             state && state.activeBonus ? state.activeBonus : [];
 
-          // Ajouter l'image de la carte
+          // Créer l'élément d'image
           let imageHtml = "";
           if (card.fond) {
             imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
@@ -410,15 +449,38 @@
               ? `<div class="active-bonus-indicator">${activeBonus.length}</div>`
               : "";
 
+          // Créer une description plus détaillée des bonus actifs
+          let activeBonusHtml = "";
+          if (activeBonus.length > 0) {
+            activeBonusHtml = `
+              <div style="font-size: 10px; color: #ff9800; margin-top: 3px;">
+                <strong>Bonus actifs:</strong> ${activeBonus
+                  .map((b) => b.bonusId)
+                  .join(", ")}
+              </div>
+            `;
+          }
+
+          // Utiliser le nom correct de la carte
+          const cardName = card.nomcarteperso || card.id || "Personnage";
+          const cardPower = card.nomdupouvoir || "";
+          const cardDescription = card.description || "";
+
+          // Construire le HTML de la carte
           cardEl.innerHTML = `
             ${bonusIndicator}
-            <div class="card-title">${card.nom || "Personnage"}</div>
+            <div class="card-title">${cardName}</div>
             ${imageHtml}
             <div class="card-overlay">
               <div class="card-stats">
                 <div><strong>PV:</strong> ${health}</div>
                 <div><strong>Attaque:</strong> ${attack}</div>
-                <div><strong>Tours:</strong> ${turns}</div>
+                <div><strong>Tours d'attaque:</strong> ${turns}</div>
+                ${activeBonusHtml}
+                <div style="font-size: 10px; color: #666; margin-top: 3px;">
+                  <strong>${cardPower}</strong>
+                  <div>${cardDescription}</div>
+                </div>
               </div>
             </div>
           `;
@@ -431,21 +493,31 @@
           cardEl.className = "card bonus-card";
           cardEl.dataset.id = card.id;
 
+          // Créer l'élément d'image
           let imageHtml = "";
           if (card.fond) {
             imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
           }
 
+          // Récupérer les valeurs correctes - utiliser les noms de propriétés des données réelles
+          const pourcentage = card.pourcentagebonus
+            ? parseInt(card.pourcentagebonus)
+            : 0;
+          const tours = card.tourbonus ? parseInt(card.tourbonus) : 1;
+          const effet = card.description || "-";
+          const nom = card.nomcartebonus || card.id || "Bonus";
+          const pouvoir = card.nomdupouvoir || "";
+
+          // Construire le HTML de la carte
           cardEl.innerHTML = `
-            <div class="card-title">${card.nom || "Bonus"}</div>
+            <div class="card-title">${nom}</div>
             ${imageHtml}
             <div class="card-overlay">
               <div class="card-stats">
-                <div><strong>Effet:</strong> ${card.effet || "-"}</div>
-                <div><strong>Pourcentage:</strong> ${
-                  card.pourcentage || "0"
-                }%</div>
-                <div><strong>Tours:</strong> ${card.tours || "1"}</div>
+                <div><strong>Pouvoir:</strong> ${pouvoir}</div>
+                <div><strong>Pourcentage:</strong> ${pourcentage}%</div>
+                <div><strong>Tours:</strong> ${tours}</div>
+                <div style="font-size: 10px; color: #666; margin-top: 3px;">${effet}</div>
               </div>
             </div>
           `;
@@ -631,6 +703,33 @@
             return;
           }
 
+          // Trouver les noms des cartes pour l'affichage
+          const attackerCard = player.cards.personnages.find(
+            (c) => c.id === gameState.selectedCharacter
+          );
+          const attackerName = attackerCard
+            ? attackerCard.nomcarteperso
+            : gameState.selectedCharacter;
+
+          // Trouver l'adversaire et la carte cible
+          let opponent = null;
+          for (const id in game.players) {
+            if (id !== gameState.playerId) {
+              opponent = game.players[id];
+              break;
+            }
+          }
+
+          let targetName = gameState.targetCharacter;
+          if (opponent) {
+            const targetCard = opponent.cards.personnages.find(
+              (c) => c.id === gameState.targetCharacter
+            );
+            if (targetCard) {
+              targetName = targetCard.nomcarteperso;
+            }
+          }
+
           socket.emit("attackCharacter", {
             gameId: gameState.gameId,
             playerId: gameState.playerId,
@@ -638,9 +737,7 @@
             targetId: gameState.targetCharacter,
           });
 
-          showMessage(
-            `Attaque avec ${gameState.selectedCharacter} sur ${gameState.targetCharacter}`
-          );
+          showMessage(`${attackerName} attaque ${targetName}`);
 
           // Réinitialiser les sélections après l'attaque
           gameState.selectedCharacter = null;
@@ -735,6 +832,7 @@
             showScreen("game");
             updateGameStatus();
             renderCards();
+            debugCardProperties();
           }
         });
 
@@ -767,17 +865,85 @@
         });
 
         socket.on("bonusPlayed", (data) => {
-          // Mettre à jour l'état du jeu avec les nouvelles valeurs
-          if (gameState.gameData && data.newGameState) {
+          if (!gameState.gameData) return;
+
+          // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
+          if (data.newGameState) {
             gameState.gameData = data.newGameState;
-            renderCards();
+          } else {
+            // Sinon, simuler l'application du bonus côté client
+            const { playerId, bonusId, targetCharacterId } = data;
+
+            // Récupérer le jeu et le joueur
+            const game = gameState.gameData;
+            const player = game.players[playerId];
+
+            if (
+              player &&
+              player.charactersState &&
+              player.charactersState[targetCharacterId]
+            ) {
+              // Trouver la carte de bonus correspondante
+              const bonusCard = player.cards.bonus.find(
+                (card) => card.id === bonusId
+              );
+              if (bonusCard) {
+                // Appliquer l'effet du bonus (augmentation de l'attaque)
+                const characterState =
+                  player.charactersState[targetCharacterId];
+                const baseAttack =
+                  characterState.baseAttack || characterState.currentAttack;
+                const bonusPercentage = bonusCard.pourcentagebonus
+                  ? parseInt(bonusCard.pourcentagebonus)
+                  : 0;
+
+                // Appliquer le bonus: force * (1 + bonus/100)
+                characterState.currentAttack = Math.floor(
+                  baseAttack * (1 + bonusPercentage / 100)
+                );
+
+                // Sauvegarder la valeur d'attaque originale si ce n'est pas déjà fait
+                if (!characterState.baseAttack) {
+                  characterState.baseAttack = baseAttack;
+                }
+
+                // Ajouter le bonus à la liste des bonus actifs
+                if (!characterState.activeBonus) {
+                  characterState.activeBonus = [];
+                }
+
+                // Ajouter les détails du bonus
+                characterState.activeBonus.push({
+                  bonusId: bonusId,
+                  remainingTurns: bonusCard.tourbonus
+                    ? parseInt(bonusCard.tourbonus)
+                    : 1,
+                  percentage: bonusPercentage,
+                  name: bonusCard.nomcartebonus || bonusId,
+                });
+              }
+            }
           }
 
-          showMessage(
-            `${data.bonusName || "Un bonus"} a été joué sur ${
-              data.targetName || "un personnage"
-            }, augmentant son attaque de ${data.percentage || "x"}%`
-          );
+          // Afficher un message avec le nom de la carte si disponible
+          const bonusName =
+            data.bonusName ||
+            gameState.gameData.players[data.playerId]?.cards.bonus.find(
+              (c) => c.id === data.bonusId
+            )?.nomcartebonus ||
+            "Un bonus";
+
+          const targetName =
+            data.targetName ||
+            gameState.gameData.players[data.playerId]?.cards.personnages.find(
+              (c) => c.id === data.targetCharacterId
+            )?.nomcarteperso ||
+            "un personnage";
+
+          showMessage(`${bonusName} a été joué sur ${targetName}`);
+
+          // Mettre à jour l'affichage
+          renderCards();
         });
 
         socket.on("characterAttacked", (data) => {
@@ -871,6 +1037,82 @@
           }
 
           return false;
+        }
+
+        // Fonction pour ajouter la possibilité de zoomer sur les cartes
+        function setupCardZoom() {
+          // Fonction pour zoomer une carte
+          function zoomCard(card) {
+            // Créer un overlay de fond
+            const overlay = document.createElement("div");
+            overlay.className = "overlay-background";
+            document.body.appendChild(overlay);
+
+            // Cloner la carte pour l'afficher en grand
+            const zoomedCard = card.cloneNode(true);
+            zoomedCard.classList.add("card-zoom");
+            document.body.appendChild(zoomedCard);
+
+            // Cliquer n'importe où pour fermer
+            function closeZoom() {
+              document.body.removeChild(overlay);
+              document.body.removeChild(zoomedCard);
+              document.removeEventListener("click", closeZoom);
+            }
+
+            document.addEventListener("click", closeZoom);
+          }
+
+          // Écouter les clics longs sur les cartes
+          document.addEventListener("mousedown", function (e) {
+            // Vérifier si c'est une carte
+            let card = null;
+            if (e.target.classList.contains("card")) {
+              card = e.target;
+            } else if (e.target.closest(".card")) {
+              card = e.target.closest(".card");
+            }
+
+            if (card) {
+              const timer = setTimeout(() => {
+                zoomCard(card);
+              }, 500); // Zoom après 500ms
+
+              // Annuler le zoom si le clic est relâché avant
+              const clearTimer = () => {
+                clearTimeout(timer);
+                document.removeEventListener("mouseup", clearTimer);
+              };
+
+              document.addEventListener("mouseup", clearTimer);
+            }
+          });
+        }
+
+        // Appeler cette fonction après le chargement du DOM
+        setupCardZoom();
+
+        // Ajouter cette fonction pour déboguer le contenu des cartes
+        function debugCardProperties() {
+          if (!gameState.gameData) return;
+
+          const game = gameState.gameData;
+          const player = game.players[gameState.playerId];
+
+          if (player && player.cards) {
+            console.log("Propriétés des cartes personnages:");
+            if (
+              player.cards.personnages &&
+              player.cards.personnages.length > 0
+            ) {
+              console.table(player.cards.personnages[0]);
+            }
+
+            console.log("Propriétés des cartes bonus:");
+            if (player.cards.bonus && player.cards.bonus.length > 0) {
+              console.table(player.cards.bonus[0]);
+            }
+          }
         }
       });
     </script>

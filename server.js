@@ -28,36 +28,9 @@ try {
   if (fs.existsSync(personnagesPath) && fs.existsSync(bonusPath)) {
     personnagesData = JSON.parse(fs.readFileSync(personnagesPath, "utf-8"));
     bonusData = JSON.parse(fs.readFileSync(bonusPath, "utf-8"));
-    console.log("Données des cartes chargées depuis les fichiers JSON");
+    console.log("Données des cartes chargées avec succès");
   } else {
-    // Créer des données de test
-    console.log("Fichiers de cartes non trouvés, création de données de test");
-
-    // Créer 20 cartes personnages de test
-    for (let i = 1; i <= 20; i++) {
-      personnagesData.push({
-        id: `P${i}`,
-        nom: `Personnage ${i}`,
-        PV: Math.floor(Math.random() * 50) + 50, // PV entre 50 et 100
-        force_attaque: Math.floor(Math.random() * 20) + 20, // Force entre 20 et 40
-        tours_attaque: Math.floor(Math.random() * 3) + 1, // 1 à 3 tours d'attaque
-        description: `Description du personnage ${i}`,
-        fond: `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P${i}.png`,
-      });
-    }
-
-    // Créer 20 cartes bonus de test
-    for (let i = 1; i <= 20; i++) {
-      bonusData.push({
-        id: `B${i}`,
-        nom: `Bonus ${i}`,
-        effet: `Effet ${i}`,
-        pourcentage: Math.floor(Math.random() * 30) + 10, // 10% à 40%
-        tours: Math.floor(Math.random() * 3) + 1, // 1 à 3 tours
-        description: `Description du bonus ${i}`,
-        fond: `https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B${i}.png`,
-      });
-    }
+    console.error("Fichiers de cartes introuvables. Vérifiez les chemins.");
   }
 } catch (error) {
   console.error("Erreur lors du chargement des données de cartes:", error);
