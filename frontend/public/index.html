@@ -118,13 +118,16 @@
       }
 
       .game-id-display {
-        font-size: 24px;
+        font-size: 28px;
         font-weight: bold;
-        background-color: #f8f9fa;
-        padding: 10px;
+        background-color: #e9ecef;
+        padding: 15px;
         border-radius: 5px;
-        margin: 10px 0;
+        margin: 15px 0;
         display: inline-block;
+        letter-spacing: 2px;
+        border: 2px dashed #007bff;
+        color: #0056b3;
       }
 
       .waiting-room {
@@ -144,6 +147,32 @@
         border-radius: 5px;
         display: none;
       }
+
+      .lobby-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin: 30px 0;
+      }
+
+      .lobby-buttons button {
+        padding: 15px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .join-game-container {
+        border-top: 1px solid #dee2e6;
+        padding-top: 20px;
+        margin-top: 20px;
+      }
+
+      .game-code-input {
+        font-size: 20px;
+        letter-spacing: 1px;
+        text-align: center;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -156,36 +185,29 @@
 
           <div id="errorMessage" class="error-message"></div>
 
-          <div class="mb-3">
-            <label for="playerName" class="form-label">Votre nom</label>
-            <input
-              type="text"
-              class="form-control"
-              id="playerName"
-              placeholder="Entrez votre nom"
-            />
-          </div>
-
-          <div class="d-flex justify-content-center mb-4">
-            <button id="createGameBtn" class="btn btn-primary me-2">
+          <div class="lobby-buttons">
+            <button id="createGameBtn" class="btn btn-primary btn-lg">
               Créer une partie
             </button>
-            <button id="joinGameBtn" class="btn btn-success">
-              Rejoindre une partie
-            </button>
-          </div>
 
-          <div id="joinGameForm" style="display: none" class="mb-3">
-            <label for="gameId" class="form-label">ID de la partie</label>
-            <input
-              type="text"
-              class="form-control"
-              id="gameId"
-              placeholder="Entrez l'ID de la partie"
-            />
-            <button id="confirmJoinBtn" class="btn btn-success mt-2">
-              Confirmer
-            </button>
+            <div class="join-game-container">
+              <h3 class="text-center mb-3">Rejoindre une partie</h3>
+              <div class="mb-3">
+                <input
+                  type="text"
+                  class="form-control game-code-input"
+                  id="gameId"
+                  placeholder="Entrez le code de la partie"
+                  maxlength="6"
+                />
+                <button
+                  id="confirmJoinBtn"
+                  class="btn btn-success btn-lg w-100 mt-3"
+                >
+                  Rejoindre
+                </button>
+              </div>
+            </div>
           </div>
 
           <div
@@ -194,12 +216,12 @@
             class="text-center waiting-room"
           >
             <h3>En attente d'un autre joueur...</h3>
-            <p>
-              ID de la partie:
+            <p class="mt-4">
+              Code de la partie:
               <span id="gameIdDisplay" class="game-id-display"></span>
             </p>
-            <p>
-              Partagez cet ID avec votre adversaire pour qu'il puisse vous
+            <p class="text-muted">
+              Partagez ce code avec votre adversaire pour qu'il puisse vous
               rejoindre.
             </p>
           </div>

@@ -28,13 +28,26 @@ async function callApi(endpoint, method = "GET", data = null) {
   }
 
   try {
+    console.log(`Appel API: ${method} ${url}`);
     const response = await fetch(url, options);
 
+    // Afficher le code d'état HTTP pour le débogage
+    console.log(`Statut réponse: ${response.status}`);
+
     if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({ error: "Erreur inconnue" }));
-      throw new Error(errorData.error || "Une erreur est survenue");
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = {
+          error: `Erreur ${response.status}: ${response.statusText}`,
+        };
+      }
+
+      console.error("Erreur API détaillée:", errorData);
+      throw new Error(
+        errorData.error || `Erreur ${response.status}: ${response.statusText}`
+      );
     }
 
     return await response.json();

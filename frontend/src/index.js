@@ -26,11 +26,8 @@ const elements = {
   lobbyView: document.getElementById("lobby-view"),
   gameView: document.getElementById("game-view"),
   gameOver: document.getElementById("game-over"),
-  playerName: document.getElementById("playerName"),
   createGameBtn: document.getElementById("createGameBtn"),
-  joinGameBtn: document.getElementById("joinGameBtn"),
   confirmJoinBtn: document.getElementById("confirmJoinBtn"),
-  joinGameForm: document.getElementById("joinGameForm"),
   gameId: document.getElementById("gameId"),
   waitingRoom: document.getElementById("waitingRoom"),
   gameIdDisplay: document.getElementById("gameIdDisplay"),
@@ -43,6 +40,7 @@ const elements = {
   endTurnBtn: document.getElementById("endTurnBtn"),
   winnerDisplay: document.getElementById("winnerDisplay"),
   backToLobbyBtn: document.getElementById("backToLobbyBtn"),
+  errorMessage: document.getElementById("errorMessage"),
 };
 
 // Initialisation de l'application
@@ -57,10 +55,14 @@ function init() {
 function setupEventListeners() {
   // Événements du lobby
   elements.createGameBtn.addEventListener("click", handleCreateGame);
-  elements.joinGameBtn.addEventListener("click", () => {
-    elements.joinGameForm.style.display = "block";
-  });
   elements.confirmJoinBtn.addEventListener("click", handleJoinGame);
+
+  // Améliorer l'expérience utilisateur avec les entrées de clavier
+  elements.gameId.addEventListener("keyup", (event) => {
+    if (event.key === "Enter") {
+      handleJoinGame();
+    }
+  });
 
   // Événements du jeu
   elements.attackBtn.addEventListener("click", handleAttack);
@@ -71,29 +73,37 @@ function setupEventListeners() {
 
 // Fonction pour afficher les messages d'erreur
 function showError(message) {
-  const errorElement = document.getElementById("errorMessage");
-  errorElement.textContent = message;
-  errorElement.style.display = "block";
+  if (elements.errorMessage) {
+    elements.errorMessage.textContent = message;
+    elements.errorMessage.style.display = "block";
 
-  // Cacher le message après 5 secondes
-  setTimeout(() => {
-    errorElement.style.display = "none";
-  }, 5000);
+    // Cacher le message après 5 secondes
+    setTimeout(() => {
+      elements.errorMessage.style.display = "none";
+    }, 5000);
+  } else {
+    // Fallback si l'élément n'est pas disponible
+    console.error("Message d'erreur:", message);
+    alert(message);
+  }
+}
+
+// Fonction pour générer un nom aléatoire pour les joueurs
+function generateRandomName() {
+  const prefix = ["Joueur", "User", "Gamer", "Player"];
+  const suffix = Math.floor(1000 + Math.random() * 9000); // nombre à 4 chiffres
+  return `${prefix[Math.floor(Math.random() * prefix.length)]}_${suffix}`;
 }
 
 // Gestionnaire de création de partie
 async function handleCreateGame() {
-  const playerName = elements.playerName.value.trim();
-
-  if (!playerName) {
-    showError("Veuillez entrer votre nom");
-    return;
-  }
-
   try {
     // Désactiver le bouton pendant la création
     elements.createGameBtn.disabled = true;
     elements.createGameBtn.textContent = "Création en cours...";
+
+    // Générer un nom aléatoire au lieu d'utiliser le champ
+    const playerName = generateRandomName();
 
     const response = await api.createGame(playerName);
 
@@ -101,36 +111,46 @@ async function handleCreateGame() {
     appState.game.id = response.gameId;
     appState.player.id = playerName;
 
-    // Afficher l'ID de la partie
+    // Afficher l'ID de la partie avec mise en évidence
     elements.gameIdDisplay.textContent = response.gameId;
 
     // Créer un bouton pour copier l'ID
     const copyButton = document.createElement("button");
-    copyButton.className = "btn btn-outline-primary mt-2 mb-3 ms-2";
-    copyButton.textContent = "Copier l'ID";
+    copyButton.className = "btn btn-primary mt-2 mb-3 ms-2";
+    copyButton.textContent = "Copier le code";
     copyButton.onclick = function () {
       navigator.clipboard
         .writeText(response.gameId)
         .then(() => {
-          copyButton.textContent = "Copié !";
+          copyButton.textContent = "Code copié !";
           setTimeout(() => {
-            copyButton.textContent = "Copier l'ID";
+            copyButton.textContent = "Copier le code";
           }, 2000);
         })
         .catch((err) => {
           console.error("Erreur lors de la copie: ", err);
-          showError("Impossible de copier l'ID");
+          showError("Impossible de copier le code");
         });
     };
 
-    // Ajouter le bouton après l'affichage de l'ID
+    // Ajouter le bouton juste à côté du code de partie
     const idContainer = elements.waitingRoom.querySelector("p");
     if (idContainer) {
+      // Vider le container pour être sûr qu'il n'y a pas de boutons précédents
+      while (idContainer.childNodes.length > 1) {
+        idContainer.removeChild(idContainer.lastChild);
+      }
       idContainer.appendChild(copyButton);
     }
 
+    // Afficher une instruction claire pour le partage
+    const shareInstructions = document.createElement("p");
+    shareInstructions.innerHTML =
+      "<strong>Partagez ce code avec votre adversaire et attendez qu'il rejoigne la partie.</strong>";
+    shareInstructions.className = "mt-3";
+    elements.waitingRoom.appendChild(shareInstructions);
+
     elements.waitingRoom.style.display = "block";
-    elements.joinGameForm.style.display = "none";
 
     // Configurer WebSocket
     setupWebSocket(appState.game.id, handleGameUpdate);
@@ -149,17 +169,19 @@ async function handleCreateGame() {
 
 // Gestionnaire pour rejoindre une partie
 async function handleJoinGame() {
-  const playerName = elements.playerName.value.trim();
   const gameId = elements.gameId.value.trim();
 
-  if (!playerName || !gameId) {
-    showError("Veuillez entrer votre nom et l'ID de la partie");
+  if (!gameId) {
+    showError("Veuillez entrer le code de la partie");
     return;
   }
 
   try {
     elements.confirmJoinBtn.disabled = true;
     elements.confirmJoinBtn.textContent = "Connexion...";
+
+    // Générer un nom aléatoire pour le second joueur également
+    const playerName = generateRandomName();
 
     const response = await api.joinGame(gameId, playerName);
 
@@ -180,7 +202,7 @@ async function handleJoinGame() {
     console.error("Erreur lors de la connexion à la partie:", error);
     showError(
       "Erreur lors de la connexion à la partie: " +
-        (error.message || "Partie introuvable")
+        (error.message || "Code de partie invalide ou introuvable")
     );
   } finally {
     elements.confirmJoinBtn.disabled = false;
@@ -569,13 +591,11 @@ function resetGame() {
   };
 
   // Réinitialiser les éléments du DOM
-  elements.playerName.value = "";
   elements.gameId.value = "";
   elements.waitingRoom.style.display = "none";
   elements.gameView.style.display = "none";
   elements.gameOver.style.display = "none";
   elements.lobbyView.style.display = "block";
-  elements.joinGameForm.style.display = "none";
 
   // Fermer la connexion WebSocket
   if (window.socket) {
