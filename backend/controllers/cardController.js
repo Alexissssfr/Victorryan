@@ -2,7 +2,7 @@ const cardService = require("../services/cardService");
 const { supabase, getImageUrl } = require("../config/supabase");
 
 /**
- * Récupère toutes les cartes d'un certain type
+ * Récupère toutes les cartes d'un type
  * @param {object} req - Requête Express
  * @param {object} res - Réponse Express
  */
@@ -10,19 +10,24 @@ async function getAllCards(req, res) {
   try {
     const { type } = req.params;
 
-    if (!type || (type !== "personnage" && type !== "bonus")) {
-      return res.status(400).json({ error: "Type de carte invalide" });
+    // Valider le type
+    if (type !== "personnages" && type !== "bonus") {
+      return res
+        .status(400)
+        .json({
+          error: "Type de carte invalide. Utilisez 'personnages' ou 'bonus'.",
+        });
     }
 
-    const { bonus, personnages } = await cardService.loadCards();
-    const cards = type === "personnage" ? personnages : bonus;
-
+    const cards = await cardService.getAllCards(type);
     res.status(200).json(cards);
   } catch (error) {
-    console.error("Erreur récupération cartes:", error);
+    console.error("Erreur lors de la récupération des cartes:", error);
     res
       .status(500)
-      .json({ error: "Erreur lors de la récupération des cartes" });
+      .json({
+        error: error.message || "Erreur lors de la récupération des cartes",
+      });
   }
 }
 
@@ -35,8 +40,13 @@ async function getCardById(req, res) {
   try {
     const { type, id } = req.params;
 
-    if (!type || !id || (type !== "personnage" && type !== "bonus")) {
-      return res.status(400).json({ error: "Type ou ID de carte invalide" });
+    // Valider le type
+    if (type !== "personnages" && type !== "bonus") {
+      return res
+        .status(400)
+        .json({
+          error: "Type de carte invalide. Utilisez 'personnages' ou 'bonus'.",
+        });
     }
 
     const card = await cardService.getCardById(type, id);
@@ -47,34 +57,43 @@ async function getCardById(req, res) {
 
     res.status(200).json(card);
   } catch (error) {
-    console.error("Erreur récupération carte:", error);
+    console.error("Erreur lors de la récupération de la carte:", error);
     res
       .status(500)
-      .json({ error: "Erreur lors de la récupération de la carte" });
+      .json({
+        error: error.message || "Erreur lors de la récupération de la carte",
+      });
   }
 }
 
 /**
- * Récupère l'URL d'une image de carte
+ * Récupère l'URL de l'image d'une carte
  * @param {object} req - Requête Express
  * @param {object} res - Réponse Express
  */
-function getCardImageUrl(req, res) {
+async function getCardImageUrl(req, res) {
   try {
     const { type, id } = req.params;
 
-    if (!type || !id || (type !== "perso" && type !== "bonus")) {
-      return res.status(400).json({ error: "Type ou ID d'image invalide" });
+    // Valider le type
+    if (type !== "personnages" && type !== "bonus") {
+      return res
+        .status(400)
+        .json({
+          error: "Type de carte invalide. Utilisez 'personnages' ou 'bonus'.",
+        });
     }
 
-    const imageUrl = getImageUrl(type, id);
-
-    res.status(200).json({ imageUrl });
+    const imageUrl = await cardService.getCardImageUrl(type, id);
+    res.status(200).json({ url: imageUrl });
   } catch (error) {
-    console.error("Erreur récupération URL image:", error);
+    console.error("Erreur lors de la récupération de l'URL de l'image:", error);
     res
       .status(500)
-      .json({ error: "Erreur lors de la récupération de l'URL de l'image" });
+      .json({
+        error:
+          error.message || "Erreur lors de la récupération de l'URL de l'image",
+      });
   }
 }
 

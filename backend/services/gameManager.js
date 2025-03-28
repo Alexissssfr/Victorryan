@@ -1,6 +1,5 @@
-const { supabase } = require("../config/supabase");
-const cardService = require("./cardService");
 const { v4: uuidv4 } = require("uuid");
+const cardService = require("./cardService");
 
 // Stockage en mémoire des parties actives
 const activeGames = new Map();
@@ -11,55 +10,46 @@ const activeGames = new Map();
  * @returns {string} - ID de la partie
  */
 async function createGame(player1) {
-  const gameId = uuidv4().substring(0, 6).toUpperCase();
+  try {
+    console.log(`Création d'une partie pour ${player1} en mode mémoire`);
+    const gameId = uuidv4().substring(0, 6).toUpperCase();
 
-  // Tirer les cartes pour le joueur 1
-  const player1Cards = await cardService.drawInitialCards();
+    // Tirer les cartes pour le joueur 1
+    const player1Cards = await cardService.drawInitialCards();
 
-  // Initialiser l'état de la partie
-  const gameState = {
-    id: gameId,
-    status: "waiting",
-    player1: {
-      id: player1,
-      cards: player1Cards,
-      health: {},
-      attack: {},
-      turns: {},
-      activeBonus: {},
-    },
-    player2: null,
-    currentTurn: null,
-  };
-
-  // Initialiser les statistiques des cartes
-  for (const card of player1Cards.personnages) {
-    gameState.player1.health[card.id] = parseInt(card.pv);
-    gameState.player1.attack[card.id] = parseInt(card.force);
-    gameState.player1.turns[card.id] = parseInt(card.tours);
-    gameState.player1.activeBonus[card.id] = [];
-  }
-
-  // Enregistrer dans la base de données Supabase
-  const { data, error } = await supabase.from("games").insert([
-    {
+    // Initialiser l'état de la partie
+    const gameState = {
       id: gameId,
-      player1: player1,
       status: "waiting",
-      created_at: new Date(),
-      game_state: JSON.stringify(gameState),
-    },
-  ]);
+      player1: {
+        id: player1,
+        cards: player1Cards,
+        health: {},
+        attack: {},
+        turns: {},
+        activeBonus: {},
+      },
+      player2: null,
+      currentTurn: null,
+    };
 
-  if (error) {
+    // Initialiser les statistiques des cartes
+    for (const card of player1Cards.personnages) {
+      gameState.player1.health[card.id] = parseInt(card.pv);
+      gameState.player1.attack[card.id] = parseInt(card.force);
+      gameState.player1.turns[card.id] = parseInt(card.tours);
+      gameState.player1.activeBonus[card.id] = [];
+    }
+
+    // Stocker l'état en mémoire
+    activeGames.set(gameId, gameState);
+    console.log(`Partie ${gameId} créée avec succès en mode mémoire`);
+
+    return gameId;
+  } catch (error) {
     console.error("Erreur lors de la création de la partie:", error);
     throw new Error("Impossible de créer la partie");
   }
-
-  // Stocker l'état en mémoire
-  activeGames.set(gameId, gameState);
-
-  return gameId;
 }
 
 /**
@@ -69,73 +59,77 @@ async function createGame(player1) {
  * @returns {object} - État actuel de la partie
  */
 async function joinGame(gameId, player2) {
-  // Vérifier si la partie existe
-  let gameState = activeGames.get(gameId);
+  try {
+    // Vérifier si la partie existe
+    let gameState = activeGames.get(gameId);
 
-  if (!gameState) {
-    // Récupérer de la base de données
-    const { data, error } = await supabase
-      .from("games")
-      .select("game_state")
-      .eq("id", gameId)
-      .single();
-
-    if (error || !data) {
+    if (!gameState) {
       throw new Error("Partie introuvable");
     }
 
-    gameState = JSON.parse(data.game_state);
+    if (gameState.status !== "waiting") {
+      throw new Error("Cette partie est déjà complète");
+    }
+
+    // Tirer les cartes pour le joueur 2
+    const player2Cards = await cardService.drawInitialCards();
+
+    // Mettre à jour l'état de la partie
+    gameState.player2 = {
+      id: player2,
+      cards: player2Cards,
+      health: {},
+      attack: {},
+      turns: {},
+      activeBonus: {},
+    };
+
+    // Initialiser les statistiques des cartes
+    for (const card of player2Cards.personnages) {
+      gameState.player2.health[card.id] = parseInt(card.pv);
+      gameState.player2.attack[card.id] = parseInt(card.force);
+      gameState.player2.turns[card.id] = parseInt(card.tours);
+      gameState.player2.activeBonus[card.id] = [];
+    }
+
+    // Mettre à jour le statut et le tour courant
+    gameState.status = "playing";
+    gameState.currentTurn = Math.random() < 0.5 ? "player1" : "player2";
+
+    // Mettre à jour en mémoire
     activeGames.set(gameId, gameState);
+    console.log(
+      `Joueur ${player2} a rejoint la partie ${gameId} en mode mémoire`
+    );
+
+    return gameState;
+  } catch (error) {
+    console.error("Erreur lors de la connexion à la partie:", error);
+    throw error;
   }
+}
 
-  if (gameState.status !== "waiting") {
-    throw new Error("Cette partie est déjà complète");
+/**
+ * Récupère l'état d'une partie
+ * @param {string} gameId - ID de la partie
+ * @returns {object} - État actuel de la partie
+ */
+async function getGameState(gameId) {
+  try {
+    const gameState = activeGames.get(gameId);
+
+    if (!gameState) {
+      throw new Error("Partie introuvable");
+    }
+
+    return gameState;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération de l'état de la partie:",
+      error
+    );
+    throw error;
   }
-
-  // Tirer les cartes pour le joueur 2
-  const player2Cards = await cardService.drawInitialCards();
-
-  // Mettre à jour l'état de la partie
-  gameState.player2 = {
-    id: player2,
-    cards: player2Cards,
-    health: {},
-    attack: {},
-    turns: {},
-    activeBonus: {},
-  };
-
-  // Initialiser les statistiques des cartes
-  for (const card of player2Cards.personnages) {
-    gameState.player2.health[card.id] = parseInt(card.pv);
-    gameState.player2.attack[card.id] = parseInt(card.force);
-    gameState.player2.turns[card.id] = parseInt(card.tours);
-    gameState.player2.activeBonus[card.id] = [];
-  }
-
-  // Mettre à jour le statut et le tour courant
-  gameState.status = "playing";
-  gameState.currentTurn = Math.random() < 0.5 ? "player1" : "player2";
-
-  // Mettre à jour dans Supabase
-  const { data, error } = await supabase
-    .from("games")
-    .update({
-      player2: player2,
-      status: "playing",
-      game_state: JSON.stringify(gameState),
-    })
-    .eq("id", gameId);
-
-  if (error) {
-    console.error("Erreur lors de la mise à jour de la partie:", error);
-    throw new Error("Impossible de rejoindre la partie");
-  }
-
-  // Mettre à jour en mémoire
-  activeGames.set(gameId, gameState);
-
-  return gameState;
 }
 
 /**
@@ -192,8 +186,8 @@ function playCard(gameId, playerId, cardId, targetId) {
     (card) => card.id !== cardId
   );
 
-  // Mettre à jour l'état dans Supabase
-  saveGameState(gameId, gameState);
+  // Mettre à jour l'état en mémoire
+  activeGames.set(gameId, gameState);
 
   return gameState;
 }
@@ -248,35 +242,23 @@ function attack(gameId, playerId, attackerId, targetId) {
     attackPower = Math.floor(attackPower * (1 + totalBonusPercentage / 100));
   }
 
-  // Infliger les dégâts
+  // Appliquer l'attaque
   gameState[opponentKey].health[targetId] -= attackPower;
 
-  // S'assurer que les PV ne sont pas négatifs
-  if (gameState[opponentKey].health[targetId] < 0) {
-    gameState[opponentKey].health[targetId] = 0;
-  }
-
-  // Réduire le nombre de tours d'attaque
+  // Réduire le nombre de tours restants pour l'attaquant
   gameState[playerKey].turns[attackerId]--;
 
   // Vérifier si la partie est terminée
-  const opponentAlive = Object.values(gameState[opponentKey].health).some(
-    (health) => health > 0
-  );
+  checkGameOver(gameState);
 
-  if (!opponentAlive) {
-    gameState.status = "finished";
-    gameState.winner = playerKey;
-  }
-
-  // Mettre à jour l'état dans Supabase
-  saveGameState(gameId, gameState);
+  // Mettre à jour l'état en mémoire
+  activeGames.set(gameId, gameState);
 
   return gameState;
 }
 
 /**
- * Termine le tour du joueur courant
+ * Termine le tour du joueur
  * @param {string} gameId - ID de la partie
  * @param {string} playerId - ID du joueur
  * @returns {object} - État actualisé de la partie
@@ -288,90 +270,88 @@ function endTurn(gameId, playerId) {
     throw new Error("Partie introuvable");
   }
 
-  // Vérifier que c'est bien le tour du joueur
+  // Déterminer le joueur actuel
   const playerKey = gameState.player1.id === playerId ? "player1" : "player2";
-  const opponentKey = playerKey === "player1" ? "player2" : "player1";
+  const nextPlayerKey = playerKey === "player1" ? "player2" : "player1";
 
+  // Vérifier si c'est le tour du joueur
   if (gameState.currentTurn !== playerKey) {
     throw new Error("Ce n'est pas votre tour");
   }
 
-  // Mettre à jour les durées des bonus
-  for (const characterId in gameState[playerKey].activeBonus) {
-    const bonusList = gameState[playerKey].activeBonus[characterId];
+  // Passer au tour suivant
+  gameState.currentTurn = nextPlayerKey;
 
-    // Réduire la durée de chaque bonus et filtrer ceux terminés
-    gameState[playerKey].activeBonus[characterId] = bonusList
-      .map((bonus) => ({ ...bonus, tours: bonus.tours - 1 }))
+  // Réinitialiser les tours d'attaque pour le prochain joueur
+  for (const cardId in gameState[nextPlayerKey].turns) {
+    gameState[nextPlayerKey].turns[cardId] = parseInt(
+      gameState[nextPlayerKey].cards.personnages.find(
+        (card) => card.id === cardId
+      ).tours
+    );
+  }
+
+  // Décrémenter les tours de bonus
+  for (const targetId in gameState[playerKey].activeBonus) {
+    const bonusList = gameState[playerKey].activeBonus[targetId];
+
+    // Filtrer les bonus expirés
+    gameState[playerKey].activeBonus[targetId] = bonusList
+      .map((bonus) => {
+        bonus.tours--;
+        return bonus;
+      })
       .filter((bonus) => bonus.tours > 0);
   }
 
-  // Changer le tour
-  gameState.currentTurn = opponentKey;
-
-  // Mettre à jour l'état dans Supabase
-  saveGameState(gameId, gameState);
+  // Mettre à jour l'état en mémoire
+  activeGames.set(gameId, gameState);
 
   return gameState;
 }
 
 /**
- * Récupère l'état d'une partie
- * @param {string} gameId - ID de la partie
- * @returns {object} - État de la partie
+ * Vérifie si la partie est terminée
+ * @param {object} gameState - État du jeu
  */
-async function getGameState(gameId) {
-  // Vérifier si la partie est en mémoire
-  let gameState = activeGames.get(gameId);
+function checkGameOver(gameState) {
+  // Compter les personnages encore en vie pour chaque joueur
+  let player1Alive = 0;
+  let player2Alive = 0;
 
-  if (!gameState) {
-    // Récupérer de la base de données
-    const { data, error } = await supabase
-      .from("games")
-      .select("game_state")
-      .eq("id", gameId)
-      .single();
-
-    if (error || !data) {
-      throw new Error("Partie introuvable");
+  for (const cardId in gameState.player1.health) {
+    if (gameState.player1.health[cardId] > 0) {
+      player1Alive++;
     }
-
-    gameState = JSON.parse(data.game_state);
-    activeGames.set(gameId, gameState);
   }
 
-  return gameState;
+  for (const cardId in gameState.player2.health) {
+    if (gameState.player2.health[cardId] > 0) {
+      player2Alive++;
+    }
+  }
+
+  // Vérifier si un joueur n'a plus de personnages
+  if (player1Alive === 0 || player2Alive === 0) {
+    gameState.status = "finished";
+    gameState.winner = player1Alive > 0 ? "player1" : "player2";
+  }
 }
 
 /**
- * Sauvegarde l'état d'une partie dans Supabase
- * @param {string} gameId - ID de la partie
- * @param {object} gameState - État à sauvegarder
+ * Fonction auxiliaire pour sauvegarder l'état du jeu (non utilisée en mode mémoire)
  */
-async function saveGameState(gameId, gameState) {
-  const { data, error } = await supabase
-    .from("games")
-    .update({
-      game_state: JSON.stringify(gameState),
-      status: gameState.status,
-      winner: gameState.winner,
-    })
-    .eq("id", gameId);
-
-  if (error) {
-    console.error(
-      "Erreur lors de la sauvegarde de l'état de la partie:",
-      error
-    );
-  }
+function saveGameState(gameId, gameState) {
+  // En mode mémoire, on ne fait rien de plus
+  activeGames.set(gameId, gameState);
 }
 
 module.exports = {
   createGame,
   joinGame,
+  getGameState,
   playCard,
   attack,
   endTurn,
-  getGameState,
-  activeGames,
+  saveGameState,
 };

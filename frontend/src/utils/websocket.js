@@ -10,19 +10,35 @@ export function setupWebSocket(gameId, onGameUpdate) {
       ? "http://localhost:3000"
       : window.location.origin;
 
+  console.log("Tentative de connexion WebSocket à:", socketUrl);
+
   // Créer l'instance de socket.io
-  const socket = io(socketUrl);
+  const socket = io(socketUrl, {
+    transports: ["websocket", "polling"],
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+  });
 
   // Stocker la référence du socket dans l'objet window pour y accéder globalement
   window.socket = socket;
 
   // Événement de connexion
   socket.on("connect", () => {
-    console.log("Connecté au serveur WebSocket");
+    console.log("Connecté au serveur WebSocket:", socket.id);
 
     // Rejoindre la salle de la partie
     socket.emit("join_game", gameId);
     console.log(`Rejoint la partie ${gameId}`);
+  });
+
+  // Événement de tentative de connexion
+  socket.on("connect_attempt", () => {
+    console.log("Tentative de connexion WebSocket...");
+  });
+
+  // Événement d'erreur de connexion
+  socket.on("connect_error", (error) => {
+    console.error("Erreur de connexion WebSocket:", error);
   });
 
   // Événement de mise à jour du jeu
@@ -42,8 +58,18 @@ export function setupWebSocket(gameId, onGameUpdate) {
   });
 
   // Événement de déconnexion
-  socket.on("disconnect", () => {
-    console.log("Déconnecté du serveur WebSocket");
+  socket.on("disconnect", (reason) => {
+    console.log("Déconnecté du serveur WebSocket. Raison:", reason);
+  });
+
+  // Événement de reconnexion
+  socket.on("reconnect", (attemptNumber) => {
+    console.log(
+      `Reconnecté au serveur WebSocket après ${attemptNumber} tentatives`
+    );
+
+    // Rejoindre à nouveau la salle de la partie après reconnexion
+    socket.emit("join_game", gameId);
   });
 
   return socket;
