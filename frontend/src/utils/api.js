@@ -12,91 +12,38 @@ const API_BASE_URL =
  * @returns {Promise} - Promesse avec les données de la réponse
  */
 async function callApi(endpoint, method = "GET", data = null) {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const API_URL =
+    window.location.hostname === "localhost"
+      ? "http://localhost:10000/api"
+      : "/api";
 
-  const options = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    // Ajouter credentials pour les requêtes CORS
-    credentials: "include",
-  };
-
-  if (data) {
-    options.body = JSON.stringify(data);
-  }
-
-  const requestId =
-    Date.now().toString(36) + Math.random().toString(36).substr(2);
+  console.log(`Appel API: ${method} ${API_URL}${endpoint}`);
 
   try {
-    console.log(
-      `📡 [${requestId}] Appel API: ${method} ${url}`,
-      data ? data : ""
-    );
+    const options = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    };
 
-    // Ajouter un timeout pour éviter les requêtes qui ne répondent jamais
-    const timeoutId = setTimeout(() => {
-      console.error(
-        `⏱️ [${requestId}] Timeout de la requête API: ${method} ${url}`
-      );
-    }, 15000); // 15 secondes de timeout
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
 
-    const response = await fetch(url, options);
-    clearTimeout(timeoutId);
+    const response = await fetch(`${API_URL}${endpoint}`, options);
 
-    // Afficher le code d'état HTTP pour le débogage
-    console.log(`🔄 [${requestId}] Statut réponse: ${response.status}`);
+    console.log(`Réponse API ${endpoint}:`, response.status);
 
     if (!response.ok) {
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch (e) {
-        errorData = {
-          error: `Erreur ${response.status}: ${response.statusText}`,
-        };
-      }
-
-      console.error(`❌ [${requestId}] Erreur API détaillée:`, errorData);
-
-      // Créer une erreur enrichie avec plus d'informations
-      const error = new Error(
-        errorData.error || `Erreur ${response.status}: ${response.statusText}`
-      );
-      error.status = response.status;
-      error.statusText = response.statusText;
-      error.responseData = errorData;
-      error.endpoint = endpoint;
-
-      throw error;
+      const errorText = await response.text();
+      console.error(`Erreur API (${response.status}):`, errorText);
+      throw new Error(`Erreur ${response.status}: ${errorText}`);
     }
 
-    const responseData = await response.json();
-    console.log(`✅ [${requestId}] Réponse API:`, responseData);
-    return responseData;
+    return await response.json();
   } catch (error) {
-    // Vérifier si c'est une erreur réseau
-    if (error.name === "TypeError" && error.message === "Failed to fetch") {
-      console.error(
-        `🌐 [${requestId}] Erreur réseau lors de l'appel API: ${method} ${url}`
-      );
-      const networkError = new Error(
-        "Impossible de se connecter au serveur. Vérifiez votre connexion Internet."
-      );
-      networkError.isNetworkError = true;
-      networkError.originalError = error;
-      throw networkError;
-    }
-
-    // Si c'est une erreur déjà traitée, la propager
-    if (error.status) {
-      throw error;
-    }
-
-    // Erreur non traitée
-    console.error(`❌ [${requestId}] Erreur API (${endpoint}):`, error);
+    console.error(`Erreur API ${endpoint}:`, error);
     throw error;
   }
 }

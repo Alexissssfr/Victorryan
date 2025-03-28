@@ -26,9 +26,9 @@ const elements = {
   lobbyView: document.getElementById("lobby-view"),
   gameView: document.getElementById("game-view"),
   gameOver: document.getElementById("game-over"),
-  createGameBtn: document.getElementById("createGameBtn"),
-  confirmJoinBtn: document.getElementById("confirmJoinBtn"),
-  gameId: document.getElementById("gameId"),
+  createGameBtn: document.getElementById("create-game-btn"),
+  confirmJoinBtn: document.getElementById("confirm-join-btn"),
+  gameId: document.getElementById("game-id-input"),
   waitingRoom: document.getElementById("waitingRoom"),
   gameIdDisplay: document.getElementById("gameIdDisplay"),
   turnIndicator: document.getElementById("turnIndicator"),
@@ -81,6 +81,12 @@ function init() {
   // Activer le mode debug si nécessaire (window.DEBUG = true dans la console pour l'activer)
   setupDebugging();
   console.log("✅ Débogage configuré");
+
+  // Au début de la fonction init()
+  window.addEventListener("error", (event) => {
+    console.error("Erreur globale capturée:", event.error);
+    showError(`Une erreur est survenue: ${event.error.message}`);
+  });
 
   console.log("=== Initialisation terminée ===");
 }
@@ -257,15 +263,17 @@ function generateRandomName() {
 
 // Créer une nouvelle partie
 async function createGame() {
-  const playerName = prompt("Entrez votre nom:", "Joueur1");
-  if (!playerName) return;
-
-  // Désactiver le bouton pendant le traitement
+  console.log("Fonction createGame appelée");
+  // Désactiver le bouton pendant le traitement pour éviter les clics multiples
   elements.createGameBtn.disabled = true;
-  elements.createGameBtn.textContent = "Création en cours...";
 
   try {
-    // Créer une partie sur le serveur
+    const playerName = prompt("Entrez votre nom:", generateRandomName());
+    if (!playerName) {
+      elements.createGameBtn.disabled = false;
+      return;
+    }
+
     console.log("Création d'une partie avec le nom:", playerName);
     const response = await api.createGame(playerName);
     console.log("Réponse API:", response);
@@ -304,9 +312,7 @@ async function createGame() {
         (error.message || "Connexion au serveur impossible")
     );
   } finally {
-    // Réactiver le bouton
     elements.createGameBtn.disabled = false;
-    elements.createGameBtn.textContent = "Créer une partie";
   }
 }
 
@@ -883,9 +889,14 @@ function resetGame() {
   console.log("Jeu réinitialisé, retour au lobby");
 }
 
-// Appeler init quand le DOM est chargé
+// Vérifiez que init() est appelé quand le DOM est chargé
 document.addEventListener("DOMContentLoaded", () => {
   console.log("DOM chargé, initialisation de l'application...");
+
+  // Vérifiez que les éléments sont bien trouvés
+  console.log("Bouton créer:", elements.createGameBtn);
+  console.log("Bouton rejoindre:", elements.confirmJoinBtn);
+
   init();
 });
 
