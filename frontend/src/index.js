@@ -1,8 +1,8 @@
-import { api } from "./utils/api.js";
-import { setupWebSocket } from "./utils/websocket.js";
-import { GameBoard } from "./components/GameBoard.js";
-import { CardHand } from "./components/CardHand.js";
-import { PlayerInfo } from "./components/PlayerInfo.js";
+import { api } from "../utils/api.js";
+import { setupWebSocket } from "../utils/websocket.js";
+import { GameBoard } from "../components/GameBoard.js";
+import { CardHand } from "../components/CardHand.js";
+import { PlayerInfo } from "../components/PlayerInfo.js";
 
 // État de l'application
 let appState = {
@@ -263,20 +263,20 @@ function generateRandomName() {
 
 // Créer une nouvelle partie
 async function createGame() {
-  console.log("Fonction createGame appelée");
-  // Désactiver le bouton pendant le traitement pour éviter les clics multiples
-  elements.createGameBtn.disabled = true;
-
   try {
+    console.log("Fonction createGame appelée");
+    // Désactiver le bouton pendant le traitement
+    elements.createGameBtn.disabled = true;
+    elements.createGameBtn.textContent = "Création en cours...";
+
     const playerName = prompt("Entrez votre nom:", generateRandomName());
     if (!playerName) {
-      elements.createGameBtn.disabled = false;
-      return;
+      throw new Error("Nom de joueur non fourni");
     }
 
-    console.log("Création d'une partie avec le nom:", playerName);
+    console.log("Tentative d'appel API createGame avec le nom:", playerName);
     const response = await api.createGame(playerName);
-    console.log("Réponse API:", response);
+    console.log("Réponse complète de l'API:", JSON.stringify(response));
 
     if (!response || !response.gameId) {
       throw new Error("Réponse du serveur invalide");
@@ -306,13 +306,12 @@ async function createGame() {
 
     console.log("Partie créée avec succès, en attente d'un adversaire");
   } catch (error) {
-    console.error("Erreur lors de la création de la partie:", error);
-    showError(
-      "Erreur lors de la création de la partie: " +
-        (error.message || "Connexion au serveur impossible")
-    );
+    console.error("Erreur détaillée:", error);
+    alert("Erreur: " + error.message);
   } finally {
+    // Réactiver le bouton
     elements.createGameBtn.disabled = false;
+    elements.createGameBtn.textContent = "Créer une partie";
   }
 }
 
@@ -905,4 +904,29 @@ window.appFunctions = {
   createGame,
   joinGame,
   resetGame,
+};
+
+// Fonction de test pour déboguer l'API
+window.testAPI = async function () {
+  try {
+    console.log("Test de l'API en cours...");
+
+    // Test de base pour vérifier la connectivité
+    const response = await fetch(window.location.origin + "/api/games", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ playerName: "TestPlayer" }),
+    });
+
+    const data = await response.text();
+    console.log("Statut de la réponse:", response.status);
+    console.log("Réponse complète:", data);
+
+    return data;
+  } catch (error) {
+    console.error("Erreur de test API:", error);
+    return error.message;
+  }
 };

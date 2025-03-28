@@ -8,7 +8,7 @@ export function setupWebSocket(gameId, playerId, onGameUpdate) {
   // L'URL du serveur WebSocket
   const socketUrl =
     window.location.hostname === "localhost"
-      ? "http://localhost:3000"
+      ? "http://localhost:10000"
       : window.location.origin;
 
   console.log("Tentative de connexion WebSocket à:", socketUrl);
