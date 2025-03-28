@@ -78,7 +78,14 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Rejoindre la salle socket.io
     socket.join(gameId);
+
+    // Stocker l'ID du joueur dans l'objet socket
+    if (playerId) {
+      socket.playerId = playerId;
+    }
+
     console.log(
       `Client ${socket.id} a rejoint la partie ${gameId}${
         playerId ? ` en tant que joueur ${playerId}` : ""
