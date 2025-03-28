@@ -1,391 +1,377 @@
-const fs = require("fs");
-const path = require("path");
-const { getImageUrl } = require("../config/supabase");
+const { supabase } = require("../config/supabase");
+const cardService = require("./cardService");
+const { v4: uuidv4 } = require("uuid");
 
-class GameManager {
-  constructor() {
-    this.activeGames = new Map();
+// Stockage en mémoire des parties actives
+const activeGames = new Map();
+
+/**
+ * Crée une nouvelle partie
+ * @param {string} player1 - Nom du joueur 1
+ * @returns {string} - ID de la partie
+ */
+async function createGame(player1) {
+  const gameId = uuidv4().substring(0, 6).toUpperCase();
+
+  // Tirer les cartes pour le joueur 1
+  const player1Cards = await cardService.drawInitialCards();
+
+  // Initialiser l'état de la partie
+  const gameState = {
+    id: gameId,
+    status: "waiting",
+    player1: {
+      id: player1,
+      cards: player1Cards,
+      health: {},
+      attack: {},
+      turns: {},
+      activeBonus: {},
+    },
+    player2: null,
+    currentTurn: null,
+  };
+
+  // Initialiser les statistiques des cartes
+  for (const card of player1Cards.personnages) {
+    gameState.player1.health[card.id] = parseInt(card.pv);
+    gameState.player1.attack[card.id] = parseInt(card.force);
+    gameState.player1.turns[card.id] = parseInt(card.tours);
+    gameState.player1.activeBonus[card.id] = [];
   }
 
-  /**
-   * Crée une nouvelle partie
-   * @param {string} gameId - ID de la partie
-   * @returns {object} - Objet représentant l'état initial de la partie
-   */
-  createGame(gameId) {
-    console.log(`Création d'une nouvelle partie avec ID: ${gameId}`);
+  // Enregistrer dans la base de données Supabase
+  const { data, error } = await supabase.from("games").insert([
+    {
+      id: gameId,
+      player1: player1,
+      status: "waiting",
+      created_at: new Date(),
+      game_state: JSON.stringify(gameState),
+    },
+  ]);
 
-    const gameState = {
-      gameId,
-      players: {
-        player1: {
-          id: "player1",
-          pv: 0, // Sera mis à jour à la distribution des cartes
-          personnages: [],
-          personnageActif: null,
-          cartesBonus: [],
-        },
-        player2: {
-          id: "player2",
-          pv: 0, // Sera mis à jour à la distribution des cartes
-          personnages: [],
-          personnageActif: null,
-          cartesBonus: [],
-        },
-      },
-      currentTurn: 1,
-      currentPlayer: "player1",
-      status: "waiting", // waiting, playing, finished
-      lastUpdate: new Date().toISOString(),
-    };
-
-    this.activeGames.set(gameId, gameState);
-    return gameState;
+  if (error) {
+    console.error("Erreur lors de la création de la partie:", error);
+    throw new Error("Impossible de créer la partie");
   }
 
-  /**
-   * Distribue les cartes initiales aux joueurs
-   * @param {string} gameId - ID de la partie
-   * @param {Array} personnages - Liste des personnages disponibles
-   * @param {Array} bonus - Liste des bonus disponibles
-   * @returns {boolean} - Succès de l'opération
-   */
-  dealInitialCards(gameId, personnages, bonus) {
-    const gameState = this.activeGames.get(gameId);
-    if (!gameState) {
-      console.error(
-        `Partie ${gameId} non trouvée pour la distribution des cartes`
-      );
-      return false;
+  // Stocker l'état en mémoire
+  activeGames.set(gameId, gameState);
+
+  return gameId;
+}
+
+/**
+ * Rejoint une partie existante
+ * @param {string} gameId - ID de la partie
+ * @param {string} player2 - Nom du joueur 2
+ * @returns {object} - État actuel de la partie
+ */
+async function joinGame(gameId, player2) {
+  // Vérifier si la partie existe
+  let gameState = activeGames.get(gameId);
+
+  if (!gameState) {
+    // Récupérer de la base de données
+    const { data, error } = await supabase
+      .from("games")
+      .select("game_state")
+      .eq("id", gameId)
+      .single();
+
+    if (error || !data) {
+      throw new Error("Partie introuvable");
     }
 
-    console.log(`Distribution des cartes pour la partie ${gameId}`);
+    gameState = JSON.parse(data.game_state);
+    activeGames.set(gameId, gameState);
+  }
 
-    // Vérifier si nous avons des données
-    if (!personnages || !personnages.length || !bonus || !bonus.length) {
-      console.error(
-        "Pas de données de cartes disponibles pour la distribution !"
-      );
-      return false;
-    }
+  if (gameState.status !== "waiting") {
+    throw new Error("Cette partie est déjà complète");
+  }
 
-    // Mélanger les cartes
-    const shuffledPersonnages = [...personnages].sort(
-      () => Math.random() - 0.5
+  // Tirer les cartes pour le joueur 2
+  const player2Cards = await cardService.drawInitialCards();
+
+  // Mettre à jour l'état de la partie
+  gameState.player2 = {
+    id: player2,
+    cards: player2Cards,
+    health: {},
+    attack: {},
+    turns: {},
+    activeBonus: {},
+  };
+
+  // Initialiser les statistiques des cartes
+  for (const card of player2Cards.personnages) {
+    gameState.player2.health[card.id] = parseInt(card.pv);
+    gameState.player2.attack[card.id] = parseInt(card.force);
+    gameState.player2.turns[card.id] = parseInt(card.tours);
+    gameState.player2.activeBonus[card.id] = [];
+  }
+
+  // Mettre à jour le statut et le tour courant
+  gameState.status = "playing";
+  gameState.currentTurn = Math.random() < 0.5 ? "player1" : "player2";
+
+  // Mettre à jour dans Supabase
+  const { data, error } = await supabase
+    .from("games")
+    .update({
+      player2: player2,
+      status: "playing",
+      game_state: JSON.stringify(gameState),
+    })
+    .eq("id", gameId);
+
+  if (error) {
+    console.error("Erreur lors de la mise à jour de la partie:", error);
+    throw new Error("Impossible de rejoindre la partie");
+  }
+
+  // Mettre à jour en mémoire
+  activeGames.set(gameId, gameState);
+
+  return gameState;
+}
+
+/**
+ * Joue une carte bonus
+ * @param {string} gameId - ID de la partie
+ * @param {string} playerId - ID du joueur
+ * @param {string} cardId - ID de la carte bonus
+ * @param {string} targetId - ID de la carte personnage cible
+ * @returns {object} - État actualisé de la partie
+ */
+function playCard(gameId, playerId, cardId, targetId) {
+  const gameState = activeGames.get(gameId);
+
+  if (!gameState) {
+    throw new Error("Partie introuvable");
+  }
+
+  // Déterminer le joueur actuel
+  const playerKey = gameState.player1.id === playerId ? "player1" : "player2";
+  const opponentKey = playerKey === "player1" ? "player2" : "player1";
+
+  // Vérifier si c'est le tour du joueur
+  if (gameState.currentTurn !== playerKey) {
+    throw new Error("Ce n'est pas votre tour");
+  }
+
+  // Trouver la carte bonus
+  const bonusCard = gameState[playerKey].cards.bonus.find(
+    (card) => card.id === cardId
+  );
+
+  if (!bonusCard) {
+    throw new Error("Carte bonus non trouvée");
+  }
+
+  // Vérifier si la carte cible existe
+  if (!gameState[playerKey].health[targetId]) {
+    throw new Error("Carte personnage cible non trouvée");
+  }
+
+  // Appliquer le bonus
+  gameState[playerKey].activeBonus[targetId] =
+    gameState[playerKey].activeBonus[targetId] || [];
+
+  gameState[playerKey].activeBonus[targetId].push({
+    id: bonusCard.id,
+    pourcentage: parseInt(bonusCard.pourcentagebonus),
+    tours: parseInt(bonusCard.tourbonus),
+    nom: bonusCard.nomcartebonus,
+  });
+
+  // Retirer la carte bonus de la main du joueur
+  gameState[playerKey].cards.bonus = gameState[playerKey].cards.bonus.filter(
+    (card) => card.id !== cardId
+  );
+
+  // Mettre à jour l'état dans Supabase
+  saveGameState(gameId, gameState);
+
+  return gameState;
+}
+
+/**
+ * Fait une attaque avec un personnage
+ * @param {string} gameId - ID de la partie
+ * @param {string} playerId - ID du joueur
+ * @param {string} attackerId - ID de la carte attaquante
+ * @param {string} targetId - ID de la carte cible
+ * @returns {object} - État actualisé de la partie
+ */
+function attack(gameId, playerId, attackerId, targetId) {
+  const gameState = activeGames.get(gameId);
+
+  if (!gameState) {
+    throw new Error("Partie introuvable");
+  }
+
+  // Déterminer le joueur actuel
+  const playerKey = gameState.player1.id === playerId ? "player1" : "player2";
+  const opponentKey = playerKey === "player1" ? "player2" : "player1";
+
+  // Vérifier si c'est le tour du joueur
+  if (gameState.currentTurn !== playerKey) {
+    throw new Error("Ce n'est pas votre tour");
+  }
+
+  // Vérifier si l'attaquant existe et a des tours d'attaque disponibles
+  if (
+    !gameState[playerKey].health[attackerId] ||
+    gameState[playerKey].turns[attackerId] <= 0
+  ) {
+    throw new Error("Carte attaquante non valide");
+  }
+
+  // Vérifier si la cible existe
+  if (!gameState[opponentKey].health[targetId]) {
+    throw new Error("Carte cible non valide");
+  }
+
+  // Calculer la force d'attaque avec les bonus
+  let attackPower = gameState[playerKey].attack[attackerId];
+  const activeBonus = gameState[playerKey].activeBonus[attackerId] || [];
+
+  // Appliquer les bonus à l'attaque
+  if (activeBonus.length > 0) {
+    const totalBonusPercentage = activeBonus.reduce(
+      (total, bonus) => total + bonus.pourcentage,
+      0
     );
-    const shuffledBonus = [...bonus].sort(() => Math.random() - 0.5);
-
-    // Distribuer 5 personnages à chaque joueur
-    gameState.players.player1.personnages = shuffledPersonnages.slice(0, 5);
-    gameState.players.player2.personnages = shuffledPersonnages.slice(5, 10);
-
-    // S'assurer que chaque personnage a 100 points de vie
-    gameState.players.player1.personnages.forEach((p) => (p.pointsdevie = 100));
-    gameState.players.player2.personnages.forEach((p) => (p.pointsdevie = 100));
-
-    // Calculer les PV totaux: 5 personnages × 100 PV = 500 PV par joueur
-    gameState.players.player1.pv = 500;
-    gameState.players.player2.pv = 500;
-
-    // Définir le personnage actif pour chaque joueur
-    gameState.players.player1.personnageActif =
-      gameState.players.player1.personnages[0];
-    gameState.players.player2.personnageActif =
-      gameState.players.player2.personnages[0];
-
-    // Distribuer 5 bonus à chaque joueur
-    gameState.players.player1.cartesBonus = shuffledBonus.slice(0, 5);
-    gameState.players.player2.cartesBonus = shuffledBonus.slice(5, 10);
-
-    // Mettre à jour l'état du jeu
-    gameState.status = "playing";
-    gameState.lastUpdate = new Date().toISOString();
-
-    // Sauvegarder l'état dans un fichier JSON
-    this.saveGameState(gameId);
-
-    return true;
+    attackPower = Math.floor(attackPower * (1 + totalBonusPercentage / 100));
   }
 
-  /**
-   * Sauvegarde l'état du jeu dans un fichier JSON
-   * @param {string} gameId - ID de la partie
-   * @returns {boolean} - Succès de l'opération
-   */
-  saveGameState(gameId) {
-    const gameState = this.activeGames.get(gameId);
-    if (!gameState) {
-      console.error(`Partie ${gameId} non trouvée pour la sauvegarde`);
-      return false;
-    }
+  // Infliger les dégâts
+  gameState[opponentKey].health[targetId] -= attackPower;
 
-    try {
-      // Créer le dossier gameStates s'il n'existe pas
-      const gameStatesDir = path.join(__dirname, "..", "..", "gameStates");
-      if (!fs.existsSync(gameStatesDir)) {
-        fs.mkdirSync(gameStatesDir, { recursive: true });
-      }
-
-      // Chemin du fichier de sauvegarde
-      const filePath = path.join(gameStatesDir, `${gameId}.json`);
-
-      // Sauvegarder l'état complet avec la date de dernière mise à jour
-      gameState.lastUpdate = new Date().toISOString();
-      fs.writeFileSync(filePath, JSON.stringify(gameState, null, 2));
-
-      console.log(`État de la partie ${gameId} sauvegardé dans ${filePath}`);
-      return true;
-    } catch (error) {
-      console.error(
-        `Erreur lors de la sauvegarde de l'état de la partie ${gameId}:`,
-        error
-      );
-      return false;
-    }
+  // S'assurer que les PV ne sont pas négatifs
+  if (gameState[opponentKey].health[targetId] < 0) {
+    gameState[opponentKey].health[targetId] = 0;
   }
 
-  /**
-   * Récupère l'état du jeu pour un joueur spécifique
-   * @param {string} gameId - ID de la partie
-   * @param {string} playerId - ID du joueur
-   * @returns {object} - État du jeu pour le joueur
-   */
-  getStateForPlayer(gameId, playerId) {
-    const gameState = this.activeGames.get(gameId);
-    if (!gameState) {
-      console.error(
-        `Partie ${gameId} non trouvée pour la récupération de l'état`
-      );
-      return null;
+  // Réduire le nombre de tours d'attaque
+  gameState[playerKey].turns[attackerId]--;
+
+  // Vérifier si la partie est terminée
+  const opponentAlive = Object.values(gameState[opponentKey].health).some(
+    (health) => health > 0
+  );
+
+  if (!opponentAlive) {
+    gameState.status = "finished";
+    gameState.winner = playerKey;
+  }
+
+  // Mettre à jour l'état dans Supabase
+  saveGameState(gameId, gameState);
+
+  return gameState;
+}
+
+/**
+ * Termine le tour du joueur courant
+ * @param {string} gameId - ID de la partie
+ * @param {string} playerId - ID du joueur
+ * @returns {object} - État actualisé de la partie
+ */
+function endTurn(gameId, playerId) {
+  const gameState = activeGames.get(gameId);
+
+  if (!gameState) {
+    throw new Error("Partie introuvable");
+  }
+
+  // Vérifier que c'est bien le tour du joueur
+  const playerKey = gameState.player1.id === playerId ? "player1" : "player2";
+  const opponentKey = playerKey === "player1" ? "player2" : "player1";
+
+  if (gameState.currentTurn !== playerKey) {
+    throw new Error("Ce n'est pas votre tour");
+  }
+
+  // Mettre à jour les durées des bonus
+  for (const characterId in gameState[playerKey].activeBonus) {
+    const bonusList = gameState[playerKey].activeBonus[characterId];
+
+    // Réduire la durée de chaque bonus et filtrer ceux terminés
+    gameState[playerKey].activeBonus[characterId] = bonusList
+      .map((bonus) => ({ ...bonus, tours: bonus.tours - 1 }))
+      .filter((bonus) => bonus.tours > 0);
+  }
+
+  // Changer le tour
+  gameState.currentTurn = opponentKey;
+
+  // Mettre à jour l'état dans Supabase
+  saveGameState(gameId, gameState);
+
+  return gameState;
+}
+
+/**
+ * Récupère l'état d'une partie
+ * @param {string} gameId - ID de la partie
+ * @returns {object} - État de la partie
+ */
+async function getGameState(gameId) {
+  // Vérifier si la partie est en mémoire
+  let gameState = activeGames.get(gameId);
+
+  if (!gameState) {
+    // Récupérer de la base de données
+    const { data, error } = await supabase
+      .from("games")
+      .select("game_state")
+      .eq("id", gameId)
+      .single();
+
+    if (error || !data) {
+      throw new Error("Partie introuvable");
     }
 
-    const opponent = playerId === "player1" ? "player2" : "player1";
+    gameState = JSON.parse(data.game_state);
+    activeGames.set(gameId, gameState);
+  }
 
-    return {
-      gameId: gameState.gameId,
-      turn: gameState.currentTurn,
-      currentPlayer: gameState.currentPlayer,
+  return gameState;
+}
+
+/**
+ * Sauvegarde l'état d'une partie dans Supabase
+ * @param {string} gameId - ID de la partie
+ * @param {object} gameState - État à sauvegarder
+ */
+async function saveGameState(gameId, gameState) {
+  const { data, error } = await supabase
+    .from("games")
+    .update({
+      game_state: JSON.stringify(gameState),
       status: gameState.status,
-      you: {
-        id: playerId,
-        pv: gameState.players[playerId].pv,
-        personnages: gameState.players[playerId].personnages,
-        personnageActif: gameState.players[playerId].personnageActif,
-        cartesBonus: gameState.players[playerId].cartesBonus,
-      },
-      opponent: {
-        id: opponent,
-        pv: gameState.players[opponent].pv,
-        // Ne pas envoyer tous les détails des personnages de l'adversaire
-        personnages: gameState.players[opponent].personnages.map((p) => ({
-          id: p.id,
-          nomcarteperso: p.nomcarteperso,
-          pointsdevie: p.pointsdevie,
-        })),
-        personnageActif: gameState.players[opponent].personnageActif
-          ? {
-              id: gameState.players[opponent].personnageActif.id,
-              nomcarteperso:
-                gameState.players[opponent].personnageActif.nomcarteperso,
-              pointsdevie:
-                gameState.players[opponent].personnageActif.pointsdevie,
-            }
-          : null,
-        // Ne pas envoyer les détails des cartes bonus de l'adversaire
-        cartesBonus: gameState.players[opponent].cartesBonus.length,
-      },
-    };
-  }
+      winner: gameState.winner,
+    })
+    .eq("id", gameId);
 
-  /**
-   * Change le personnage actif d'un joueur
-   * @param {string} gameId - ID de la partie
-   * @param {string} playerId - ID du joueur
-   * @param {string} characterId - ID du personnage à activer
-   * @returns {boolean} - Succès de l'opération
-   */
-  changeActiveCharacter(gameId, playerId, characterId) {
-    const gameState = this.activeGames.get(gameId);
-    if (!gameState) {
-      console.error(
-        `Partie ${gameId} non trouvée pour le changement de personnage actif`
-      );
-      return false;
-    }
-
-    const player = gameState.players[playerId];
-    if (!player) {
-      console.error(`Joueur ${playerId} non trouvé dans la partie ${gameId}`);
-      return false;
-    }
-
-    // Vérifier si c'est bien le tour du joueur
-    if (gameState.currentPlayer !== playerId) {
-      console.error(
-        `Ce n'est pas le tour du joueur ${playerId} dans la partie ${gameId}`
-      );
-      return false;
-    }
-
-    // Trouver le personnage dans la liste des personnages du joueur
-    const character = player.personnages.find((p) => p.id === characterId);
-    if (!character) {
-      console.error(
-        `Personnage ${characterId} non trouvé pour le joueur ${playerId}`
-      );
-      return false;
-    }
-
-    // Changer le personnage actif
-    player.personnageActif = character;
-
-    // Sauvegarder l'état du jeu
-    this.saveGameState(gameId);
-
-    console.log(
-      `Personnage actif du joueur ${playerId} changé pour ${characterId}`
+  if (error) {
+    console.error(
+      "Erreur lors de la sauvegarde de l'état de la partie:",
+      error
     );
-    return true;
-  }
-
-  /**
-   * Applique un bonus à un personnage
-   * @param {string} gameId - ID de la partie
-   * @param {string} playerId - ID du joueur
-   * @param {object} bonusCard - Carte bonus à appliquer
-   * @returns {boolean} - Succès de l'opération
-   */
-  applyBonus(gameId, playerId, bonusCard) {
-    const gameState = this.activeGames.get(gameId);
-    if (!gameState) {
-      console.error(`Partie ${gameId} non trouvée pour l'application du bonus`);
-      return false;
-    }
-
-    const player = gameState.players[playerId];
-    if (!player) {
-      console.error(`Joueur ${playerId} non trouvé dans la partie ${gameId}`);
-      return false;
-    }
-
-    // Vérifier si c'est bien le tour du joueur
-    if (gameState.currentPlayer !== playerId) {
-      console.error(
-        `Ce n'est pas le tour du joueur ${playerId} dans la partie ${gameId}`
-      );
-      return false;
-    }
-
-    // Trouver la carte bonus dans la main du joueur
-    const bonusIndex = player.cartesBonus.findIndex(
-      (card) => card.id === bonusCard.id
-    );
-    if (bonusIndex === -1) {
-      console.error(
-        `Carte bonus ${bonusCard.id} non trouvée dans la main du joueur ${playerId}`
-      );
-      return false;
-    }
-
-    // Vérifier si le joueur a un personnage actif
-    if (!player.personnageActif) {
-      console.error(
-        `Le joueur ${playerId} n'a pas de personnage actif pour appliquer le bonus`
-      );
-      return false;
-    }
-
-    // Appliquer l'effet du bonus
-    const bonus = parseInt(bonusCard.pourcentagebonus, 10) || 0;
-    if (bonus > 0) {
-      // Augmenter la force d'attaque du personnage
-      const currentAttack =
-        parseInt(player.personnageActif.forceattaque, 10) || 0;
-      player.personnageActif.forceattaque = Math.round(
-        currentAttack * (1 + bonus / 100)
-      );
-
-      console.log(
-        `Bonus de ${bonus}% appliqué au personnage ${player.personnageActif.id}. Attaque: ${currentAttack} -> ${player.personnageActif.forceattaque}`
-      );
-    }
-
-    // Retirer la carte bonus de la main du joueur
-    player.cartesBonus.splice(bonusIndex, 1);
-
-    // Sauvegarder l'état du jeu
-    this.saveGameState(gameId);
-
-    return true;
-  }
-
-  /**
-   * Passe au tour suivant
-   * @param {string} gameId - ID de la partie
-   * @returns {boolean} - Succès de l'opération
-   */
-  nextTurn(gameId) {
-    const gameState = this.activeGames.get(gameId);
-    if (!gameState) {
-      console.error(
-        `Partie ${gameId} non trouvée pour le passage au tour suivant`
-      );
-      return false;
-    }
-
-    // Changer de joueur
-    gameState.currentPlayer =
-      gameState.currentPlayer === "player1" ? "player2" : "player1";
-
-    // Incrémenter le compteur de tours si on revient au premier joueur
-    if (gameState.currentPlayer === "player1") {
-      gameState.currentTurn++;
-    }
-
-    // Sauvegarder l'état du jeu
-    this.saveGameState(gameId);
-
-    console.log(
-      `Tour suivant dans la partie ${gameId}: Joueur ${gameState.currentPlayer}, Tour ${gameState.currentTurn}`
-    );
-    return true;
-  }
-
-  /**
-   * Charge une partie depuis un fichier JSON
-   * @param {string} gameId - ID de la partie
-   * @returns {boolean} - Succès de l'opération
-   */
-  loadGame(gameId) {
-    try {
-      const gameStatesDir = path.join(__dirname, "..", "..", "gameStates");
-      const filePath = path.join(gameStatesDir, `${gameId}.json`);
-
-      if (!fs.existsSync(filePath)) {
-        console.error(`Fichier de sauvegarde ${filePath} non trouvé`);
-        return false;
-      }
-
-      const gameState = JSON.parse(fs.readFileSync(filePath, "utf8"));
-      this.activeGames.set(gameId, gameState);
-
-      console.log(`Partie ${gameId} chargée depuis ${filePath}`);
-      return true;
-    } catch (error) {
-      console.error(`Erreur lors du chargement de la partie ${gameId}:`, error);
-      return false;
-    }
-  }
-
-  /**
-   * Récupère une image à partir de son type et de son ID
-   * @param {string} type - Type de l'image (perso, bonus)
-   * @param {string} id - ID de l'image
-   * @returns {string} - URL de l'image
-   */
-  getImageUrl(type, id) {
-    return getImageUrl(type, id);
   }
 }
 
-module.exports = GameManager;
+module.exports = {
+  createGame,
+  joinGame,
+  playCard,
+  attack,
+  endTurn,
+  getGameState,
+  activeGames,
+};

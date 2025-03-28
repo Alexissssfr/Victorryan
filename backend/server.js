@@ -1,72 +1,93 @@
 const express = require("express");
-const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 const cors = require("cors");
-const { GameManager } = require("./services/gameManager");
-const { supabase, getImageUrl } = require("./config/supabase");
+const dotenv = require("dotenv");
+const gameRoutes = require("./routes/gameRoutes");
+const cardRoutes = require("./routes/cardRoutes");
+const gameManager = require("./services/gameManager");
 
+// Charger les variables d'environnement
+dotenv.config();
+
+// Initialiser l'application Express
 const app = express();
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);
 
-// Middleware
+// Configurer CORS
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../public")));
 
-// Initialisation du gestionnaire de jeu
-const gameManager = new GameManager();
+// Configurer les routes
+app.use("/api/games", gameRoutes);
+app.use("/api/cards", cardRoutes);
 
-// Routes API
-app.post("/api/game/create", (req, res) => {
-  const gameId = gameManager.createGame();
-  res.json({ gameId });
+// Configurer Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
 });
 
-app.get("/api/game/:gameId", (req, res) => {
-  const game = gameManager.getGame(req.params.gameId);
-  if (!game) {
-    return res.status(404).json({ error: "Game not found" });
-  }
-  res.json(game);
+// Gérer les connexions WebSocket
+io.on("connection", (socket) => {
+  console.log(`Nouveau client connecté: ${socket.id}`);
+
+  // Rejoindre une partie
+  socket.on("join_game", (gameId) => {
+    socket.join(gameId);
+    console.log(`Client ${socket.id} a rejoint la partie ${gameId}`);
+  });
+
+  // Jouer une carte
+  socket.on("play_card", ({ gameId, playerId, cardId, targetId }) => {
+    try {
+      const gameState = gameManager.playCard(
+        gameId,
+        playerId,
+        cardId,
+        targetId
+      );
+      io.to(gameId).emit("game_update", gameState);
+    } catch (error) {
+      socket.emit("error", { message: error.message });
+    }
+  });
+
+  // Faire une attaque
+  socket.on("attack", ({ gameId, playerId, attackerId, targetId }) => {
+    try {
+      const gameState = gameManager.attack(
+        gameId,
+        playerId,
+        attackerId,
+        targetId
+      );
+      io.to(gameId).emit("game_update", gameState);
+    } catch (error) {
+      socket.emit("error", { message: error.message });
+    }
+  });
+
+  // Terminer le tour
+  socket.on("end_turn", ({ gameId, playerId }) => {
+    try {
+      const gameState = gameManager.endTurn(gameId, playerId);
+      io.to(gameId).emit("game_update", gameState);
+    } catch (error) {
+      socket.emit("error", { message: error.message });
+    }
+  });
+
+  // Déconnexion
+  socket.on("disconnect", () => {
+    console.log(`Client déconnecté: ${socket.id}`);
+  });
 });
 
-app.post("/api/game/:gameId/start", (req, res) => {
-  const game = gameManager.getGame(req.params.gameId);
-  if (!game) {
-    return res.status(404).json({ error: "Game not found" });
-  }
-  game.startGame();
-  res.json({ message: "Game started" });
-});
-
-app.post("/api/game/:gameId/end-turn", (req, res) => {
-  const game = gameManager.getGame(req.params.gameId);
-  if (!game) {
-    return res.status(404).json({ error: "Game not found" });
-  }
-  game.endTurn();
-  res.json({ message: "Turn ended" });
-});
-
-// Route pour obtenir l'URL d'une image
-app.get("/api/image/:type/:id", (req, res) => {
-  const { type, id } = req.params;
-  const imageUrl = getImageUrl(type, id);
-  res.json({ url: imageUrl });
-});
-
-// Route principale
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/index.html"));
-});
-
-// Gestion des erreurs
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
-});
-
-// Démarrage du serveur
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+// Démarrer le serveur
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Serveur démarré sur le port ${PORT}`);
 });
