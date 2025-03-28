@@ -6,7 +6,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "NECTAR COSMIQUE",
     "description": "Augmente temporairement la puissance cosmique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B1.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B1.png"
   },
   {
     "id": "B2",
@@ -15,7 +15,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "NECTAR COSMIQUE",
     "description": "Augmente temporairement la puissance cosmique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B2.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B2.png"
   },
   {
     "id": "B3",
@@ -24,7 +24,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Invocation des Secrets Anciens",
     "description": "Augmente temporairement les connaissances stratégiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B3.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B3.png"
   },
   {
     "id": "B4",
@@ -33,7 +33,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Invocation des Secrets Anciens",
     "description": "Augmente temporairement les connaissances stratégiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B4.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B4.png"
   },
   {
     "id": "B5",
@@ -42,7 +42,7 @@
     "tourbonus": "1",
     "nomdupouvoir": "Révélation Sablée",
     "description": "Révèle une vérité cachée",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B5.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B5.png"
   },
   {
     "id": "B6",
@@ -51,7 +51,7 @@
     "tourbonus": "1",
     "nomdupouvoir": "Révélation Sablée",
     "description": "Révèle une vérité cachée",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B6.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B6.png"
   },
   {
     "id": "B7",
@@ -60,7 +60,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Coup d'Éternité",
     "description": "Inflige une frappe intemporelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B7.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B7.png"
   },
   {
     "id": "B8",
@@ -69,7 +69,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Coup d'Éternité",
     "description": "Inflige une frappe intemporelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B8.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B8.png"
   },
   {
     "id": "B9",
@@ -78,7 +78,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Chaos Numérique",
     "description": "Perturbe les systèmes ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B9.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B9.png"
   },
   {
     "id": "B10",
@@ -87,7 +87,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Chaos Numérique",
     "description": "Perturbe les systèmes ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B10.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B10.png"
   },
   {
     "id": "B11",
@@ -96,7 +96,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Passage Fracturé",
     "description": "Crée une brèche dimensionnelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B11.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B11.png"
   },
   {
     "id": "B12",
@@ -105,7 +105,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Passage Fracturé",
     "description": "Crée une brèche dimensionnelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B12.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B12.png"
   },
   {
     "id": "B13",
@@ -114,7 +114,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Éclat Technomagique",
     "description": "Projette une onde technologique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B13.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B13.png"
   },
   {
     "id": "B14",
@@ -123,7 +123,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Éclat Technomagique",
     "description": "Projette une onde technologique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B14.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B14.png"
   },
   {
     "id": "B15",
@@ -132,7 +132,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Régénération Mutante",
     "description": "Se régénère rapidement après des attaques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B15.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B15.png"
   },
   {
     "id": "B16",
@@ -141,7 +141,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Régénération Mutante",
     "description": "Se régénère rapidement après des attaques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B16.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B16.png"
   },
   {
     "id": "B17",
@@ -150,7 +150,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Distorsion Mentale",
     "description": "Perturbe la conscience ennemie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B17.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B17.png"
   },
   {
     "id": "B18",
@@ -159,7 +159,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Distorsion Mentale",
     "description": "Perturbe la conscience ennemie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B18.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B18.png"
   },
   {
     "id": "B19",
@@ -168,7 +168,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Appel des Ancêtres",
     "description": "Invoque les forces des anciens",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B19.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B19.png"
   },
   {
     "id": "B20",
@@ -177,7 +177,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Appel des Ancêtres",
     "description": "Invoque les forces des anciens",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B20.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B20.png"
   },
   {
     "id": "B21",
@@ -186,7 +186,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Souffle d'Ambroisie",
     "description": "Restaure l'énergie vitale",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B21.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B21.png"
   },
   {
     "id": "B22",
@@ -195,7 +195,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Souffle d'Ambroisie",
     "description": "Restaure l'énergie vitale",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B22.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B22.png"
   },
   {
     "id": "B23",
@@ -204,7 +204,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Éveil Ancestral",
     "description": "Accroît la puissance spirituelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B23.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B23.png"
   },
   {
     "id": "B24",
@@ -213,7 +213,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Éveil Ancestral",
     "description": "Accroît la puissance spirituelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B24.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B24.png"
   },
   {
     "id": "B25",
@@ -222,7 +222,7 @@
     "tourbonus": "1",
     "nomdupouvoir": "Page Maudite",
     "description": "Inflige une malédiction temporaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B25.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B25.png"
   },
   {
     "id": "B26",
@@ -231,7 +231,7 @@
     "tourbonus": "1",
     "nomdupouvoir": "Page Maudite",
     "description": "Inflige une malédiction temporaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B26.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B26.png"
   },
   {
     "id": "B27",
@@ -240,7 +240,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Passage Interdit",
     "description": "Ouvre une dimension secrète",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B27.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B27.png"
   },
   {
     "id": "B28",
@@ -249,7 +249,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Passage Interdit",
     "description": "Ouvre une dimension secrète",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B28.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B28.png"
   },
   {
     "id": "B29",
@@ -258,7 +258,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Chant des Anciens",
     "description": "Augmente temporairement la concentration",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B29.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B29.png"
   },
   {
     "id": "B30",
@@ -267,7 +267,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Chant des Anciens",
     "description": "Augmente temporairement la concentration",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B30.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B30.png"
   },
   {
     "id": "B31",
@@ -276,7 +276,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Impact Fulgurant",
     "description": "Déchaîne une énergie céleste",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B31.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B31.png"
   },
   {
     "id": "B32",
@@ -285,7 +285,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Impact Fulgurant",
     "description": "Déchaîne une énergie céleste",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B32.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B32.png"
   },
   {
     "id": "B33",
@@ -294,7 +294,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Lueur Guidante",
     "description": "Éclaire les chemins inconnus",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B33.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B33.png"
   },
   {
     "id": "B34",
@@ -303,7 +303,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Lueur Guidante",
     "description": "Éclaire les chemins inconnus",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B34.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B34.png"
   },
   {
     "id": "B35",
@@ -312,7 +312,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Cercle du Chaos",
     "description": "Modifie la trajectoire du destin",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B35.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B35.png"
   },
   {
     "id": "B36",
@@ -321,7 +321,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Cercle du Chaos",
     "description": "Modifie la trajectoire du destin",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B36.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B36.png"
   },
   {
     "id": "B37",
@@ -330,7 +330,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Miroir Distordu",
     "description": "Confond l'ennemi avec des illusions",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B37.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B37.png"
   },
   {
     "id": "B38",
@@ -339,7 +339,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Miroir Distordu",
     "description": "Confond l'ennemi avec des illusions",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B38.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B38.png"
   },
   {
     "id": "B39",
@@ -348,7 +348,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Barrière Primordiale",
     "description": "Absorbe une grande quantité de dégâts",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B39.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B39.png"
   },
   {
     "id": "B40",
@@ -357,7 +357,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Barrière Primordiale",
     "description": "Absorbe une grande quantité de dégâts",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B40.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B40.png"
   },
   {
     "id": "B41",
@@ -366,7 +366,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Prophétie d'Éternité",
     "description": "Anticipe les mouvements ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B41.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B41.png"
   },
   {
     "id": "B42",
@@ -375,7 +375,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Prophétie d'Éternité",
     "description": "Anticipe les mouvements ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B42.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B42.png"
   },
   {
     "id": "B43",
@@ -384,7 +384,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Vol du Destin",
     "description": "Augmente l'agilité temporairement",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B43.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B43.png"
   },
   {
     "id": "B44",
@@ -393,7 +393,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Vol du Destin",
     "description": "Augmente l'agilité temporairement",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B44.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B44.png"
   },
   {
     "id": "B45",
@@ -402,7 +402,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Savoir Éternel",
     "description": "Améliore la compréhension magique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B45.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B45.png"
   },
   {
     "id": "B46",
@@ -411,7 +411,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Savoir Éternel",
     "description": "Améliore la compréhension magique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B46.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B46.png"
   },
   {
     "id": "B47",
@@ -420,7 +420,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Reflet Trompeur",
     "description": "Désoriente l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B47.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B47.png"
   },
   {
     "id": "B48",
@@ -429,7 +429,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Reflet Trompeur",
     "description": "Désoriente l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B48.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B48.png"
   },
   {
     "id": "B49",
@@ -438,7 +438,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Voix des Anciens",
     "description": "Renforce le courage et la détermination",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B49.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B49.png"
   },
   {
     "id": "B50",
@@ -447,7 +447,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Voix des Anciens",
     "description": "Renforce le courage et la détermination",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B50.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B50.png"
   },
   {
     "id": "B51",
@@ -456,7 +456,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Révélation Cachée",
     "description": "Augmente les chances de critique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B51.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B51.png"
   },
   {
     "id": "B52",
@@ -465,7 +465,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Révélation Cachée",
     "description": "Augmente les chances de critique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B52.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B52.png"
   },
   {
     "id": "B53",
@@ -474,7 +474,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Rugissement Abyssal",
     "description": "Diminue la défense des ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B53.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B53.png"
   },
   {
     "id": "B54",
@@ -483,7 +483,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Rugissement Abyssal",
     "description": "Diminue la défense des ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B54.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B54.png"
   },
   {
     "id": "B55",
@@ -492,7 +492,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Énergie Lunaire",
     "description": "Restaure progressivement la vie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B55.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B55.png"
   },
   {
     "id": "B56",
@@ -501,7 +501,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Énergie Lunaire",
     "description": "Restaure progressivement la vie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B56.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B56.png"
   },
   {
     "id": "B57",
@@ -510,7 +510,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Lueur Spectrale",
     "description": "Empêche les ennemis de fuir",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B57.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B57.png"
   },
   {
     "id": "B58",
@@ -519,7 +519,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Lueur Spectrale",
     "description": "Empêche les ennemis de fuir",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B58.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B58.png"
   },
   {
     "id": "B59",
@@ -528,7 +528,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Protection Draconique",
     "description": "Réduit tous les dégâts subis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B59.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B59.png"
   },
   {
     "id": "B60",
@@ -537,7 +537,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Protection Draconique",
     "description": "Réduit tous les dégâts subis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B60.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B60.png"
   },
   {
     "id": "B61",
@@ -546,7 +546,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Horreur Onirique",
     "description": "Fait perdre de la concentration aux ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B61.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B61.png"
   },
   {
     "id": "B62",
@@ -555,7 +555,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Horreur Onirique",
     "description": "Fait perdre de la concentration aux ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B62.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B62.png"
   },
   {
     "id": "B63",
@@ -564,7 +564,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Renaissance Ardente",
     "description": "Résurrection avec un bonus d'attaque",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B63.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B63.png"
   },
   {
     "id": "B64",
@@ -573,7 +573,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Renaissance Ardente",
     "description": "Résurrection avec un bonus d'attaque",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B64.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B64.png"
   },
   {
     "id": "B65",
@@ -582,7 +582,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Vortex Chaotique",
     "description": "Mélange les statuts des combattants",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B65.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B65.png"
   },
   {
     "id": "B66",
@@ -591,7 +591,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Vortex Chaotique",
     "description": "Mélange les statuts des combattants",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B66.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B66.png"
   },
   {
     "id": "B67",
@@ -600,7 +600,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Invocation Suprême",
     "description": "Renforce massivement un allié",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B67.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B67.png"
   },
   {
     "id": "B68",
@@ -609,7 +609,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Invocation Suprême",
     "description": "Renforce massivement un allié",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B68.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B68.png"
   },
   {
     "id": "B69",
@@ -618,7 +618,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Dernier Courage",
     "description": "Accorde une action supplémentaire en cas de danger",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B69.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B69.png"
   },
   {
     "id": "B70",
@@ -627,7 +627,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Dernier Courage",
     "description": "Accorde une action supplémentaire en cas de danger",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B70.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B70.png"
   },
   {
     "id": "B71",
@@ -636,7 +636,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Clarté Cosmique",
     "description": "Augmente temporairement la vitesse",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B71.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B71.png"
   },
   {
     "id": "B72",
@@ -645,7 +645,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Clarté Cosmique",
     "description": "Augmente temporairement la vitesse",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B72.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B72.png"
   },
   {
     "id": "B73",
@@ -654,7 +654,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Tranchant Céleste",
     "description": "Augmente la puissance d'attaque",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B73.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B73.png"
   },
   {
     "id": "B74",
@@ -663,7 +663,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Tranchant Céleste",
     "description": "Augmente la puissance d'attaque",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B74.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B74.png"
   },
   {
     "id": "B75",
@@ -672,7 +672,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Purification Naturelle",
     "description": "Soigne tous les malus de statut",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B75.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B75.png"
   },
   {
     "id": "B76",
@@ -681,7 +681,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Purification Naturelle",
     "description": "Soigne tous les malus de statut",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B76.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B76.png"
   },
   {
     "id": "B77",
@@ -690,7 +690,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Détermination Inébranlable",
     "description": "Diminue les dégâts subis en défense",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B77.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B77.png"
   },
   {
     "id": "B78",
@@ -699,7 +699,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Détermination Inébranlable",
     "description": "Diminue les dégâts subis en défense",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B78.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B78.png"
   },
   {
     "id": "B79",
@@ -708,7 +708,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Rage Libérée",
     "description": "Augmente l'attaque en fonction des PV perdus",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B79.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B79.png"
   },
   {
     "id": "B80",
@@ -717,7 +717,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Rage Libérée",
     "description": "Augmente l'attaque en fonction des PV perdus",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B80.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B80.png"
   },
   {
     "id": "B81",
@@ -726,7 +726,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Ombre Silencieuse",
     "description": "Rend le porteur insensible aux coups critiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B81.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B81.png"
   },
   {
     "id": "B82",
@@ -735,7 +735,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Ombre Silencieuse",
     "description": "Rend le porteur insensible aux coups critiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B82.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B82.png"
   },
   {
     "id": "B83",
@@ -744,7 +744,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Vision Prophétique",
     "description": "Augmente la précision des attaques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B83.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B83.png"
   },
   {
     "id": "B84",
@@ -753,7 +753,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Vision Prophétique",
     "description": "Augmente la précision des attaques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B84.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B84.png"
   },
   {
     "id": "B85",
@@ -762,7 +762,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Absorption Spectrale",
     "description": "Convertit les dégâts infligés en soin",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B85.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B85.png"
   },
   {
     "id": "B86",
@@ -771,7 +771,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Absorption Spectrale",
     "description": "Convertit les dégâts infligés en soin",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B86.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B86.png"
   },
   {
     "id": "B87",
@@ -780,7 +780,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Éveil du Brasier",
     "description": "Inflige des dégâts de feu supplémentaires",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B87.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B87.png"
   },
   {
     "id": "B88",
@@ -789,7 +789,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Éveil du Brasier",
     "description": "Inflige des dégâts de feu supplémentaires",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B88.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B88.png"
   },
   {
     "id": "B89",
@@ -798,7 +798,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Esquive Fantôme",
     "description": "Augmente temporairement l'esquive",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B89.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B89.png"
   },
   {
     "id": "B90",
@@ -807,7 +807,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Esquive Fantôme",
     "description": "Augmente temporairement l'esquive",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B90.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B90.png"
   },
   {
     "id": "B91",
@@ -816,7 +816,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Force Ancestrale",
     "description": "Augmente la résistance aux altérations",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B91.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B91.png"
   },
   {
     "id": "B92",
@@ -825,7 +825,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Force Ancestrale",
     "description": "Augmente la résistance aux altérations",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B92.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B92.png"
   },
   {
     "id": "B93",
@@ -834,7 +834,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Instinct Sauvage",
     "description": "Augmente le taux de coup critique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B93.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B93.png"
   },
   {
     "id": "B94",
@@ -843,7 +843,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Instinct Sauvage",
     "description": "Augmente le taux de coup critique",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B94.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B94.png"
   },
   {
     "id": "B95",
@@ -852,7 +852,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Sanction Divine",
     "description": "Inflige des dégâts aux ennemis qui attaquent",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B95.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B95.png"
   },
   {
     "id": "B96",
@@ -861,7 +861,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Sanction Divine",
     "description": "Inflige des dégâts aux ennemis qui attaquent",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B96.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B96.png"
   },
   {
     "id": "B97",
@@ -870,7 +870,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Aura Mystique",
     "description": "Confère une chance d'attaque double",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B97.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B97.png"
   },
   {
     "id": "B98",
@@ -879,7 +879,7 @@
     "tourbonus": "2",
     "nomdupouvoir": "Aura Mystique",
     "description": "Confère une chance d'attaque double",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B98.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B98.png"
   },
   {
     "id": "B99",
@@ -888,7 +888,7 @@
     "tourbonus": "3",
     "nomdupouvoir": "Précision Chirurgicale",
     "description": "Ignore une partie de la défense ennemie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B99.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B99.png"
   },
   {
     "id": "B100",
@@ -897,6 +897,6 @@
     "tourbonus": "3",
     "nomdupouvoir": "Précision Chirurgicale",
     "description": "Ignore une partie de la défense ennemie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/data/images/bonus/B100.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/bonus/B100.png"
   }
 ]

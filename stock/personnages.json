@@ -7,7 +7,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Tempête Déchaînée",
     "description": "Inflige une tempête violente à l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P1.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P1.png"
   },
   {
     "id": "P2",
@@ -17,7 +17,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Tempête Déchaînée",
     "description": "Inflige une tempête violente à l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P2.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P2.png"
   },
   {
     "id": "P3",
@@ -27,7 +27,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Éveil Céleste",
     "description": "Appelle une énergie cosmique protectrice",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P3.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P3.png"
   },
   {
     "id": "P4",
@@ -37,7 +37,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Éveil Céleste",
     "description": "Appelle une énergie cosmique protectrice",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P4.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P4.png"
   },
   {
     "id": "P5",
@@ -47,7 +47,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Déchirure Temporelle",
     "description": "Déstabilise le flux du temps",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P5.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P5.png"
   },
   {
     "id": "P6",
@@ -57,7 +57,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Déchirure Temporelle",
     "description": "Déstabilise le flux du temps",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P6.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P6.png"
   },
   {
     "id": "P7",
@@ -67,7 +67,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Navigation Transdimensionnelle",
     "description": "Traverse les dimensions pour surprendre l'adversaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P7.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P7.png"
   },
   {
     "id": "P8",
@@ -77,7 +77,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Navigation Transdimensionnelle",
     "description": "Traverse les dimensions pour surprendre l'adversaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P8.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P8.png"
   },
   {
     "id": "P9",
@@ -87,7 +87,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Fureur Draconique",
     "description": "Libère une puissante énergie foudroyante",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P9.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P9.png"
   },
   {
     "id": "P10",
@@ -97,7 +97,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Fureur Draconique",
     "description": "Libère une puissante énergie foudroyante",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P10.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P10.png"
   },
   {
     "id": "P11",
@@ -107,7 +107,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Marée Bioluminescente",
     "description": "Inonde le champ de bataille d'une marée lumineuse",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P11.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P11.png"
   },
   {
     "id": "P12",
@@ -117,7 +117,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Marée Bioluminescente",
     "description": "Inonde le champ de bataille d'une marée lumineuse",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P12.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P12.png"
   },
   {
     "id": "P13",
@@ -127,7 +127,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Archiviste d'Éternité",
     "description": "Protège par une mémoire temporelle infinie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P13.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P13.png"
   },
   {
     "id": "P14",
@@ -137,7 +137,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Archiviste d'Éternité",
     "description": "Protège par une mémoire temporelle infinie",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P14.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P14.png"
   },
   {
     "id": "P15",
@@ -147,7 +147,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Virus Disruptif",
     "description": "Perturbe les systèmes adverses",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P15.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P15.png"
   },
   {
     "id": "P16",
@@ -157,7 +157,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Virus Disruptif",
     "description": "Perturbe les systèmes adverses",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P16.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P16.png"
   },
   {
     "id": "P17",
@@ -167,7 +167,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Chronométrie Détective",
     "description": "Prévoit les actions adverses",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P17.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P17.png"
   },
   {
     "id": "P18",
@@ -177,7 +177,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Chronométrie Détective",
     "description": "Prévoit les actions adverses",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P18.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P18.png"
   },
   {
     "id": "P19",
@@ -187,7 +187,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Danse des Spectres",
     "description": "Enveloppe l'adversaire de ténèbres mouvantes",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P19.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P19.png"
   },
   {
     "id": "P20",
@@ -197,7 +197,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Danse des Spectres",
     "description": "Enveloppe l'adversaire de ténèbres mouvantes",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P20.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P20.png"
   },
   {
     "id": "P21",
@@ -207,7 +207,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Renaissance Florale",
     "description": "Soigne les blessures par la magie naturelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P21.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P21.png"
   },
   {
     "id": "P22",
@@ -217,7 +217,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Renaissance Florale",
     "description": "Soigne les blessures par la magie naturelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P22.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P22.png"
   },
   {
     "id": "P23",
@@ -227,7 +227,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Appel des Âmes Perdues",
     "description": "Invoque les âmes pour perturber l'adversaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P23.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P23.png"
   },
   {
     "id": "P24",
@@ -237,7 +237,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Appel des Âmes Perdues",
     "description": "Invoque les âmes pour perturber l'adversaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P24.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P24.png"
   },
   {
     "id": "P25",
@@ -247,7 +247,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Adaptation Planétaire",
     "description": "S'adapte à toutes les attaques adverses",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P25.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P25.png"
   },
   {
     "id": "P26",
@@ -257,7 +257,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Adaptation Planétaire",
     "description": "S'adapte à toutes les attaques adverses",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P26.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P26.png"
   },
   {
     "id": "P27",
@@ -267,7 +267,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Maître des Rêves Distordus",
     "description": "Contrôle les rêves pour infliger des dégâts psychiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P27.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P27.png"
   },
   {
     "id": "P28",
@@ -277,7 +277,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Maître des Rêves Distordus",
     "description": "Contrôle les rêves pour infliger des dégâts psychiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P28.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P28.png"
   },
   {
     "id": "P29",
@@ -287,7 +287,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Vortex Abyssal",
     "description": "Crée une tempête de vide",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P29.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P29.png"
   },
   {
     "id": "P30",
@@ -297,7 +297,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Vortex Abyssal",
     "description": "Crée une tempête de vide",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P30.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P30.png"
   },
   {
     "id": "P31",
@@ -307,7 +307,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Ombres Rampantes",
     "description": "Enveloppe l'adversaire d'ombres",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P31.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P31.png"
   },
   {
     "id": "P32",
@@ -317,7 +317,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Ombres Rampantes",
     "description": "Enveloppe l'adversaire d'ombres",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P32.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P32.png"
   },
   {
     "id": "P33",
@@ -327,7 +327,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Ouragan Mystique",
     "description": "Lance un souffle dévastateur",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P33.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P33.png"
   },
   {
     "id": "P34",
@@ -337,7 +337,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Ouragan Mystique",
     "description": "Lance un souffle dévastateur",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P34.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P34.png"
   },
   {
     "id": "P35",
@@ -347,7 +347,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Flammes du Chaos",
     "description": "Invoque une explosion ardente",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P35.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P35.png"
   },
   {
     "id": "P36",
@@ -357,7 +357,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Flammes du Chaos",
     "description": "Invoque une explosion ardente",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P36.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P36.png"
   },
   {
     "id": "P37",
@@ -367,7 +367,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Chrono-Barrière",
     "description": "Erige un mur temporel protecteur",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P37.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P37.png"
   },
   {
     "id": "P38",
@@ -377,7 +377,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Chrono-Barrière",
     "description": "Erige un mur temporel protecteur",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P38.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P38.png"
   },
   {
     "id": "P39",
@@ -387,7 +387,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Transmutation Obscure",
     "description": "Altère la matière à volonté",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P39.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P39.png"
   },
   {
     "id": "P40",
@@ -397,7 +397,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Transmutation Obscure",
     "description": "Altère la matière à volonté",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P40.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P40.png"
   },
   {
     "id": "P41",
@@ -407,7 +407,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Rêverie Éthérée",
     "description": "Endort temporairement l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P41.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P41.png"
   },
   {
     "id": "P42",
@@ -417,7 +417,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Rêverie Éthérée",
     "description": "Endort temporairement l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P42.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P42.png"
   },
   {
     "id": "P43",
@@ -427,7 +427,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Lame Astrale",
     "description": "Tranche avec une épée chargée d'énergie stellaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P43.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P43.png"
   },
   {
     "id": "P44",
@@ -437,7 +437,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Lame Astrale",
     "description": "Tranche avec une épée chargée d'énergie stellaire",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P44.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P44.png"
   },
   {
     "id": "P45",
@@ -447,7 +447,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Prédiction Chaotique",
     "description": "Anticipe et contre les attaques ennemies",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P45.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P45.png"
   },
   {
     "id": "P46",
@@ -457,7 +457,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Prédiction Chaotique",
     "description": "Anticipe et contre les attaques ennemies",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P46.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P46.png"
   },
   {
     "id": "P47",
@@ -467,7 +467,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Incandescence Sombre",
     "description": "Invoque des flammes destructrices",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P47.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P47.png"
   },
   {
     "id": "P48",
@@ -477,7 +477,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Incandescence Sombre",
     "description": "Invoque des flammes destructrices",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P48.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P48.png"
   },
   {
     "id": "P49",
@@ -487,7 +487,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Souffle des Anciens",
     "description": "Canalise l'énergie d'anciens vestiges",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P49.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P49.png"
   },
   {
     "id": "P50",
@@ -497,7 +497,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Souffle des Anciens",
     "description": "Canalise l'énergie d'anciens vestiges",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P50.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P50.png"
   },
   {
     "id": "P51",
@@ -507,7 +507,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Ombre Furtive",
     "description": "Se déplace sans être détecté",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P51.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P51.png"
   },
   {
     "id": "P52",
@@ -517,7 +517,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Ombre Furtive",
     "description": "Se déplace sans être détecté",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P52.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P52.png"
   },
   {
     "id": "P53",
@@ -527,7 +527,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Ouragan Céleste",
     "description": "Déchaîne une tempête de vent",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P53.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P53.png"
   },
   {
     "id": "P54",
@@ -537,7 +537,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Ouragan Céleste",
     "description": "Déchaîne une tempête de vent",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P54.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P54.png"
   },
   {
     "id": "P55",
@@ -547,7 +547,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Reflet Trompeur",
     "description": "Crée des copies illusoires",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P55.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P55.png"
   },
   {
     "id": "P56",
@@ -557,7 +557,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Reflet Trompeur",
     "description": "Crée des copies illusoires",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P56.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P56.png"
   },
   {
     "id": "P57",
@@ -567,7 +567,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Poigne Maudite",
     "description": "Entrave un ennemi avec des chaînes d'ombre",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P57.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P57.png"
   },
   {
     "id": "P58",
@@ -577,7 +577,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Poigne Maudite",
     "description": "Entrave un ennemi avec des chaînes d'ombre",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P58.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P58.png"
   },
   {
     "id": "P59",
@@ -587,7 +587,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Bénédiction Sylvestre",
     "description": "Guérit les alliés avec l'énergie de la nature",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P59.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P59.png"
   },
   {
     "id": "P60",
@@ -597,7 +597,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Bénédiction Sylvestre",
     "description": "Guérit les alliés avec l'énergie de la nature",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P60.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P60.png"
   },
   {
     "id": "P61",
@@ -607,7 +607,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Déluge Foudroyant",
     "description": "Lance une pluie d'éclairs",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P61.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P61.png"
   },
   {
     "id": "P62",
@@ -617,7 +617,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Déluge Foudroyant",
     "description": "Lance une pluie d'éclairs",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P62.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P62.png"
   },
   {
     "id": "P63",
@@ -627,7 +627,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Élixir Chaotique",
     "description": "Altère l'état des combattants",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P63.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P63.png"
   },
   {
     "id": "P64",
@@ -637,7 +637,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Élixir Chaotique",
     "description": "Altère l'état des combattants",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P64.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P64.png"
   },
   {
     "id": "P65",
@@ -647,7 +647,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Silencieuse",
     "description": "Se fond dans l'obscurité pour attaquer",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P65.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P65.png"
   },
   {
     "id": "P66",
@@ -657,7 +657,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Silencieuse",
     "description": "Se fond dans l'obscurité pour attaquer",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P66.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P66.png"
   },
   {
     "id": "P67",
@@ -667,7 +667,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Chute Stellaire",
     "description": "Fait tomber une étoile sur l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P67.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P67.png"
   },
   {
     "id": "P68",
@@ -677,7 +677,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Chute Stellaire",
     "description": "Fait tomber une étoile sur l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P68.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P68.png"
   },
   {
     "id": "P69",
@@ -687,7 +687,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Bouclier Radieux",
     "description": "Protège et repousse les ténèbres",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P69.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P69.png"
   },
   {
     "id": "P70",
@@ -697,7 +697,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Bouclier Radieux",
     "description": "Protège et repousse les ténèbres",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P70.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P70.png"
   },
   {
     "id": "P71",
@@ -707,7 +707,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Déchirure Cosmique",
     "description": "Crée une faille dimensionnelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P71.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P71.png"
   },
   {
     "id": "P72",
@@ -717,7 +717,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Déchirure Cosmique",
     "description": "Crée une faille dimensionnelle",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P72.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P72.png"
   },
   {
     "id": "P73",
@@ -727,7 +727,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Éveil Stellaire",
     "description": "Déploie une énergie céleste protectrice",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P73.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P73.png"
   },
   {
     "id": "P74",
@@ -737,7 +737,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Éveil Stellaire",
     "description": "Déploie une énergie céleste protectrice",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P74.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P74.png"
   },
   {
     "id": "P75",
@@ -747,7 +747,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Marche Fantomatique",
     "description": "Traverse la réalité pour surprendre l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P75.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P75.png"
   },
   {
     "id": "P76",
@@ -757,7 +757,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Marche Fantomatique",
     "description": "Traverse la réalité pour surprendre l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P76.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P76.png"
   },
   {
     "id": "P77",
@@ -767,7 +767,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Incandescence Infernale",
     "description": "Déchaîne une vague de feu ardente",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P77.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P77.png"
   },
   {
     "id": "P78",
@@ -777,7 +777,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Incandescence Infernale",
     "description": "Déchaîne une vague de feu ardente",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P78.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P78.png"
   },
   {
     "id": "P79",
@@ -787,7 +787,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Vague Prophétique",
     "description": "Prédit l'avenir en contrôlant les marées",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P79.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P79.png"
   },
   {
     "id": "P80",
@@ -797,7 +797,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Vague Prophétique",
     "description": "Prédit l'avenir en contrôlant les marées",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P80.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P80.png"
   },
   {
     "id": "P81",
@@ -807,7 +807,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Fureur Orageuse",
     "description": "Déchaîne une tempête électrisante",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P81.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P81.png"
   },
   {
     "id": "P82",
@@ -817,7 +817,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Fureur Orageuse",
     "description": "Déchaîne une tempête électrisante",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P82.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P82.png"
   },
   {
     "id": "P83",
@@ -827,7 +827,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Voile Nocturne",
     "description": "Se fond dans les ténèbres pour frapper",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P83.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P83.png"
   },
   {
     "id": "P84",
@@ -837,7 +837,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Voile Nocturne",
     "description": "Se fond dans les ténèbres pour frapper",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P84.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P84.png"
   },
   {
     "id": "P85",
@@ -847,7 +847,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Écho du Vide",
     "description": "Propage des ondes de vide destructrices",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P85.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P85.png"
   },
   {
     "id": "P86",
@@ -857,7 +857,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Écho du Vide",
     "description": "Propage des ondes de vide destructrices",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P86.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P86.png"
   },
   {
     "id": "P87",
@@ -867,7 +867,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Racines Ancestrales",
     "description": "Entrave les ennemis avec des lianes magiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P87.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P87.png"
   },
   {
     "id": "P88",
@@ -877,7 +877,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Racines Ancestrales",
     "description": "Entrave les ennemis avec des lianes magiques",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P88.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P88.png"
   },
   {
     "id": "P89",
@@ -887,7 +887,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Blizzard Éternel",
     "description": "Enveloppe le champ de bataille de glace",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P89.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P89.png"
   },
   {
     "id": "P90",
@@ -897,7 +897,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Blizzard Éternel",
     "description": "Enveloppe le champ de bataille de glace",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P90.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P90.png"
   },
   {
     "id": "P91",
@@ -907,7 +907,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Rayon Divin",
     "description": "Canalise une énergie sacrée destructrice",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P91.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P91.png"
   },
   {
     "id": "P92",
@@ -917,7 +917,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Rayon Divin",
     "description": "Canalise une énergie sacrée destructrice",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P92.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P92.png"
   },
   {
     "id": "P93",
@@ -927,7 +927,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Miroir Trompeur",
     "description": "Crée des clones illusoires pour troubler l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P93.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P93.png"
   },
   {
     "id": "P94",
@@ -937,7 +937,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Miroir Trompeur",
     "description": "Crée des clones illusoires pour troubler l'ennemi",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P94.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P94.png"
   },
   {
     "id": "P95",
@@ -947,7 +947,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Lumière Astrale",
     "description": "Illumine le champ de bataille et affaiblit les ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P95.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P95.png"
   },
   {
     "id": "P96",
@@ -957,7 +957,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Lumière Astrale",
     "description": "Illumine le champ de bataille et affaiblit les ennemis",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P96.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P96.png"
   },
   {
     "id": "P97",
@@ -967,7 +967,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Tempête Chaotique",
     "description": "Semer le désordre avec une énergie instable",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P97.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P97.png"
   },
   {
     "id": "P98",
@@ -977,7 +977,7 @@
     "tourattaque": "3",
     "nomdupouvoir": "Tempête Chaotique",
     "description": "Semer le désordre avec une énergie instable",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P98.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P98.png"
   },
   {
     "id": "P99",
@@ -987,7 +987,7 @@
     "tourattaque": "2",
     "nomdupouvoir": "Lumière Rédemptrice",
     "description": "Réduit les ténèbres avec une aura sacrée",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P99.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P99.png"
   },
   {
     "id": "P100",
@@ -997,6 +997,6 @@
     "tourattaque": "2",
     "nomdupouvoir": "Lumière Rédemptrice",
     "description": "Réduit les ténèbres avec une aura sacrée",
-    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/data/images/perso/P100.png"
+    "fond": "https://nlpzherlejtsgjynimko.supabase.co/storage/v1/object/public/images/perso/P100.png"
   }
 ]

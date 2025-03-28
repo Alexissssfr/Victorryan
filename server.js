@@ -5,6 +5,7 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const fs = require("fs");
 const { supabase, getImageUrl } = require("./backend/config/supabase"); // Importer le module Supabase
+const GameManager = require("./backend/services/gameManager");
 
 // Classe pour gérer l'état d'une partie
 class GameState {
@@ -244,6 +245,7 @@ if (!supabaseUrl || !supabaseKey) {
 // Initialisation du serveur Express
 const app = express();
 const PORT = process.env.PORT || 3000;
+const gameManager = new GameManager();
 
 // Middleware
 app.use(cors());
@@ -271,36 +273,37 @@ if (!fs.existsSync(gameStatesDir)) {
 }
 
 // Chargement des données des cartes
-let personnages = [];
-let bonus = [];
+let personnagesData = [];
+let bonusData = [];
 
 try {
-  const personnagesPath = path.join(__dirname, "stock", "personnages.json");
-  const bonusPath = path.join(__dirname, "stock", "bonus.json");
-
-  console.log("Tentative de chargement de:", personnagesPath);
-  console.log("Fichier existe:", fs.existsSync(personnagesPath));
-
-  if (fs.existsSync(personnagesPath)) {
-    personnages = JSON.parse(fs.readFileSync(personnagesPath, "utf8"));
-    console.log(`Chargement réussi: ${personnages.length} personnages`);
-  }
-
-  console.log("Tentative de chargement de:", bonusPath);
-  console.log("Fichier existe:", fs.existsSync(bonusPath));
-
-  if (fs.existsSync(bonusPath)) {
-    bonus = JSON.parse(fs.readFileSync(bonusPath, "utf8"));
-    console.log(`Chargement réussi: ${bonus.length} cartes bonus`);
+  const personnagesFile = path.join(__dirname, "stock", "personnages.json");
+  if (fs.existsSync(personnagesFile)) {
+    personnagesData = JSON.parse(fs.readFileSync(personnagesFile, "utf8"));
+    console.log(`${personnagesData.length} personnages chargés`);
+  } else {
+    console.error("Fichier personnages.json non trouvé");
   }
 } catch (error) {
-  console.error("Erreur lors du chargement des cartes:", error);
+  console.error("Erreur lors du chargement des personnages:", error);
+}
+
+try {
+  const bonusFile = path.join(__dirname, "stock", "bonus.json");
+  if (fs.existsSync(bonusFile)) {
+    bonusData = JSON.parse(fs.readFileSync(bonusFile, "utf8"));
+    console.log(`${bonusData.length} bonus chargés`);
+  } else {
+    console.error("Fichier bonus.json non trouvé");
+  }
+} catch (error) {
+  console.error("Erreur lors du chargement des bonus:", error);
 }
 
 // Routes API
 app.get("/api/cards/personnages", (req, res) => {
   // Si aucun personnage n'a été chargé, renvoyer des données d'exemple
-  if (personnages.length === 0) {
+  if (personnagesData.length === 0) {
     return res.json([
       {
         id: "P1",
@@ -313,12 +316,12 @@ app.get("/api/cards/personnages", (req, res) => {
       },
     ]);
   }
-  res.json(personnages);
+  res.json(personnagesData);
 });
 
 app.get("/api/cards/bonus", (req, res) => {
   // Si aucun bonus n'a été chargé, renvoyer des données d'exemple
-  if (bonus.length === 0) {
+  if (bonusData.length === 0) {
     return res.json([
       {
         id: "B1",
@@ -329,7 +332,7 @@ app.get("/api/cards/bonus", (req, res) => {
       },
     ]);
   }
-  res.json(bonus);
+  res.json(bonusData);
 });
 
 app.get("/api/image/:type/:id", (req, res) => {
@@ -339,109 +342,138 @@ app.get("/api/image/:type/:id", (req, res) => {
 });
 
 app.post("/api/game/create", (req, res) => {
-  const gameId = Math.random().toString(36).substring(7).toUpperCase();
-  const game = new GameState(gameId);
-  activeGames.set(gameId, game);
-  console.log(`Nouvelle partie créée: ${gameId}`);
-  res.json({ gameId });
+  const gameId = `game_${Date.now()}`;
+  const gameState = gameManager.createGame(gameId);
+  res.json({
+    gameId,
+    message: "Partie créée avec succès",
+    gameState,
+  });
 });
 
-app.post("/api/game/:gameId/start", async (req, res) => {
-  const game = activeGames.get(req.params.gameId);
-  if (!game) {
-    return res.status(404).json({ error: "Partie non trouvée" });
-  }
-
-  console.log(`Démarrage de la partie ${req.params.gameId}`);
-  await game.dealInitialCards(personnages, bonus);
-  res.json({ success: true });
-});
-
-app.get("/api/game/:gameId/state/:playerId", (req, res) => {
-  const { gameId, playerId } = req.params;
-  const game = activeGames.get(gameId);
-  if (!game) {
-    return res.status(404).json({ error: "Partie non trouvée" });
-  }
-
-  res.json(game.getStateForPlayer(playerId));
-});
-
-app.post("/api/game/:gameId/bonus", (req, res) => {
+app.post("/api/game/:gameId/start", (req, res) => {
   const { gameId } = req.params;
-  const { playerId, bonusCard } = req.body;
-  const game = activeGames.get(gameId);
-  if (!game) {
+  const success = gameManager.dealInitialCards(
+    gameId,
+    personnagesData,
+    bonusData
+  );
+
+  if (!success) {
+    return res
+      .status(500)
+      .json({ error: "Erreur lors du démarrage de la partie" });
+  }
+
+  const gameState = gameManager.getStateForPlayer(gameId, "player1");
+  res.json({
+    message: "Partie démarrée avec succès",
+    gameState,
+  });
+});
+
+app.get("/api/game/:gameId", (req, res) => {
+  const { gameId } = req.params;
+  const { playerId } = req.query;
+
+  if (!playerId) {
+    return res.status(400).json({ error: "ID du joueur manquant" });
+  }
+
+  const gameState = gameManager.getStateForPlayer(gameId, playerId);
+  if (!gameState) {
     return res.status(404).json({ error: "Partie non trouvée" });
   }
 
-  console.log(
-    `Joueur ${playerId} utilise la carte bonus ${bonusCard.id} dans la partie ${gameId}`
-  );
-  const success = game.applyBonus(playerId, bonusCard);
-  res.json({ success });
+  res.json(gameState);
 });
 
-app.post("/api/game/:gameId/change-character", (req, res) => {
+app.post("/api/game/:gameId/changecharacter", (req, res) => {
   const { gameId } = req.params;
   const { playerId, characterId } = req.body;
-  const game = activeGames.get(gameId);
-  if (!game) {
-    return res.status(404).json({ error: "Partie non trouvée" });
+
+  if (!playerId || !characterId) {
+    return res.status(400).json({ error: "Paramètres manquants" });
   }
 
-  console.log(
-    `Joueur ${playerId} change de personnage actif pour ${characterId} dans la partie ${gameId}`
+  const success = gameManager.changeActiveCharacter(
+    gameId,
+    playerId,
+    characterId
   );
-  const success = game.changeActiveCharacter(playerId, characterId);
-  res.json({ success });
+  if (!success) {
+    return res
+      .status(500)
+      .json({ error: "Erreur lors du changement de personnage" });
+  }
+
+  const gameState = gameManager.getStateForPlayer(gameId, playerId);
+  res.json({
+    message: "Personnage changé avec succès",
+    gameState,
+  });
+});
+
+app.post("/api/game/:gameId/applybonus", (req, res) => {
+  const { gameId } = req.params;
+  const { playerId, bonusCard } = req.body;
+
+  if (!playerId || !bonusCard) {
+    return res.status(400).json({ error: "Paramètres manquants" });
+  }
+
+  const success = gameManager.applyBonus(gameId, playerId, bonusCard);
+  if (!success) {
+    return res
+      .status(500)
+      .json({ error: "Erreur lors de l'application du bonus" });
+  }
+
+  const gameState = gameManager.getStateForPlayer(gameId, playerId);
+  res.json({
+    message: "Bonus appliqué avec succès",
+    gameState,
+  });
 });
 
 app.post("/api/game/:gameId/end-turn", (req, res) => {
   const { gameId } = req.params;
-  const game = activeGames.get(gameId);
-  if (!game) {
+  const { playerId } = req.body;
+
+  if (!playerId) {
+    return res.status(400).json({ error: "ID du joueur manquant" });
+  }
+
+  const success = gameManager.nextTurn(gameId);
+  if (!success) {
+    return res.status(500).json({ error: "Erreur lors de la fin du tour" });
+  }
+
+  const gameState = gameManager.getStateForPlayer(gameId, playerId);
+  res.json({
+    message: "Tour terminé avec succès",
+    gameState,
+  });
+});
+
+app.get("/api/game/:gameId/load", (req, res) => {
+  const { gameId } = req.params;
+  const { playerId } = req.query;
+
+  if (!playerId) {
+    return res.status(400).json({ error: "ID du joueur manquant" });
+  }
+
+  const success = gameManager.loadGame(gameId);
+  if (!success) {
     return res.status(404).json({ error: "Partie non trouvée" });
   }
 
-  console.log(`Fin du tour dans la partie ${gameId}`);
-  game.nextTurn();
-  res.json({ success: true });
-});
-
-// Route pour charger une partie existante depuis un fichier
-app.get("/api/game/:gameId/load", (req, res) => {
-  const { gameId } = req.params;
-
-  try {
-    const filePath = path.join(__dirname, "gameStates", `${gameId}.json`);
-    if (!fs.existsSync(filePath)) {
-      return res
-        .status(404)
-        .json({ error: "Sauvegarde de partie non trouvée" });
-    }
-
-    const savedState = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    const game = new GameState(gameId);
-
-    // Restaurer l'état
-    game.players = savedState.players;
-    game.currentTurn = savedState.currentTurn;
-    game.currentPlayer = savedState.currentPlayer;
-    game.status = savedState.status;
-
-    // Ajouter la partie à la map active
-    activeGames.set(gameId, game);
-
-    console.log(`Partie ${gameId} chargée depuis le fichier`);
-    res.json({ success: true });
-  } catch (error) {
-    console.error(`Erreur lors du chargement de la partie ${gameId}:`, error);
-    res.status(500).json({
-      error: "Erreur lors du chargement de la partie",
-      message: error.message,
-    });
-  }
+  const gameState = gameManager.getStateForPlayer(gameId, playerId);
+  res.json({
+    message: "Partie chargée avec succès",
+    gameState,
+  });
 });
 
 // Route principale
@@ -453,26 +485,26 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || "development",
-    filesLoaded: {
-      personnages: personnages.length,
-      bonus: bonus.length,
-    },
-    activeGames: activeGames.size,
+    personnages: personnagesData.length,
+    bonus: bonusData.length,
+    activeGames: gameManager.activeGames.size,
   });
 });
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {
-  console.error("Erreur serveur:", err.stack);
-  res.status(500).json({
-    error: "Erreur serveur",
-    message: err.message,
-  });
+  console.error("Erreur serveur:", err);
+  res.status(500).json({ error: "Erreur serveur" });
 });
 
 // Démarrage du serveur
 app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
+  console.log(
+    `Serveur démarré sur le port ${PORT} - Environnement: ${
+      process.env.NODE_ENV || "development"
+    }`
+  );
+  console.log(
+    `🎮 Victorryan Game Server - Utilisant les URL Supabase pour les images`
+  );
 });
