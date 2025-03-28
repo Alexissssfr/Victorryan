@@ -51,12 +51,14 @@
       .cards-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 15px;
         margin-top: 10px;
+        justify-content: flex-start;
       }
 
       .card {
-        width: 150px;
+        width: 180px;
+        height: 280px;
         border: 1px solid #ddd;
         border-radius: 8px;
         padding: 10px;
@@ -64,6 +66,9 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: transform 0.2s;
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 15px;
       }
 
       .card:hover {
@@ -75,20 +80,30 @@
         border: 2px solid #4caf50;
       }
 
+      .card-image {
+        width: 100%;
+        height: 180px;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        margin-bottom: 8px;
+      }
+
+      .card-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px;
+        border-top: 1px solid #ddd;
+      }
+
       .card-title {
         font-weight: bold;
         text-align: center;
-        margin-bottom: 8px;
+        margin-bottom: 5px;
         font-size: 14px;
-      }
-
-      .card-image {
-        width: 100%;
-        height: 100px;
-        background-size: cover;
-        background-position: center;
-        margin-bottom: 8px;
-        border-radius: 4px;
       }
 
       .card-stats {
@@ -130,6 +145,33 @@
         justify-content: center;
         margin-top: 20px;
       }
+
+      .active-bonus-indicator {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: #ff9800;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+      }
+
+      .game-info {
+        background-color: #f1f1f1;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .turn-indicator {
+        font-weight: bold;
+        color: #4caf50;
+      }
     </style>
   </head>
   <body>
@@ -170,6 +212,18 @@
     <!-- Écran de jeu -->
     <div id="gameScreen" class="hidden">
       <div class="game-status" id="gameStatus">En attente...</div>
+
+      <div class="game-info">
+        <h3>Informations de la partie</h3>
+        <div id="gameInfo">
+          <p>
+            Votre tour:
+            <span id="turnIndicator" class="turn-indicator">En attente...</span>
+          </p>
+          <p>Joueur 1: <span id="player1Name"></span></p>
+          <p>Joueur 2: <span id="player2Name"></span></p>
+        </div>
+      </div>
 
       <div class="player-section">
         <h3>Vos personnages</h3>
@@ -335,22 +389,37 @@
           }`;
           cardEl.dataset.id = card.id;
 
+          // Valeurs à afficher, en tenant compte des modifications d'état
           const health = state ? state.currentHealth : card.PV;
           const attack = state ? state.currentAttack : card.force_attaque;
           const turns = state ? state.currentTurns : card.tours_attaque;
 
+          // Vérifier si des bonus sont actifs sur cette carte
+          const activeBonus =
+            state && state.activeBonus ? state.activeBonus : [];
+
+          // Ajouter l'image de la carte
           let imageHtml = "";
           if (card.fond) {
             imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
           }
 
+          // Indicateur de bonus actifs
+          const bonusIndicator =
+            activeBonus.length > 0
+              ? `<div class="active-bonus-indicator">${activeBonus.length}</div>`
+              : "";
+
           cardEl.innerHTML = `
+            ${bonusIndicator}
             <div class="card-title">${card.nom || "Personnage"}</div>
             ${imageHtml}
-            <div class="card-stats">
-              <div>PV: ${health}</div>
-              <div>Attaque: ${attack}</div>
-              <div>Tours: ${turns}</div>
+            <div class="card-overlay">
+              <div class="card-stats">
+                <div><strong>PV:</strong> ${health}</div>
+                <div><strong>Attaque:</strong> ${attack}</div>
+                <div><strong>Tours:</strong> ${turns}</div>
+              </div>
             </div>
           `;
 
@@ -370,10 +439,14 @@
           cardEl.innerHTML = `
             <div class="card-title">${card.nom || "Bonus"}</div>
             ${imageHtml}
-            <div class="card-stats">
-              <div>Effet: ${card.effet || "-"}</div>
-              <div>Pourcentage: ${card.pourcentage || "0"}%</div>
-              <div>Tours: ${card.tours || "1"}</div>
+            <div class="card-overlay">
+              <div class="card-stats">
+                <div><strong>Effet:</strong> ${card.effet || "-"}</div>
+                <div><strong>Pourcentage:</strong> ${
+                  card.pourcentage || "0"
+                }%</div>
+                <div><strong>Tours:</strong> ${card.tours || "1"}</div>
+              </div>
             </div>
           `;
 
@@ -413,6 +486,7 @@
         function selectBonus(cardId) {
           if (!gameState.isMyTurn) return;
 
+          // Vérifier si le bonus est déjà sélectionné
           if (gameState.selectedBonus === cardId) {
             gameState.selectedBonus = null;
           } else {
@@ -450,8 +524,24 @@
             gameStatus.textContent = gameState.isMyTurn
               ? "C'est votre tour!"
               : "Au tour de l'adversaire";
+
+            document.getElementById("turnIndicator").textContent =
+              gameState.isMyTurn ? "Oui" : "Non";
+
+            // Mettre à jour les noms des joueurs
+            const playerIds = Object.keys(gameState.gameData.players);
+            if (playerIds.length > 0) {
+              const player1 = gameState.gameData.players[playerIds[0]];
+              document.getElementById("player1Name").textContent = player1.name;
+            }
+
+            if (playerIds.length > 1) {
+              const player2 = gameState.gameData.players[playerIds[1]];
+              document.getElementById("player2Name").textContent = player2.name;
+            }
           } else {
             gameStatus.textContent = "En attente d'un adversaire...";
+            document.getElementById("turnIndicator").textContent = "En attente";
           }
         }
 
@@ -528,6 +618,19 @@
           )
             return;
 
+          // Vérification que le personnage a des tours d'attaque
+          const game = gameState.gameData;
+          const player = game.players[gameState.playerId];
+          const attacker = player.charactersState[gameState.selectedCharacter];
+
+          if (attacker.currentTurns <= 0) {
+            showMessage(
+              "Ce personnage n'a plus de tours d'attaque disponibles.",
+              true
+            );
+            return;
+          }
+
           socket.emit("attackCharacter", {
             gameId: gameState.gameId,
             playerId: gameState.playerId,
@@ -564,9 +667,9 @@
             `Bonus ${gameState.selectedBonus} joué sur ${gameState.selectedCharacter}`
           );
 
-          // Réinitialiser les sélections après avoir joué un bonus
+          // Réinitialiser seulement la sélection de bonus, pas le personnage
+          // pour permettre d'appliquer plusieurs bonus sur le même personnage
           gameState.selectedBonus = null;
-          gameState.selectedCharacter = null;
           renderCards();
         });
 
@@ -664,13 +767,34 @@
         });
 
         socket.on("bonusPlayed", (data) => {
-          showMessage(`Un bonus a été joué sur un personnage`);
-          // On pourrait mettre à jour l'état du jeu ici
+          // Mettre à jour l'état du jeu avec les nouvelles valeurs
+          if (gameState.gameData && data.newGameState) {
+            gameState.gameData = data.newGameState;
+            renderCards();
+          }
+
+          showMessage(
+            `${data.bonusName || "Un bonus"} a été joué sur ${
+              data.targetName || "un personnage"
+            }, augmentant son attaque de ${data.percentage || "x"}%`
+          );
         });
 
         socket.on("characterAttacked", (data) => {
-          showMessage(`Une attaque a été effectuée`);
-          // On pourrait mettre à jour l'état du jeu ici
+          // Mettre à jour l'état du jeu avec les nouvelles valeurs
+          if (gameState.gameData && data.newGameState) {
+            gameState.gameData = data.newGameState;
+            renderCards();
+
+            // Vérifier si la partie est terminée
+            checkGameOver();
+          }
+
+          showMessage(
+            `${data.attackerName || "Un personnage"} a attaqué ${
+              data.targetName || "un autre personnage"
+            } pour ${data.damage || "des"} dégâts!`
+          );
         });
 
         socket.on("playerLeft", (data) => {
@@ -703,6 +827,50 @@
             localStorage.removeItem("playerId");
             localStorage.removeItem("playerName");
           }
+        }
+
+        // Ajouter une fonction pour vérifier si la partie est gagnée/perdue
+        function checkGameOver() {
+          if (!gameState.gameData) return false;
+
+          const game = gameState.gameData;
+          const player = game.players[gameState.playerId];
+
+          // Trouver l'adversaire
+          let opponent = null;
+          for (const id in game.players) {
+            if (id !== gameState.playerId) {
+              opponent = game.players[id];
+              break;
+            }
+          }
+
+          if (!player || !opponent) return false;
+
+          // Vérifier si tous les personnages d'un joueur sont à 0 PV
+          const playerAlive = Object.values(player.charactersState).some(
+            (char) => char.currentHealth > 0
+          );
+          const opponentAlive = Object.values(opponent.charactersState).some(
+            (char) => char.currentHealth > 0
+          );
+
+          if (!playerAlive) {
+            showMessage(
+              "Vous avez perdu la partie ! Tous vos personnages sont vaincus.",
+              true
+            );
+            return true;
+          }
+
+          if (!opponentAlive) {
+            showMessage(
+              "Vous avez gagné la partie ! Tous les personnages adverses sont vaincus."
+            );
+            return true;
+          }
+
+          return false;
         }
       });
     </script>
