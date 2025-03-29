@@ -234,7 +234,62 @@ io.on("connection", (socket) => {
         return;
       }
 
-      // Changer de joueur
+      // Vérifier si la partie est terminée car plus de tours d'attaque
+      let allPlayersOutOfTurns = true;
+
+      for (const pid in game.players) {
+        const p = game.players[pid];
+        const hasAttackTurnsLeft = Object.values(p.charactersState).some(
+          (c) => c.currentHealth > 0 && c.currentTurns > 0
+        );
+
+        if (hasAttackTurnsLeft) {
+          allPlayersOutOfTurns = false;
+          break;
+        }
+      }
+
+      if (allPlayersOutOfTurns) {
+        // Si plus de tours d'attaque pour personne, terminer la partie
+        game.status = "finished";
+
+        // Déterminer le vainqueur en comparant les PV restants
+        const playersTotalHealth = {};
+
+        for (const pid in game.players) {
+          playersTotalHealth[pid] = Object.values(
+            game.players[pid].charactersState
+          ).reduce((total, char) => total + char.currentHealth, 0);
+        }
+
+        const playerIds = Object.keys(playersTotalHealth);
+
+        if (playerIds.length === 2) {
+          if (
+            playersTotalHealth[playerIds[0]] > playersTotalHealth[playerIds[1]]
+          ) {
+            game.winner = playerIds[0];
+          } else if (
+            playersTotalHealth[playerIds[1]] > playersTotalHealth[playerIds[0]]
+          ) {
+            game.winner = playerIds[1];
+          } else {
+            game.winner = "tie"; // Match nul
+          }
+        }
+
+        // Informer tous les joueurs de la fin de partie
+        io.to(gameId).emit("gameOver", {
+          reason: "no_attack_turns",
+          winner: game.winner,
+          playersTotalHealth: playersTotalHealth,
+          newGameState: JSON.parse(JSON.stringify(game)),
+        });
+
+        return;
+      }
+
+      // Si la partie continue, passer au joueur suivant
       const players = Object.keys(game.players);
       const currentIndex = players.indexOf(playerId);
       const nextIndex = (currentIndex + 1) % players.length;
@@ -243,6 +298,7 @@ io.on("connection", (socket) => {
       // Informer tous les joueurs
       io.to(gameId).emit("turnChanged", {
         currentTurn: game.currentTurn,
+        newGameState: JSON.parse(JSON.stringify(game)),
       });
     });
 
@@ -263,9 +319,22 @@ io.on("connection", (socket) => {
         if (!player) return;
 
         // Trouver la carte bonus
-        const bonusCard = player.cards.bonus.find((c) => c.id === bonusId);
-        if (!bonusCard) {
+        const bonusCardIndex = player.cards.bonus.findIndex(
+          (c) => c.id === bonusId
+        );
+        if (bonusCardIndex === -1) {
           socket.emit("error", { message: "Carte bonus non trouvée" });
+          return;
+        }
+
+        const bonusCard = player.cards.bonus[bonusCardIndex];
+
+        // Vérifier si le bonus a encore des tours disponibles
+        const bonusTours = parseInt(bonusCard.tourbonus) || 1;
+        if (bonusTours <= 0) {
+          socket.emit("error", {
+            message: "Ce bonus n'a plus de tours disponibles",
+          });
           return;
         }
 
@@ -276,18 +345,27 @@ io.on("connection", (socket) => {
           return;
         }
 
+        // Vérifier que le personnage est encore en vie
+        if (characterState.currentHealth <= 0) {
+          socket.emit("error", {
+            message:
+              "Ce personnage est vaincu et ne peut pas recevoir de bonus",
+          });
+          return;
+        }
+
         // Appliquer le bonus
         const bonusPercentage = parseInt(bonusCard.pourcentagebonus) || 0;
-        const bonusTurns = parseInt(bonusCard.tourbonus) || 1;
 
-        // Sauvegarder la valeur d'attaque originale si ce n'est pas déjà fait
+        // Si c'est le premier bonus, sauvegarder l'attaque de base
         if (!characterState.baseAttack) {
           characterState.baseAttack = characterState.currentAttack;
         }
 
-        // Calculer la nouvelle attaque: force * (1 + bonus/100)
+        // Appliquer le bonus sur la valeur ACTUELLE d'attaque
+        // Nouvelle attaque = attaque actuelle * (1 + bonus/100)
         characterState.currentAttack = Math.floor(
-          characterState.baseAttack * (1 + bonusPercentage / 100)
+          characterState.currentAttack * (1 + bonusPercentage / 100)
         );
 
         // Ajouter le bonus aux bonus actifs
@@ -297,10 +375,18 @@ io.on("connection", (socket) => {
 
         characterState.activeBonus.push({
           bonusId: bonusId,
-          remainingTurns: bonusTurns,
+          remainingTurns: bonusTours,
           percentage: bonusPercentage,
           name: bonusCard.nomcartebonus,
         });
+
+        // Décrémenter le nombre de tours du bonus
+        bonusCard.tourbonus = String(bonusTours - 1);
+
+        // Si le bonus n'a plus de tours, le désactiver visuellement
+        if (parseInt(bonusCard.tourbonus) <= 0) {
+          bonusCard.disabled = true;
+        }
 
         // Informer tous les joueurs
         io.to(gameId).emit("bonusPlayed", {
@@ -330,10 +416,34 @@ io.on("connection", (socket) => {
           return;
         }
 
+        // Vérifier si le joueur a déjà attaqué ce tour
+        if (game.attackPerformed) {
+          socket.emit("error", { message: "Vous avez déjà attaqué ce tour" });
+          return;
+        }
+
         // Trouver l'attaquant
         const player = game.players[playerId];
         if (!player || !player.charactersState[attackerId]) {
           socket.emit("error", { message: "Attaquant non trouvé" });
+          return;
+        }
+
+        const attacker = player.charactersState[attackerId];
+
+        // Vérifier si l'attaquant est en vie
+        if (attacker.currentHealth <= 0) {
+          socket.emit("error", {
+            message: "Ce personnage est vaincu et ne peut pas attaquer",
+          });
+          return;
+        }
+
+        // Vérifier si l'attaquant a des tours d'attaque
+        if (attacker.currentTurns <= 0) {
+          socket.emit("error", {
+            message: "Plus de tours d'attaque disponibles",
+          });
           return;
         }
 
@@ -357,15 +467,6 @@ io.on("connection", (socket) => {
           return;
         }
 
-        // Vérifier si l'attaquant a des tours d'attaque
-        const attacker = player.charactersState[attackerId];
-        if (attacker.currentTurns <= 0) {
-          socket.emit("error", {
-            message: "Plus de tours d'attaque disponibles",
-          });
-          return;
-        }
-
         // Calcul des dégâts
         const damage = attacker.currentAttack;
         targetCharacter.currentHealth = Math.max(
@@ -375,6 +476,9 @@ io.on("connection", (socket) => {
 
         // Réduire le nombre de tours d'attaque
         attacker.currentTurns--;
+
+        // Marquer que le joueur a attaqué ce tour
+        game.attackPerformed = true;
 
         // Vérifier la victoire/défaite
         let gameOver = false;

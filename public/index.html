@@ -193,6 +193,43 @@
         background-color: rgba(0, 0, 0, 0.7);
         z-index: 999;
       }
+
+      .card.depleted {
+        opacity: 0.7;
+        background-color: #f0f0f0;
+      }
+
+      .card.cannot-attack {
+        opacity: 0.7;
+        background-color: #ffebee;
+      }
+
+      .card.can-attack {
+        border-color: #4caf50;
+      }
+
+      .card.can-target {
+        border-color: #f44336;
+      }
+
+      .turn-info {
+        background-color: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+
+      .attack-status {
+        background-color: #ff9800;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        display: inline-block;
+        margin-left: 10px;
+      }
     </style>
   </head>
   <body>
@@ -353,17 +390,33 @@
           // Afficher vos cartes personnages
           yourCharacters.innerHTML = "";
           player.cards.personnages.forEach((card) => {
-            const cardEl = createCharacterCard(
-              card,
-              player.charactersState[card.id],
-              false
-            );
-            cardEl.addEventListener("click", () =>
-              selectYourCharacter(card.id)
-            );
+            const characterState = player.charactersState[card.id];
+            const cardEl = createCharacterCard(card, characterState, false);
+
+            // N'ajouter l'événement de clic que si le personnage peut attaquer
+            if (
+              gameState.isMyTurn &&
+              characterState &&
+              characterState.currentHealth > 0 &&
+              characterState.currentTurns > 0 &&
+              !game.attackPerformed
+            ) {
+              cardEl.addEventListener("click", () =>
+                selectYourCharacter(card.id)
+              );
+              cardEl.classList.add("can-attack");
+            } else if (
+              characterState &&
+              (characterState.currentHealth <= 0 ||
+                characterState.currentTurns <= 0)
+            ) {
+              cardEl.classList.add("cannot-attack");
+            }
+
             if (card.id === gameState.selectedCharacter) {
               cardEl.classList.add("selected");
             }
+
             yourCharacters.appendChild(cardEl);
           });
 
@@ -371,10 +424,20 @@
           yourBonus.innerHTML = "";
           player.cards.bonus.forEach((card) => {
             const cardEl = createBonusCard(card);
-            cardEl.addEventListener("click", () => selectBonus(card.id));
+
+            // N'ajouter l'événement de clic que si le bonus a encore des tours
+            const bonusTours = parseInt(card.tourbonus) || 0;
+            if (gameState.isMyTurn && bonusTours > 0) {
+              cardEl.addEventListener("click", () => selectBonus(card.id));
+              cardEl.classList.add("can-play");
+            } else if (bonusTours <= 0) {
+              cardEl.classList.add("depleted");
+            }
+
             if (card.id === gameState.selectedBonus) {
               cardEl.classList.add("selected");
             }
+
             yourBonus.appendChild(cardEl);
           });
 
@@ -382,19 +445,26 @@
           opponentCharacters.innerHTML = "";
           if (opponent && opponent.cards) {
             opponent.cards.personnages.forEach((card) => {
-              const cardEl = createCharacterCard(
-                card,
-                opponent.charactersState[card.id],
-                true
-              );
-              if (gameState.isMyTurn && gameState.selectedCharacter) {
+              const characterState = opponent.charactersState[card.id];
+              const cardEl = createCharacterCard(card, characterState, true);
+
+              // N'ajouter l'événement de clic que si le personnage est vivant
+              if (
+                gameState.isMyTurn &&
+                gameState.selectedCharacter &&
+                characterState &&
+                characterState.currentHealth > 0
+              ) {
                 cardEl.addEventListener("click", () =>
                   selectOpponentCharacter(card.id)
                 );
+                cardEl.classList.add("can-target");
               }
+
               if (card.id === gameState.targetCharacter) {
                 cardEl.classList.add("selected");
               }
+
               opponentCharacters.appendChild(cardEl);
             });
           }
@@ -493,20 +563,31 @@
           cardEl.className = "card bonus-card";
           cardEl.dataset.id = card.id;
 
+          // Ajouter la classe 'depleted' si le bonus n'a plus de tours
+          if (parseInt(card.tourbonus) <= 0 || card.disabled) {
+            cardEl.classList.add("depleted");
+          }
+
           // Créer l'élément d'image
           let imageHtml = "";
           if (card.fond) {
             imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
           }
 
-          // Récupérer les valeurs correctes - utiliser les noms de propriétés des données réelles
+          // Récupérer les valeurs correctes
           const pourcentage = card.pourcentagebonus
             ? parseInt(card.pourcentagebonus)
             : 0;
-          const tours = card.tourbonus ? parseInt(card.tourbonus) : 1;
+          const tours = card.tourbonus ? parseInt(card.tourbonus) : 0;
           const effet = card.description || "-";
           const nom = card.nomcartebonus || card.id || "Bonus";
           const pouvoir = card.nomdupouvoir || "";
+
+          // Mettre en évidence les tours restants
+          const toursHtml =
+            tours <= 0
+              ? `<div><strong>Tours:</strong> <span style="color:red">0</span></div>`
+              : `<div><strong>Tours:</strong> ${tours}</div>`;
 
           // Construire le HTML de la carte
           cardEl.innerHTML = `
@@ -516,7 +597,7 @@
               <div class="card-stats">
                 <div><strong>Pouvoir:</strong> ${pouvoir}</div>
                 <div><strong>Pourcentage:</strong> ${pourcentage}%</div>
-                <div><strong>Tours:</strong> ${tours}</div>
+                ${toursHtml}
                 <div style="font-size: 10px; color: #666; margin-top: 3px;">${effet}</div>
               </div>
             </div>
@@ -592,29 +673,38 @@
         }
 
         function updateGameStatus() {
+          let statusText = "";
+
           if (gameState.gameData && gameState.gameData.status === "playing") {
-            gameStatus.textContent = gameState.isMyTurn
+            statusText = gameState.isMyTurn
               ? "C'est votre tour!"
               : "Au tour de l'adversaire";
 
-            document.getElementById("turnIndicator").textContent =
-              gameState.isMyTurn ? "Oui" : "Non";
+            // Ajouter l'information sur l'attaque
+            if (gameState.isMyTurn) {
+              const attackStatus =
+                gameState.gameData && gameState.gameData.attackPerformed
+                  ? '<span class="attack-status">Attaque effectuée</span>'
+                  : '<span class="attack-status">Attaque disponible</span>';
 
-            // Mettre à jour les noms des joueurs
-            const playerIds = Object.keys(gameState.gameData.players);
-            if (playerIds.length > 0) {
-              const player1 = gameState.gameData.players[playerIds[0]];
-              document.getElementById("player1Name").textContent = player1.name;
+              statusText += " " + attackStatus;
             }
-
-            if (playerIds.length > 1) {
-              const player2 = gameState.gameData.players[playerIds[1]];
-              document.getElementById("player2Name").textContent = player2.name;
+          } else if (
+            gameState.gameData &&
+            gameState.gameData.status === "finished"
+          ) {
+            if (gameState.gameData.winner === gameState.playerId) {
+              statusText = "Victoire! La partie est terminée.";
+            } else if (gameState.gameData.winner === "tie") {
+              statusText = "Match nul! La partie est terminée.";
+            } else {
+              statusText = "Défaite! La partie est terminée.";
             }
           } else {
-            gameStatus.textContent = "En attente d'un adversaire...";
-            document.getElementById("turnIndicator").textContent = "En attente";
+            statusText = "En attente d'un adversaire...";
           }
+
+          gameStatus.innerHTML = statusText;
         }
 
         // Event handlers
@@ -690,10 +780,24 @@
           )
             return;
 
-          // Vérification que le personnage a des tours d'attaque
+          // Vérifier si le joueur a déjà attaqué ce tour
+          if (gameState.gameData.attackPerformed) {
+            showMessage("Vous avez déjà attaqué ce tour.", true);
+            return;
+          }
+
+          // Vérification que le personnage a des tours d'attaque et est en vie
           const game = gameState.gameData;
           const player = game.players[gameState.playerId];
           const attacker = player.charactersState[gameState.selectedCharacter];
+
+          if (attacker.currentHealth <= 0) {
+            showMessage(
+              "Ce personnage est vaincu et ne peut pas attaquer.",
+              true
+            );
+            return;
+          }
 
           if (attacker.currentTurns <= 0) {
             showMessage(
@@ -739,9 +843,15 @@
 
           showMessage(`${attackerName} attaque ${targetName}`);
 
+          // Marquer que l'attaque a été effectuée ce tour
+          gameState.gameData.attackPerformed = true;
+
           // Réinitialiser les sélections après l'attaque
           gameState.selectedCharacter = null;
           gameState.targetCharacter = null;
+
+          // Mettre à jour l'affichage
+          updateActionButtons();
           renderCards();
         });
 
@@ -854,6 +964,17 @@
 
         socket.on("turnChanged", (data) => {
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
+
+          // Si c'est notre tour, réinitialiser l'attaque
+          if (gameState.isMyTurn && data.newGameState) {
+            // Mettre à jour l'état du jeu avec les nouvelles données
+            gameState.gameData = data.newGameState;
+            // Réinitialiser le flag d'attaque pour le nouveau tour
+            if (gameState.gameData) {
+              gameState.gameData.attackPerformed = false;
+            }
+          }
+
           updateGameStatus();
           updateActionButtons();
 
@@ -862,6 +983,9 @@
           } else {
             showMessage("Au tour de l'adversaire");
           }
+
+          // Mettre à jour l'affichage des cartes
+          renderCards();
         });
 
         socket.on("bonusPlayed", (data) => {
@@ -965,6 +1089,41 @@
 
         socket.on("playerLeft", (data) => {
           showMessage("L'adversaire s'est déconnecté");
+        });
+
+        socket.on("gameOver", (data) => {
+          gameState.gameData = data.newGameState;
+
+          // Afficher un message approprié selon la raison de fin de partie
+          if (data.reason === "no_attack_turns") {
+            if (data.winner === "tie") {
+              showMessage(
+                "Partie terminée! Match nul - les deux joueurs ont le même nombre de PV restants."
+              );
+            } else if (data.winner === gameState.playerId) {
+              showMessage(
+                "Victoire! Vous avez plus de PV restants que votre adversaire."
+              );
+            } else {
+              showMessage("Défaite! Votre adversaire a plus de PV restants.");
+            }
+
+            // Afficher les PV totaux
+            if (data.playersTotalHealth) {
+              for (const pid in data.playersTotalHealth) {
+                const playerName = gameState.gameData.players[pid].name;
+                const totalHealth = data.playersTotalHealth[pid];
+                showMessage(`${playerName}: ${totalHealth} PV restants`);
+              }
+            }
+          }
+
+          // Désactiver les boutons d'action
+          gameState.isMyTurn = false;
+          updateActionButtons();
+
+          // Mettre à jour l'affichage
+          renderCards();
         });
 
         // Check for existing game in localStorage
