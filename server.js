@@ -480,6 +480,12 @@ io.on("connection", (socket) => {
         // Marquer que le joueur a attaqué ce tour
         game.attackPerformed = true;
 
+        // NOUVEAU CODE : Passer automatiquement le tour à l'adversaire après une attaque
+        const players = Object.keys(game.players);
+        const currentIndex = players.indexOf(playerId);
+        const nextIndex = (currentIndex + 1) % players.length;
+        game.currentTurn = players[nextIndex];
+
         // Vérifier la victoire/défaite
         let gameOver = false;
         let winner = null;
@@ -521,6 +527,8 @@ io.on("connection", (socket) => {
           gameOver,
           winner,
           newGameState: JSON.parse(JSON.stringify(game)),
+          turnChanged: true, // Ajouter ce flag pour indiquer que le tour a changé
+          newCurrentTurn: game.currentTurn, // Indiquer qui est le nouveau joueur actif
         });
       }
     );

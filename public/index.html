@@ -230,6 +230,22 @@
         display: inline-block;
         margin-left: 10px;
       }
+
+      .turn-change-notification {
+        position: fixed;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        padding: 30px 50px;
+        background-color: rgba(76, 175, 80, 0.9);
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        transition: opacity 0.5s;
+      }
     </style>
   </head>
   <body>
@@ -378,6 +394,9 @@
             return;
           }
 
+          // Si nous sommes en train d'attendre que l'attaque soit traitée, désactiver toutes les interactions
+          const attackInProgress = gameState.isMyTurn && game.attackPerformed;
+
           // Trouver l'adversaire
           let opponent = null;
           for (const id in game.players) {
@@ -471,6 +490,33 @@
 
           // Mettre à jour les boutons d'action
           updateActionButtons();
+
+          // Si une attaque est en cours de traitement, ajouter une indication visuelle
+          if (attackInProgress) {
+            const message = document.createElement("div");
+            message.className = "turn-info";
+            message.textContent = "Changement de tour en cours...";
+            message.style.position = "fixed";
+            message.style.top = "50%";
+            message.style.left = "50%";
+            message.style.transform = "translate(-50%, -50%)";
+            message.style.zIndex = "1000";
+            message.style.padding = "20px";
+            message.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+            message.style.color = "white";
+            message.style.borderRadius = "8px";
+
+            // Supprimer les anciennes notifications si elles existent
+            const existingMessages = document.querySelectorAll(".turn-info");
+            existingMessages.forEach((m) => m.remove());
+
+            document.body.appendChild(message);
+
+            // Supprimer après un court délai
+            setTimeout(() => {
+              message.remove();
+            }, 2000);
+          }
         }
 
         function createCharacterCard(card, state, isOpponent) {
@@ -780,9 +826,15 @@
           )
             return;
 
-          // Vérifier si le joueur a déjà attaqué ce tour
+          // La vérification d'attaque est maintenant inutile car le tour changera automatiquement
+          // après une attaque, mais nous la gardons pour la sécurité (en cas de problème réseau)
           if (gameState.gameData.attackPerformed) {
-            showMessage("Vous avez déjà attaqué ce tour.", true);
+            showMessage(
+              "Vous avez déjà attaqué ce tour. C'est au tour de l'adversaire.",
+              true
+            );
+
+            // NOUVEAU CODE : Ne pas permettre d'attaquer à nouveau
             return;
           }
 
@@ -841,14 +893,10 @@
             targetId: gameState.targetCharacter,
           });
 
-          showMessage(`${attackerName} attaque ${targetName}`);
-
-          // Marquer que l'attaque a été effectuée ce tour
-          gameState.gameData.attackPerformed = true;
-
-          // Réinitialiser les sélections après l'attaque
-          gameState.selectedCharacter = null;
-          gameState.targetCharacter = null;
+          // Modification ici aussi: informer que le tour passe automatiquement
+          showMessage(
+            `${attackerName} attaque ${targetName}. Le tour passe à l'adversaire.`
+          );
 
           // Mettre à jour l'affichage
           updateActionButtons();
@@ -964,6 +1012,7 @@
 
         socket.on("turnChanged", (data) => {
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
+          showTurnChange(gameState.isMyTurn);
 
           // Si c'est notre tour, réinitialiser l'attaque
           if (gameState.isMyTurn && data.newGameState) {
@@ -1074,12 +1123,31 @@
           // Mettre à jour l'état du jeu avec les nouvelles valeurs
           if (gameState.gameData && data.newGameState) {
             gameState.gameData = data.newGameState;
+
+            // NOUVEAU CODE : Si le serveur indique que le tour a changé
+            if (data.turnChanged) {
+              gameState.isMyTurn = data.newCurrentTurn === gameState.playerId;
+
+              // Message approprié pour le changement de tour
+              if (gameState.isMyTurn) {
+                showMessage(
+                  "L'adversaire a attaqué. C'est maintenant votre tour!"
+                );
+              } else {
+                showMessage("Vous avez attaqué. Au tour de l'adversaire!");
+              }
+            }
+
+            // Mettre à jour l'interface
+            updateGameStatus();
+            updateActionButtons();
             renderCards();
 
             // Vérifier si la partie est terminée
             checkGameOver();
           }
 
+          // Afficher le message d'attaque
           showMessage(
             `${data.attackerName || "Un personnage"} a attaqué ${
               data.targetName || "un autre personnage"
@@ -1272,6 +1340,43 @@
               console.table(player.cards.bonus[0]);
             }
           }
+        }
+
+        // Ajouter cette fonction pour mieux visualiser les changements de tour
+        function showTurnChange(isMyTurn) {
+          // Créer un élément de notification de changement de tour
+          const notification = document.createElement("div");
+          notification.className = "turn-change-notification";
+          notification.textContent = isMyTurn
+            ? "À VOTRE TOUR"
+            : "AU TOUR DE L'ADVERSAIRE";
+          notification.style.position = "fixed";
+          notification.style.top = "40%";
+          notification.style.left = "50%";
+          notification.style.transform = "translate(-50%, -50%)";
+          notification.style.zIndex = "1000";
+          notification.style.padding = "30px 50px";
+          notification.style.backgroundColor = isMyTurn
+            ? "rgba(76, 175, 80, 0.9)"
+            : "rgba(255, 152, 0, 0.9)";
+          notification.style.color = "white";
+          notification.style.borderRadius = "8px";
+          notification.style.fontWeight = "bold";
+          notification.style.fontSize = "24px";
+          notification.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.4)";
+          notification.style.transition = "opacity 0.5s";
+
+          document.body.appendChild(notification);
+
+          // Faire disparaître progressivement la notification
+          setTimeout(() => {
+            notification.style.opacity = "0";
+          }, 1500);
+
+          // Supprimer l'élément après l'animation
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 2000);
         }
       });
     </script>
