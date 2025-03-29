@@ -58,34 +58,56 @@
 
       .card {
         width: 220px;
-        height: 360px;
+        height: 340px;
         border-radius: 12px;
-        padding: 12px;
-        background-color: white;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        padding: 0;
+        background-color: transparent;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
         transition: all 0.3s ease;
         cursor: pointer;
         position: relative;
         overflow: hidden;
         margin-bottom: 20px;
-        display: flex;
-        flex-direction: column;
       }
 
       .card:hover {
-        transform: translateY(-10px) scale(1.02);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        transform: translateY(-8px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
       }
 
       .card-image {
         width: 100%;
-        height: 220px;
-        background-size: contain;
+        height: 100%;
+        background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        margin-bottom: 8px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 12px;
+        z-index: 1;
+      }
+
+      .card-title {
+        display: none;
+      }
+
+      .card-stats {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        right: 0;
+        padding: 8px;
+        z-index: 3;
+        font-size: 14px;
+        background-color: rgba(0, 0, 0, 0.6);
         border-radius: 8px;
-        flex-grow: 1;
+        margin: 0 8px;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
       }
 
       .card-overlay {
@@ -93,32 +115,11 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background-color: rgba(255, 255, 255, 0.9);
-        padding: 10px;
-        border-top: 1px solid #ddd;
-        backdrop-filter: blur(3px);
-        border-radius: 0 0 12px 12px;
-      }
-
-      .card-title {
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 5px;
-        font-size: 16px;
-        color: #333;
-        padding: 5px;
-        border-radius: 4px;
-        background-color: rgba(255, 255, 255, 0.8);
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        right: 8px;
+        background-color: transparent;
+        padding: 0;
+        border-top: none;
+        backdrop-filter: none;
         z-index: 2;
-      }
-
-      .card-stats {
-        font-size: 12px;
-        line-height: 1.4;
       }
 
       .personnage-card {
@@ -158,20 +159,21 @@
 
       .active-bonus-indicator {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        background-color: #ff9800;
+        top: 5px;
+        right: 5px;
+        background-color: rgba(255, 152, 0, 0.8);
         color: white;
         border-radius: 50%;
-        width: 30px;
-        height: 30px;
+        width: 26px;
+        height: 26px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 14px;
         font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-        z-index: 4;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+        z-index: 5;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
       }
 
       .game-info {
@@ -235,7 +237,7 @@
         );
         border-radius: 12px;
         pointer-events: none;
-        z-index: 3;
+        z-index: 2;
       }
 
       .card.can-attack {
@@ -285,7 +287,7 @@
 
       /* Amélioration des états visuels des cartes */
       .card.selected {
-        transform: translateY(-15px);
+        transform: translateY(-12px);
         box-shadow: 0 0 25px rgba(76, 175, 80, 0.6);
         border: 3px solid #4caf50;
         animation: pulse 1.5s infinite;
@@ -405,6 +407,85 @@
 
       #gameOverScreen {
         animation: fadeIn 0.5s ease-out;
+      }
+
+      /* Ajouter un style pour chaque stat */
+      .stat-item {
+        display: inline-block;
+        padding: 2px 5px;
+        border-radius: 4px;
+        margin: 2px;
+        font-weight: bold;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .stat-hp {
+        border-left: 3px solid #ff5252;
+      }
+
+      .stat-attack {
+        border-left: 3px solid #2196F3;
+      }
+
+      .stat-turns {
+        border-left: 3px solid #4CAF50;
+      }
+
+      .stat-bonus {
+        border-left: 3px solid #FF9800;
+      }
+
+      /* Styles pour les états de santé */
+      .health-normal {
+        color: #4CAF50;
+      }
+
+      .health-warning {
+        color: #FF9800;
+      }
+
+      .health-critical {
+        color: #f44336;
+        font-weight: bold;
+      }
+
+      .health-depleted {
+        color: #f44336;
+        font-weight: bold;
+        text-decoration: line-through;
+      }
+
+      /* Style pour les cartes épuisées */
+      .card.depleted .card-image {
+        filter: grayscale(70%) brightness(70%);
+      }
+
+      /* Amélioration de l'effet de sélection */
+      .card.selected {
+        transform: translateY(-12px);
+        border: 3px solid rgba(76, 175, 80, 0.8);
+      }
+
+      .card.selected .card-image {
+        filter: brightness(110%);
+      }
+
+      .card.can-attack {
+        border: 2px solid rgba(76, 175, 80, 0.8);
+        box-shadow: 0 0 12px rgba(76, 175, 80, 0.6);
+      }
+
+      .card.can-target {
+        border: 2px solid rgba(244, 67, 54, 0.8);
+        box-shadow: 0 0 12px rgba(244, 67, 54, 0.6);
+      }
+
+      /* Style pour le zoom des cartes */
+      .card-zoom {
+        transform: translate(-50%, -50%) scale(2.5) !important;
+        z-index: 1000;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.5) !important;
+        border: none !important;
       }
     </style>
   </head>
@@ -713,100 +794,59 @@
 
         function createCharacterCard(card, state, isOpponent) {
           const cardEl = document.createElement("div");
-          cardEl.className = `card ${
-            isOpponent ? "opponent-card" : "personnage-card"
-          }`;
+          cardEl.className = `card ${isOpponent ? "opponent-card" : "personnage-card"}`;
           cardEl.dataset.id = card.id;
 
           // Récupérer les valeurs correctes
-          const health =
-            state && state.currentHealth !== undefined
-              ? state.currentHealth
-              : card.pointsdevie
-              ? parseInt(card.pointsdevie)
-              : 100;
-
-          const attack =
-            state && state.currentAttack !== undefined
-              ? state.currentAttack
-              : card.forceattaque
-              ? parseInt(card.forceattaque)
-              : 30;
-
-          const turns =
-            state && state.currentTurns !== undefined
-              ? state.currentTurns
-              : card.tourattaque
-              ? parseInt(card.tourattaque)
-              : 2;
+          const health = state && state.currentHealth !== undefined
+            ? state.currentHealth
+            : card.pointsdevie ? parseInt(card.pointsdevie) : 100;
+          
+          const attack = state && state.currentAttack !== undefined
+            ? state.currentAttack
+            : card.forceattaque ? parseInt(card.forceattaque) : 30;
+          
+          const turns = state && state.currentTurns !== undefined
+            ? state.currentTurns
+            : card.tourattaque ? parseInt(card.tourattaque) : 2;
 
           // Vérifier si des bonus sont actifs
-          const activeBonus =
-            state && state.activeBonus ? state.activeBonus : [];
+          const activeBonus = state && state.activeBonus ? state.activeBonus : [];
 
-          // Statut de santé pour l'affichage
-          let healthStatus = "";
-          if (health <= 0) {
-            healthStatus = `<span style="color: red; font-weight: bold;">KO</span>`;
-          } else if (health <= 30) {
-            healthStatus = `<span style="color: red;">${health}</span>`;
-          } else if (health <= 50) {
-            healthStatus = `<span style="color: orange;">${health}</span>`;
-          } else {
-            healthStatus = `<span style="color: green;">${health}</span>`;
-          }
-
-          // Créer l'élément d'image
+          // Créer l'élément d'image (maintenant en plein écran)
           let imageHtml = "";
           if (card.fond) {
             imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
           }
 
           // Indicateur de bonus actifs
-          const bonusIndicator =
-            activeBonus.length > 0
-              ? `<div class="active-bonus-indicator">${activeBonus.length}</div>`
-              : "";
+          const bonusIndicator = activeBonus.length > 0
+            ? `<div class="active-bonus-indicator">${activeBonus.length}</div>`
+            : "";
 
-          // Description des bonus actifs
-          let activeBonusHtml = "";
-          if (activeBonus.length > 0) {
-            activeBonusHtml = `
-              <div style="font-size: 10px; color: #ff9800; margin-top: 3px;">
-                <strong>Bonus actifs:</strong> ${activeBonus
-                  .map((b) => `${b.name || b.bonusId} (+${b.percentage}%)`)
-                  .join(", ")}
-              </div>
-            `;
+          // Format des statistiques en fonction de leur valeur
+          let healthClass = "normal";
+          if (health <= 0) {
+            healthClass = "depleted";
+          } else if (health <= 30) {
+            healthClass = "critical";
+          } else if (health <= 50) {
+            healthClass = "warning";
           }
 
-          // Nom de la carte avec meilleure présentation
-          const cardName = card.nomcarteperso || card.id || "Personnage";
-          const cardPower = card.nomdupouvoir || "";
-          const cardDescription = card.description || "";
+          let healthDisplay = health;
+          if (health <= 0) {
+            healthDisplay = "KO";
+          }
 
-          // Construire le HTML de la carte avec style amélioré
+          // Construire le HTML de la carte simplifiée
           cardEl.innerHTML = `
-            ${bonusIndicator}
-            <div class="card-title">${cardName}</div>
             ${imageHtml}
-            <div class="card-overlay">
-              <div class="card-stats">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                  <strong>PV:</strong> ${healthStatus}
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                  <strong>Attaque:</strong> <span style="color: #2196F3;">${attack}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                  <strong>Tours:</strong> <span>${turns}</span>
-                </div>
-                ${activeBonusHtml}
-                <div style="font-size: 10px; color: #666; margin-top: 3px; text-align: center;">
-                  <strong>${cardPower}</strong>
-                  <div>${cardDescription}</div>
-                </div>
-              </div>
+            ${bonusIndicator}
+            <div class="card-stats">
+              <div class="stat-item stat-hp">PV: <span class="health-${healthClass}">${healthDisplay}</span></div>
+              <div class="stat-item stat-attack">ATQ: ${attack}</div>
+              <div class="stat-item stat-turns">TOURS: ${turns}</div>
             </div>
           `;
 
@@ -823,40 +863,22 @@
             cardEl.classList.add("depleted");
           }
 
-          // Créer l'élément d'image
+          // Créer l'élément d'image (maintenant en plein écran)
           let imageHtml = "";
           if (card.fond) {
             imageHtml = `<div class="card-image" style="background-image: url('${card.fond}')"></div>`;
           }
 
           // Récupérer les valeurs correctes
-          const pourcentage = card.pourcentagebonus
-            ? parseInt(card.pourcentagebonus)
-            : 0;
+          const pourcentage = card.pourcentagebonus ? parseInt(card.pourcentagebonus) : 0;
           const tours = card.tourbonus ? parseInt(card.tourbonus) : 0;
-          const effet = card.description || "-";
-          const nom = card.nomcartebonus || card.id || "Bonus";
-          const pouvoir = card.nomdupouvoir || "";
 
-          // Style du nombre de tours selon disponibilité
-          const toursHtml =
-            tours <= 0
-              ? `<div><strong>Tours:</strong> <span style="color:red; font-weight: bold;">0</span></div>`
-              : `<div><strong>Tours:</strong> <span style="color:green;">${tours}</span></div>`;
-
-          // Construire le HTML de la carte avec style amélioré
+          // Construire le HTML de la carte simplifiée
           cardEl.innerHTML = `
-            <div class="card-title">${nom}</div>
             ${imageHtml}
-            <div class="card-overlay">
-              <div class="card-stats">
-                <div style="margin-bottom: 5px;"><strong>Pouvoir:</strong> ${pouvoir}</div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                  <strong>Bonus:</strong> <span style="color: #ff9800; font-weight: bold;">+${pourcentage}%</span>
-                </div>
-                ${toursHtml}
-                <div style="font-size: 10px; color: #666; margin-top: 5px; text-align: center;">${effet}</div>
-              </div>
+            <div class="card-stats">
+              <div class="stat-item stat-bonus">BONUS: +${pourcentage}%</div>
+              <div class="stat-item stat-turns">TOURS: ${tours}</div>
             </div>
           `;
 
@@ -1687,6 +1709,21 @@
                 <span>${playerName} ${isWinner ? " (Vainqueur)" : ""}</span>
                 <span>${
                   isWinner ? "Tous les personnages adverses sont K.O." : ""
+                }</span>
+              `;
+
+              playerStats.appendChild(statDiv);
+            }
+          }
+
+          // Afficher l'écran de fin de partie
+          gameOverScreen.classList.remove("hidden");
+        }
+      });
+    </script>
+  </body>
+</html>
+
                 }</span>
               `;
 
