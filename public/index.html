@@ -818,6 +818,19 @@
           messages.scrollTop = messages.scrollHeight;
         }
 
+        // Ajouter cette fonction pour vérifier si le joueur courant peut jouer
+        function currentPlayerCanPlay() {
+          if (!gameState.gameData || !gameState.isMyTurn) return false;
+          
+          const player = gameState.gameData.players[gameState.playerId];
+          if (!player) return false;
+          
+          // Vérifier si au moins un personnage est vivant et a des tours d'attaque
+          return Object.values(player.charactersState).some(
+            (char) => char.currentHealth > 0 && char.currentTurns > 0
+          );
+        }
+
         // Fonction pour afficher les cartes des joueurs
         function renderCards() {
           if (!gameState.gameData) return;
@@ -828,6 +841,39 @@
           if (!player || !player.cards) {
             console.log("Données du joueur non disponibles");
             return;
+          }
+
+          // Si c'est notre tour mais qu'on ne peut pas jouer, passer le tour automatiquement
+          if (gameState.isMyTurn && !currentPlayerCanPlay() && !game.attackPerformed) {
+            // Trouver l'adversaire
+            let opponent = null;
+            for (const id in game.players) {
+              if (id !== gameState.playerId) {
+                opponent = game.players[id];
+                break;
+              }
+            }
+            
+            // Vérifier si l'adversaire peut jouer
+            const opponentCanPlay = opponent && Object.values(opponent.charactersState).some(
+              (char) => char.currentHealth > 0 && char.currentTurns > 0
+            );
+            
+            if (opponentCanPlay) {
+              // Si l'adversaire peut jouer, passer le tour
+              showMessage("Vous ne pouvez plus attaquer avec aucun personnage. Passage de tour automatique.");
+              
+              socket.emit("endTurn", {
+                gameId: gameState.gameId,
+                playerId: gameState.playerId
+              });
+              
+              // Pour éviter des émissions multiples
+              game.attackPerformed = true;
+            } else {
+              // Si personne ne peut jouer, fin de partie
+              checkGameOver();
+            }
           }
 
           // Si nous sommes en train d'attendre que l'attaque soit traitée, désactiver toutes les interactions
@@ -1627,15 +1673,16 @@
 
           if (!player || !opponent) return false;
 
-          // Vérifier si tous les personnages d'un joueur sont à 0 PV
-          const playerAlive = Object.values(player.charactersState).some(
+          // RÈGLE 1: Vérifier si tous les personnages d'un joueur sont à 0 PV
+          const playerHasAliveChars = Object.values(player.charactersState).some(
             (char) => char.currentHealth > 0
           );
-          const opponentAlive = Object.values(opponent.charactersState).some(
+          const opponentHasAliveChars = Object.values(opponent.charactersState).some(
             (char) => char.currentHealth > 0
           );
 
-          if (!playerAlive) {
+          // Si un joueur n'a plus de personnages en vie, il a perdu
+          if (!playerHasAliveChars) {
             showMessage(
               "Vous avez perdu la partie ! Tous vos personnages sont vaincus.",
               true
@@ -1643,10 +1690,57 @@
             return true;
           }
 
-          if (!opponentAlive) {
+          if (!opponentHasAliveChars) {
             showMessage(
               "Vous avez gagné la partie ! Tous les personnages adverses sont vaincus."
             );
+            return true;
+          }
+
+          // RÈGLE 2 & 3: Vérifier si les joueurs peuvent encore attaquer
+          const playerCanAttack = Object.values(player.charactersState).some(
+            (char) => char.currentHealth > 0 && char.currentTurns > 0
+          );
+          
+          const opponentCanAttack = Object.values(opponent.charactersState).some(
+            (char) => char.currentHealth > 0 && char.currentTurns > 0
+          );
+
+          // Si aucun des deux joueurs ne peut attaquer, la partie se termine
+          if (!playerCanAttack && !opponentCanAttack) {
+            // Déterminer le gagnant basé sur les PV restants
+            const playerTotalHealth = Object.values(player.charactersState).reduce(
+              (total, char) => total + Math.max(0, char.currentHealth),
+              0
+            );
+            
+            const opponentTotalHealth = Object.values(opponent.charactersState).reduce(
+              (total, char) => total + Math.max(0, char.currentHealth),
+              0
+            );
+
+            if (playerTotalHealth > opponentTotalHealth) {
+              showMessage(
+                "Partie terminée ! Vous gagnez par points de vie restants."
+              );
+            } else if (opponentTotalHealth > playerTotalHealth) {
+              showMessage(
+                "Partie terminée ! Vous perdez par points de vie restants.",
+                true
+              );
+            } else {
+              showMessage("Partie terminée ! Match nul par points de vie égaux.");
+            }
+            
+            // Informer le serveur de la fin de partie
+            socket.emit("gameEnded", {
+              gameId: gameState.gameId,
+              playersTotalHealth: {
+                [gameState.playerId]: playerTotalHealth,
+                [opponent.id]: opponentTotalHealth
+              }
+            });
+            
             return true;
           }
 
@@ -1931,6 +2025,12 @@
 
           newGameBtn.addEventListener("click", startNewGame);
           quitGameBtn.addEventListener("click", returnToMenu);
+        }
+      });
+    </script>
+  </body>
+</html>
+
         }
       });
     </script>
