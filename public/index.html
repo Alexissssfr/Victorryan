@@ -77,7 +77,9 @@
       }
 
       .card.selected {
-        border: 2px solid #4caf50;
+        transform: translateY(-10px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        border-width: 3px;
       }
 
       .card-image {
@@ -200,16 +202,20 @@
       }
 
       .card.cannot-attack {
-        opacity: 0.7;
+        opacity: 0.6;
         background-color: #ffebee;
+        border: 1px solid #ffcdd2;
+        cursor: not-allowed;
       }
 
       .card.can-attack {
-        border-color: #4caf50;
+        border: 2px solid #4caf50;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
       }
 
       .card.can-target {
-        border-color: #f44336;
+        border: 2px solid #f44336;
+        box-shadow: 0 0 5px rgba(244, 67, 54, 0.5);
       }
 
       .turn-info {
@@ -408,36 +414,40 @@
 
           // Afficher vos cartes personnages
           yourCharacters.innerHTML = "";
-          player.cards.personnages.forEach((card) => {
-            const characterState = player.charactersState[card.id];
-            const cardEl = createCharacterCard(card, characterState, false);
+          if (player.cards.personnages) {
+            player.cards.personnages.forEach((card) => {
+              const characterState = player.charactersState[card.id];
+              const cardEl = createCharacterCard(card, characterState, false);
 
-            // N'ajouter l'événement de clic que si le personnage peut attaquer
-            if (
-              gameState.isMyTurn &&
-              characterState &&
-              characterState.currentHealth > 0 &&
-              characterState.currentTurns > 0 &&
-              !game.attackPerformed
-            ) {
-              cardEl.addEventListener("click", () =>
-                selectYourCharacter(card.id)
-              );
-              cardEl.classList.add("can-attack");
-            } else if (
-              characterState &&
-              (characterState.currentHealth <= 0 ||
-                characterState.currentTurns <= 0)
-            ) {
-              cardEl.classList.add("cannot-attack");
-            }
+              // Simplification de la condition pour ajouter l'événement de clic
+              // C'est mon tour ET le personnage est vivant ET il a des tours d'attaque ET je n'ai pas encore attaqué
+              const canAttack =
+                gameState.isMyTurn &&
+                characterState &&
+                characterState.currentHealth > 0 &&
+                characterState.currentTurns > 0 &&
+                !game.attackPerformed;
 
-            if (card.id === gameState.selectedCharacter) {
-              cardEl.classList.add("selected");
-            }
+              if (canAttack) {
+                cardEl.addEventListener("click", () =>
+                  selectYourCharacter(card.id)
+                );
+                cardEl.classList.add("can-attack");
+              } else if (
+                characterState &&
+                (characterState.currentHealth <= 0 ||
+                  characterState.currentTurns <= 0)
+              ) {
+                cardEl.classList.add("cannot-attack");
+              }
 
-            yourCharacters.appendChild(cardEl);
-          });
+              if (card.id === gameState.selectedCharacter) {
+                cardEl.classList.add("selected");
+              }
+
+              yourCharacters.appendChild(cardEl);
+            });
+          }
 
           // Afficher vos cartes bonus
           yourBonus.innerHTML = "";
@@ -1124,8 +1134,13 @@
           if (gameState.gameData && data.newGameState) {
             gameState.gameData = data.newGameState;
 
-            // NOUVEAU CODE : Si le serveur indique que le tour a changé
+            // Si le serveur indique que le tour a changé
             if (data.turnChanged) {
+              // Réinitialiser TOUTES les sélections lors du changement de tour
+              gameState.selectedCharacter = null;
+              gameState.targetCharacter = null;
+              gameState.selectedBonus = null;
+
               gameState.isMyTurn = data.newCurrentTurn === gameState.playerId;
 
               // Message approprié pour le changement de tour

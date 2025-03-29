@@ -295,6 +295,9 @@ io.on("connection", (socket) => {
       const nextIndex = (currentIndex + 1) % players.length;
       game.currentTurn = players[nextIndex];
 
+      // IMPORTANT: Réinitialiser le flag d'attaque pour le nouveau joueur
+      game.attackPerformed = false;
+
       // Informer tous les joueurs
       io.to(gameId).emit("turnChanged", {
         currentTurn: game.currentTurn,
@@ -485,6 +488,9 @@ io.on("connection", (socket) => {
         const currentIndex = players.indexOf(playerId);
         const nextIndex = (currentIndex + 1) % players.length;
         game.currentTurn = players[nextIndex];
+
+        // Ajouter cette ligne pour réinitialiser l'attaque pour le prochain joueur
+        game.attackPerformed = false; // C'est un nouveau tour pour le prochain joueur, il peut attaquer
 
         // Vérifier la victoire/défaite
         let gameOver = false;
