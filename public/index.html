@@ -57,38 +57,35 @@
       }
 
       .card {
-        width: 180px;
-        height: 300px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
+        width: 220px;
+        height: 360px;
+        border-radius: 12px;
+        padding: 12px;
         background-color: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
         cursor: pointer;
         position: relative;
         overflow: hidden;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
       }
 
       .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      .card.selected {
-        transform: translateY(-10px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-        border-width: 3px;
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
       }
 
       .card-image {
         width: 100%;
-        height: 180px;
+        height: 220px;
         background-size: contain;
         background-position: center;
         background-repeat: no-repeat;
-        margin-bottom: 5px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        flex-grow: 1;
       }
 
       .card-overlay {
@@ -97,15 +94,26 @@
         left: 0;
         right: 0;
         background-color: rgba(255, 255, 255, 0.9);
-        padding: 8px;
+        padding: 10px;
         border-top: 1px solid #ddd;
+        backdrop-filter: blur(3px);
+        border-radius: 0 0 12px 12px;
       }
 
       .card-title {
         font-weight: bold;
         text-align: center;
         margin-bottom: 5px;
-        font-size: 14px;
+        font-size: 16px;
+        color: #333;
+        padding: 5px;
+        border-radius: 4px;
+        background-color: rgba(255, 255, 255, 0.8);
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        z-index: 2;
       }
 
       .card-stats {
@@ -150,17 +158,20 @@
 
       .active-bonus-indicator {
         position: absolute;
-        top: 5px;
-        right: 5px;
+        top: 10px;
+        right: 10px;
         background-color: #ff9800;
         color: white;
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
+        width: 30px;
+        height: 30px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        z-index: 4;
       }
 
       .game-info {
@@ -197,25 +208,44 @@
       }
 
       .card.depleted {
-        opacity: 0.7;
-        background-color: #f0f0f0;
+        opacity: 0.6;
+        filter: grayscale(70%);
       }
 
       .card.cannot-attack {
-        opacity: 0.6;
+        opacity: 0.7;
         background-color: #ffebee;
-        border: 1px solid #ffcdd2;
-        cursor: not-allowed;
+        border: 2px solid #ffcdd2;
+        position: relative;
+      }
+
+      .card.cannot-attack::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: repeating-linear-gradient(
+          45deg,
+          rgba(244, 67, 54, 0.1),
+          rgba(244, 67, 54, 0.1) 10px,
+          rgba(244, 67, 54, 0.2) 10px,
+          rgba(244, 67, 54, 0.2) 20px
+        );
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: 3;
       }
 
       .card.can-attack {
-        border: 2px solid #4caf50;
-        box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        border: 3px solid #4caf50;
+        box-shadow: 0 0 12px rgba(76, 175, 80, 0.8);
       }
 
       .card.can-target {
-        border: 2px solid #f44336;
-        box-shadow: 0 0 5px rgba(244, 67, 54, 0.5);
+        border: 3px solid #f44336;
+        box-shadow: 0 0 12px rgba(244, 67, 54, 0.8);
       }
 
       .turn-info {
@@ -251,6 +281,130 @@
         font-size: 24px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         transition: opacity 0.5s;
+      }
+
+      /* Amélioration des états visuels des cartes */
+      .card.selected {
+        transform: translateY(-15px);
+        box-shadow: 0 0 25px rgba(76, 175, 80, 0.6);
+        border: 3px solid #4caf50;
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+        50% {
+          box-shadow: 0 0 25px rgba(76, 175, 80, 0.9);
+        }
+        100% {
+          box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+      }
+
+      /* Styles pour l'écran de fin de partie */
+      .game-over-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      #gameOverTitle {
+        font-size: 32px;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      #gameOverMessage {
+        font-size: 18px;
+        margin-bottom: 30px;
+        padding: 15px;
+        border-radius: 5px;
+      }
+
+      .message-victory {
+        background-color: #e8f5e9;
+        border-left: 5px solid #4caf50;
+        color: #2e7d32;
+      }
+
+      .message-defeat {
+        background-color: #ffebee;
+        border-left: 5px solid #f44336;
+        color: #c62828;
+      }
+
+      .message-tie {
+        background-color: #e3f2fd;
+        border-left: 5px solid #2196f3;
+        color: #1565c0;
+      }
+
+      .stats-container {
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+      }
+
+      .player-stat {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: white;
+        border-radius: 5px;
+      }
+
+      .player-stat.winner {
+        background-color: #e8f5e9;
+        font-weight: bold;
+      }
+
+      .game-over-actions {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .btn {
+        padding: 12px 25px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .btn-secondary {
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+      }
+
+      .btn-secondary:hover {
+        background-color: #e0e0e0;
+      }
+
+      /* Animation pour l'écran de fin de partie */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      #gameOverScreen {
+        animation: fadeIn 0.5s ease-out;
       }
     </style>
   </head>
@@ -327,6 +481,26 @@
       </div>
     </div>
 
+    <!-- Écran de fin de partie -->
+    <div id="gameOverScreen" class="hidden">
+      <div class="game-over-container">
+        <h2 id="gameOverTitle">Partie terminée</h2>
+        <div id="gameOverMessage"></div>
+
+        <div class="stats-container">
+          <h3>Statistiques de la partie</h3>
+          <div id="playerStats"></div>
+        </div>
+
+        <div class="game-over-actions">
+          <button id="newGameBtn" class="btn">Nouvelle partie</button>
+          <button id="quitGameBtn" class="btn btn-secondary">
+            Retour au menu
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div id="messages"></div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -371,6 +545,14 @@
 
         // Socket.io
         const socket = io();
+
+        // Ajoutez ces variables DOM au début de votre code JavaScript
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const gameOverTitle = document.getElementById("gameOverTitle");
+        const gameOverMessage = document.getElementById("gameOverMessage");
+        const playerStats = document.getElementById("playerStats");
+        const newGameBtn = document.getElementById("newGameBtn");
+        const quitGameBtn = document.getElementById("quitGameBtn");
 
         // Functions
         function showScreen(screenName) {
@@ -536,8 +718,7 @@
           }`;
           cardEl.dataset.id = card.id;
 
-          // Récupérer les valeurs correctes, avec état actuel ou valeurs de base
-          // Utiliser les noms de propriétés corrects des données reçues
+          // Récupérer les valeurs correctes
           const health =
             state && state.currentHealth !== undefined
               ? state.currentHealth
@@ -563,6 +744,18 @@
           const activeBonus =
             state && state.activeBonus ? state.activeBonus : [];
 
+          // Statut de santé pour l'affichage
+          let healthStatus = "";
+          if (health <= 0) {
+            healthStatus = `<span style="color: red; font-weight: bold;">KO</span>`;
+          } else if (health <= 30) {
+            healthStatus = `<span style="color: red;">${health}</span>`;
+          } else if (health <= 50) {
+            healthStatus = `<span style="color: orange;">${health}</span>`;
+          } else {
+            healthStatus = `<span style="color: green;">${health}</span>`;
+          }
+
           // Créer l'élément d'image
           let imageHtml = "";
           if (card.fond) {
@@ -575,35 +768,41 @@
               ? `<div class="active-bonus-indicator">${activeBonus.length}</div>`
               : "";
 
-          // Créer une description plus détaillée des bonus actifs
+          // Description des bonus actifs
           let activeBonusHtml = "";
           if (activeBonus.length > 0) {
             activeBonusHtml = `
               <div style="font-size: 10px; color: #ff9800; margin-top: 3px;">
                 <strong>Bonus actifs:</strong> ${activeBonus
-                  .map((b) => b.bonusId)
+                  .map((b) => `${b.name || b.bonusId} (+${b.percentage}%)`)
                   .join(", ")}
               </div>
             `;
           }
 
-          // Utiliser le nom correct de la carte
+          // Nom de la carte avec meilleure présentation
           const cardName = card.nomcarteperso || card.id || "Personnage";
           const cardPower = card.nomdupouvoir || "";
           const cardDescription = card.description || "";
 
-          // Construire le HTML de la carte
+          // Construire le HTML de la carte avec style amélioré
           cardEl.innerHTML = `
             ${bonusIndicator}
             <div class="card-title">${cardName}</div>
             ${imageHtml}
             <div class="card-overlay">
               <div class="card-stats">
-                <div><strong>PV:</strong> ${health}</div>
-                <div><strong>Attaque:</strong> ${attack}</div>
-                <div><strong>Tours d'attaque:</strong> ${turns}</div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                  <strong>PV:</strong> ${healthStatus}
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                  <strong>Attaque:</strong> <span style="color: #2196F3;">${attack}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                  <strong>Tours:</strong> <span>${turns}</span>
+                </div>
                 ${activeBonusHtml}
-                <div style="font-size: 10px; color: #666; margin-top: 3px;">
+                <div style="font-size: 10px; color: #666; margin-top: 3px; text-align: center;">
                   <strong>${cardPower}</strong>
                   <div>${cardDescription}</div>
                 </div>
@@ -639,22 +838,24 @@
           const nom = card.nomcartebonus || card.id || "Bonus";
           const pouvoir = card.nomdupouvoir || "";
 
-          // Mettre en évidence les tours restants
+          // Style du nombre de tours selon disponibilité
           const toursHtml =
             tours <= 0
-              ? `<div><strong>Tours:</strong> <span style="color:red">0</span></div>`
-              : `<div><strong>Tours:</strong> ${tours}</div>`;
+              ? `<div><strong>Tours:</strong> <span style="color:red; font-weight: bold;">0</span></div>`
+              : `<div><strong>Tours:</strong> <span style="color:green;">${tours}</span></div>`;
 
-          // Construire le HTML de la carte
+          // Construire le HTML de la carte avec style amélioré
           cardEl.innerHTML = `
             <div class="card-title">${nom}</div>
             ${imageHtml}
             <div class="card-overlay">
               <div class="card-stats">
-                <div><strong>Pouvoir:</strong> ${pouvoir}</div>
-                <div><strong>Pourcentage:</strong> ${pourcentage}%</div>
+                <div style="margin-bottom: 5px;"><strong>Pouvoir:</strong> ${pouvoir}</div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                  <strong>Bonus:</strong> <span style="color: #ff9800; font-weight: bold;">+${pourcentage}%</span>
+                </div>
                 ${toursHtml}
-                <div style="font-size: 10px; color: #666; margin-top: 3px;">${effet}</div>
+                <div style="font-size: 10px; color: #666; margin-top: 5px; text-align: center;">${effet}</div>
               </div>
             </div>
           `;
@@ -1177,36 +1378,7 @@
         socket.on("gameOver", (data) => {
           gameState.gameData = data.newGameState;
 
-          // Afficher un message approprié selon la raison de fin de partie
-          if (data.reason === "no_attack_turns") {
-            if (data.winner === "tie") {
-              showMessage(
-                "Partie terminée! Match nul - les deux joueurs ont le même nombre de PV restants."
-              );
-            } else if (data.winner === gameState.playerId) {
-              showMessage(
-                "Victoire! Vous avez plus de PV restants que votre adversaire."
-              );
-            } else {
-              showMessage("Défaite! Votre adversaire a plus de PV restants.");
-            }
-
-            // Afficher les PV totaux
-            if (data.playersTotalHealth) {
-              for (const pid in data.playersTotalHealth) {
-                const playerName = gameState.gameData.players[pid].name;
-                const totalHealth = data.playersTotalHealth[pid];
-                showMessage(`${playerName}: ${totalHealth} PV restants`);
-              }
-            }
-          }
-
-          // Désactiver les boutons d'action
-          gameState.isMyTurn = false;
-          updateActionButtons();
-
-          // Mettre à jour l'affichage
-          renderCards();
+          showGameOverScreen(data);
         });
 
         // Check for existing game in localStorage
@@ -1392,6 +1564,138 @@
           setTimeout(() => {
             document.body.removeChild(notification);
           }, 2000);
+        }
+
+        // Ajoutez les gestionnaires d'événements pour les boutons de fin de partie
+        newGameBtn.addEventListener("click", startNewGame);
+        quitGameBtn.addEventListener("click", returnToMenu);
+
+        // Fonction pour démarrer une nouvelle partie
+        function startNewGame() {
+          // Réinitialiser les sélections et l'état du jeu
+          gameState.selectedCharacter = null;
+          gameState.selectedBonus = null;
+          gameState.targetCharacter = null;
+
+          // Créer une nouvelle partie
+          fetch("/api/games", {
+            method: "POST",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                gameState.gameId = data.gameId;
+                gameIdDisplay.textContent = data.gameId;
+
+                // Sauvegarder le nouvel ID de partie
+                localStorage.setItem("gameId", data.gameId);
+
+                // Rejoindre automatiquement la nouvelle partie
+                joinGame(data.gameId, gameState.playerName);
+
+                // Cacher l'écran de fin de partie
+                gameOverScreen.classList.add("hidden");
+              } else {
+                showMessage(
+                  "Erreur lors de la création d'une nouvelle partie: " +
+                    data.error,
+                  true
+                );
+              }
+            })
+            .catch((error) => {
+              showMessage("Erreur de connexion", true);
+              console.error("Error:", error);
+            });
+        }
+
+        // Fonction pour retourner au menu principal
+        function returnToMenu() {
+          // Effacer les données de la partie
+          localStorage.removeItem("gameId");
+          localStorage.removeItem("playerId");
+          localStorage.removeItem("playerName");
+
+          // Réinitialiser l'état du jeu
+          gameState = {
+            gameId: null,
+            playerId: null,
+            playerName: null,
+            isMyTurn: false,
+            gameData: null,
+            selectedCharacter: null,
+            selectedBonus: null,
+            targetCharacter: null,
+          };
+
+          // Afficher l'écran d'accueil
+          showScreen("home");
+        }
+
+        // Fonction améliorée pour afficher l'écran de fin de partie avec les statistiques
+        function showGameOverScreen(data) {
+          // Cacher l'écran de jeu
+          gameScreen.classList.add("hidden");
+
+          // Configurer le message selon le résultat
+          if (data.winner === gameState.playerId) {
+            gameOverTitle.textContent = "Victoire !";
+            gameOverMessage.textContent =
+              "Félicitations, vous avez gagné la partie !";
+            gameOverMessage.className = "message-victory";
+          } else if (data.winner === "tie") {
+            gameOverTitle.textContent = "Match nul !";
+            gameOverMessage.textContent =
+              "La partie s'est terminée par une égalité.";
+            gameOverMessage.className = "message-tie";
+          } else {
+            gameOverTitle.textContent = "Défaite !";
+            gameOverMessage.textContent =
+              "Vous avez perdu la partie. Réessayez !";
+            gameOverMessage.className = "message-defeat";
+          }
+
+          // Afficher les statistiques des joueurs
+          playerStats.innerHTML = "";
+
+          // Si nous avons les données des PV restants
+          if (data.playersTotalHealth) {
+            const playerIds = Object.keys(data.playersTotalHealth);
+            playerIds.forEach((pid) => {
+              const playerName = gameState.gameData.players[pid].name;
+              const totalHealth = data.playersTotalHealth[pid];
+              const isWinner = pid === data.winner;
+
+              const statDiv = document.createElement("div");
+              statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
+              statDiv.innerHTML = `
+                <span>${playerName} ${isWinner ? " (Vainqueur)" : ""}</span>
+                <span>${totalHealth} PV restants</span>
+              `;
+
+              playerStats.appendChild(statDiv);
+            });
+          } else {
+            // Si nous n'avons pas les données détaillées, afficher un message de base
+            for (const pid in gameState.gameData.players) {
+              const playerName = gameState.gameData.players[pid].name;
+              const isWinner = pid === data.winner;
+
+              const statDiv = document.createElement("div");
+              statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
+              statDiv.innerHTML = `
+                <span>${playerName} ${isWinner ? " (Vainqueur)" : ""}</span>
+                <span>${
+                  isWinner ? "Tous les personnages adverses sont K.O." : ""
+                }</span>
+              `;
+
+              playerStats.appendChild(statDiv);
+            }
+          }
+
+          // Afficher l'écran de fin de partie
+          gameOverScreen.classList.remove("hidden");
         }
       });
     </script>
