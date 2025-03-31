@@ -475,7 +475,7 @@ io.on("connection", (socket) => {
           return;
         }
 
-        // Calcul des dégâts
+        // Calcul et application des dégâts
         const damage = attacker.currentAttack;
         targetCharacter.currentHealth = Math.max(
           0,
@@ -488,32 +488,40 @@ io.on("connection", (socket) => {
         // Marquer que le joueur a attaqué ce tour
         game.attackPerformed = true;
 
-        // NOUVEAU CODE : Passer automatiquement le tour à l'adversaire après une attaque
-        const players = Object.keys(game.players);
-        const currentIndex = players.indexOf(playerId);
-        const nextIndex = (currentIndex + 1) % players.length;
-        game.currentTurn = players[nextIndex];
+        // Vérifier si le joueur peut encore attaquer
+        const canStillAttack = Object.values(player.charactersState).some(
+          (char) => char.currentHealth > 0 && char.currentTurns > 0
+        );
 
-        // Ajouter cette ligne pour réinitialiser l'attaque pour le prochain joueur
-        game.attackPerformed = false; // C'est un nouveau tour pour le prochain joueur, il peut attaquer
+        // Si le joueur ne peut plus attaquer, passer le tour
+        if (!canStillAttack) {
+          const players = Object.keys(game.players);
+          const currentIndex = players.indexOf(playerId);
+          const nextIndex = (currentIndex + 1) % players.length;
+          game.currentTurn = players[nextIndex];
+          game.attackPerformed = false; // Réinitialiser pour le prochain joueur
+        }
 
         // Vérifier la victoire/défaite
         let gameOver = false;
         let winner = null;
+        const playersTotalHealth = {};
 
-        // Vérifier si toutes les cartes d'un joueur sont à 0 PV
-        const allPlayersStatus = {};
-
+        // Calculer les points de vie totaux et vérifier les conditions de victoire
         for (const pid in game.players) {
           const p = game.players[pid];
+          const totalHealth = Object.values(p.charactersState).reduce(
+            (sum, char) => sum + Math.max(0, char.currentHealth),
+            0
+          );
+          playersTotalHealth[pid] = totalHealth;
+
           const hasAliveCharacters = Object.values(p.charactersState).some(
             (c) => c.currentHealth > 0
           );
-          allPlayersStatus[pid] = hasAliveCharacters;
 
           if (!hasAliveCharacters) {
             gameOver = true;
-            // Le gagnant est l'autre joueur
             winner = Object.keys(game.players).find((id) => id !== pid);
           }
         }
@@ -522,6 +530,7 @@ io.on("connection", (socket) => {
         if (gameOver) {
           game.status = "finished";
           game.winner = winner;
+          game.playersTotalHealth = playersTotalHealth;
         }
 
         // Informer tous les joueurs
@@ -537,10 +546,20 @@ io.on("connection", (socket) => {
           )?.nomcarteperso,
           gameOver,
           winner,
+          playersTotalHealth,
           newGameState: JSON.parse(JSON.stringify(game)),
-          turnChanged: true, // Ajouter ce flag pour indiquer que le tour a changé
-          newCurrentTurn: game.currentTurn, // Indiquer qui est le nouveau joueur actif
+          turnChanged: !canStillAttack, // Le tour change seulement si le joueur ne peut plus attaquer
+          newCurrentTurn: game.currentTurn,
         });
+
+        // Si la partie est terminée, envoyer l'événement gameOver
+        if (gameOver) {
+          io.to(gameId).emit("gameOver", {
+            winner,
+            playersTotalHealth,
+            newGameState: JSON.parse(JSON.stringify(game)),
+          });
+        }
       }
     );
 
@@ -548,10 +567,123 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
       console.log(`Joueur ${playerId} déconnecté de la partie ${gameId}`);
 
-      if (game && game.players[playerId]) {
-        game.players[playerId].connected = false;
-        socket.to(gameId).emit("playerLeft", { playerId });
+      if (!game || !game.players[playerId]) return;
+
+      // Marquer le joueur comme déconnecté
+      game.players[playerId].connected = false;
+      game.players[playerId].lastDisconnect = Date.now();
+
+      // Informer les autres joueurs
+      socket.to(gameId).emit("playerLeft", {
+        playerId,
+        playerName: game.players[playerId].name,
+        temporary: true,
+      });
+
+      // Mettre la partie en pause si elle est en cours
+      if (game.status === "playing") {
+        game.status = "paused";
+        game.pausedAt = Date.now();
+        game.pausedBy = playerId;
+
+        // Sauvegarder l'état du jeu avant la pause
+        game.pausedState = {
+          currentTurn: game.currentTurn,
+          attackPerformed: game.attackPerformed,
+          bonusPlayedThisTurn: game.bonusPlayedThisTurn,
+          lastBonusTarget: game.lastBonusTarget,
+        };
+
+        // Informer les autres joueurs de la pause
+        io.to(gameId).emit("gamePaused", {
+          reason: "player_disconnected",
+          playerId: playerId,
+          playerName: game.players[playerId].name,
+          newGameState: JSON.parse(JSON.stringify(game)),
+        });
+
+        // Définir un délai de reconnexion (par exemple 2 minutes)
+        setTimeout(() => {
+          if (
+            game &&
+            game.status === "paused" &&
+            !game.players[playerId].connected
+          ) {
+            // Si le joueur ne s'est pas reconnecté après le délai
+            game.status = "finished";
+            game.winner = Object.keys(game.players).find(
+              (pid) => pid !== playerId
+            );
+            game.endReason = "player_abandoned";
+
+            // Informer les joueurs restants
+            io.to(gameId).emit("gameOver", {
+              reason: "player_abandoned",
+              winner: game.winner,
+              abandonedBy: playerId,
+              newGameState: JSON.parse(JSON.stringify(game)),
+            });
+
+            // Optionnel : Nettoyer la partie après un certain temps
+            setTimeout(() => {
+              if (games.has(gameId)) {
+                games.delete(gameId);
+                console.log(`Partie ${gameId} nettoyée après abandon`);
+              }
+            }, 300000); // 5 minutes
+          }
+        }, 120000); // 2 minutes
       }
+    });
+
+    // Gérer la reconnexion
+    socket.on("reconnectToGame", ({ gameId, playerId }) => {
+      if (!games.has(gameId) || !game.players[playerId]) {
+        socket.emit("error", { message: "Partie ou joueur non trouvé" });
+        return;
+      }
+
+      console.log(
+        `Joueur ${playerId} tente de se reconnecter à la partie ${gameId}`
+      );
+
+      // Mettre à jour le socket et l'état de connexion
+      game.players[playerId].socketId = socket.id;
+      game.players[playerId].connected = true;
+
+      // Si la partie était en pause à cause de ce joueur
+      if (game.status === "paused" && game.pausedBy === playerId) {
+        // Restaurer l'état de la partie
+        game.status = "playing";
+        game.currentTurn = game.pausedState.currentTurn;
+        game.attackPerformed = game.pausedState.attackPerformed;
+        game.bonusPlayedThisTurn = game.pausedState.bonusPlayedThisTurn;
+        game.lastBonusTarget = game.pausedState.lastBonusTarget;
+
+        delete game.pausedAt;
+        delete game.pausedBy;
+        delete game.pausedState;
+
+        // Informer tous les joueurs de la reprise
+        io.to(gameId).emit("gameResumed", {
+          playerId: playerId,
+          playerName: game.players[playerId].name,
+          newGameState: JSON.parse(JSON.stringify(game)),
+        });
+      }
+
+      // Envoyer l'état actuel au joueur reconnecté
+      socket.emit("gameState", {
+        game: JSON.parse(JSON.stringify(game)),
+        playerId: playerId,
+        reconnected: true,
+      });
+
+      // Informer les autres joueurs
+      socket.to(gameId).emit("playerReconnected", {
+        playerId: playerId,
+        playerName: game.players[playerId].name,
+      });
     });
   });
 });

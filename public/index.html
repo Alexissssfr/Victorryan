@@ -1792,30 +1792,148 @@
         });
 
         socket.on("playerLeft", (data) => {
-          showMessage("L'adversaire s'est déconnecté");
+          console.log("Joueur déconnecté:", data);
+          if (data.temporary) {
+            showMessage(
+              `${data.playerName} s'est déconnecté temporairement. La partie est en pause.`,
+              true
+            );
+          } else {
+            showMessage(`${data.playerName} a quitté la partie.`, true);
+          }
         });
 
-        socket.on("gameOver", (data) => {
-          console.log("Réception de l'événement gameOver", data);
+        socket.on("gamePaused", (data) => {
+          console.log("Partie en pause:", data);
+          if (data.reason === "player_disconnected") {
+            showMessage(
+              `La partie est en pause car ${data.playerName} s'est déconnecté. Attente de reconnexion...`,
+              true
+            );
+            disableGameInteractions();
+          }
 
-          // Mettre à jour l'état du jeu
           if (data.newGameState) {
             gameState.gameData = data.newGameState;
+            updateGameStatus();
+            renderCards();
+          }
+        });
+
+        socket.on("gameResumed", (data) => {
+          console.log("Partie reprise:", data);
+          showMessage(
+            `${data.playerName} s'est reconnecté. La partie reprend !`
+          );
+          enableGameInteractions();
+
+          if (data.newGameState) {
+            gameState.gameData = data.newGameState;
+            updateGameStatus();
+            renderCards();
+          }
+        });
+
+        socket.on("playerReconnected", (data) => {
+          showMessage(`${data.playerName} s'est reconnecté à la partie.`);
+        });
+
+        // Gérer la déconnexion d'un joueur
+        socket.on("playerLeft", (data) => {
+          console.log("Joueur déconnecté:", data);
+          if (data.temporary) {
+            showMessage(
+              `${data.playerName} s'est déconnecté temporairement. La partie est en pause.`,
+              true
+            );
+          } else {
+            showMessage(`${data.playerName} a quitté la partie.`, true);
+          }
+        });
+
+        // Gérer la mise en pause de la partie
+        socket.on("gamePaused", (data) => {
+          console.log("Partie en pause:", data);
+          if (data.reason === "player_disconnected") {
+            showMessage(
+              `La partie est en pause car ${data.playerName} s'est déconnecté. Attente de reconnexion...`,
+              true
+            );
+            disableGameInteractions();
           }
 
-          // Marquer la partie comme terminée
-          if (gameState.gameData) {
-            gameState.gameData.status = "finished";
-            gameState.gameData.winner = data.winner;
-            if (data.playersTotalHealth) {
-              gameState.gameData.playersTotalHealth = data.playersTotalHealth;
-            }
+          if (data.newGameState) {
+            gameState.gameData = data.newGameState;
+            updateGameStatus();
+            renderCards();
           }
+        });
 
-          // Afficher l'écran de fin de partie après un court délai
-          setTimeout(() => {
-            showGameOverScreen(data);
-          }, 500);
+        // Gérer la reprise de la partie
+        socket.on("gameResumed", (data) => {
+          console.log("Partie reprise:", data);
+          showMessage(
+            `${data.playerName} s'est reconnecté. La partie reprend !`
+          );
+          enableGameInteractions();
+
+          if (data.newGameState) {
+            gameState.gameData = data.newGameState;
+            updateGameStatus();
+            renderCards();
+          }
+        });
+
+        // Gérer la déconnexion du socket
+        socket.on("disconnect", () => {
+          console.log("Déconnecté du serveur");
+          showMessage("Déconnecté du serveur. Tentative de reconnexion...", true);
+          disableGameInteractions();
+        });
+
+        // Gérer la reconnexion du socket
+        socket.on("connect", () => {
+          console.log("Reconnecté au serveur");
+          if (gameState.gameId && gameState.playerId) {
+            socket.emit("reconnectToGame", {
+              gameId: gameState.gameId,
+              playerId: gameState.playerId
+            });
+          }
+        });
+
+        // Gérer la fin de partie par abandon
+        socket.on("gameOver", (data) => {
+          if (data.reason === "player_abandoned") {
+            showMessage(
+              `La partie est terminée car ${
+                gameState.gameData.players[data.abandonedBy].name
+              } a abandonné.`,
+              true
+            );
+          }
+          showGameOverScreen(data);
+        });
+
+        // Fonctions utilitaires pour la gestion des interactions
+        function disableGameInteractions() {
+          document.querySelectorAll(".btn, .card").forEach((el) => {
+            el.style.pointerEvents = "none";
+            el.style.opacity = "0.7";
+          });
+        }
+
+        function enableGameInteractions() {
+          document.querySelectorAll(".btn, .card").forEach((el) => {
+            el.style.pointerEvents = "auto";
+            el.style.opacity = "1";
+          });
+        }
+
+        // Check for existing game in localStorage
+        const savedGameId = localStorage.getItem("gameId");
+          }
+          showGameOverScreen(data);
         });
 
         // Check for existing game in localStorage
