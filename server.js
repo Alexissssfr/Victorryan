@@ -16,6 +16,9 @@ app.use(express.static(path.join(__dirname, "public")));
 // Stockage des parties actives
 const games = new Map();
 
+// Structure pour stocker les bonus par partie
+const gameBonus = new Map();
+
 // Chargement des données des cartes
 let personnagesData = [];
 let bonusData = [];
@@ -107,6 +110,12 @@ app.post("/api/games", (req, res) => {
     status: "waiting",
     currentTurn: null,
     createdAt: new Date().toISOString(),
+  });
+
+  // Initialiser la structure des bonus pour cette partie
+  gameBonus.set(gameId, {
+    player1: new Map(),
+    player2: new Map(),
   });
 
   console.log(`Nouvelle partie créée: ${gameId}`);
@@ -308,260 +317,151 @@ io.on("connection", (socket) => {
     });
 
     // Jouer une carte bonus
-    socket.on(
-      "playBonus",
-      ({ gameId, playerId, bonusId, targetCharacterId }) => {
-        if (!games.has(gameId)) return;
+    socket.on("playBonus", (data) => {
+      const { gameId, playerId, bonusId, targetId } = data;
+      const game = games.get(gameId);
+      const gameBonusState = gameBonus.get(gameId);
 
-        const game = games.get(gameId);
-
-        if (game.currentTurn !== playerId) {
-          socket.emit("error", { message: "Pas votre tour" });
-          return;
-        }
-
-        const player = game.players[playerId];
-        if (!player) return;
-
-        // Trouver la carte bonus
-        const bonusCardIndex = player.cards.bonus.findIndex(
-          (c) => c.id === bonusId
-        );
-        if (bonusCardIndex === -1) {
-          socket.emit("error", { message: "Carte bonus non trouvée" });
-          return;
-        }
-
-        const bonusCard = player.cards.bonus[bonusCardIndex];
-
-        // Vérifier si le bonus a encore des tours disponibles
-        const bonusTours = parseInt(bonusCard.tourbonus) || 1;
-        if (bonusTours <= 0) {
-          socket.emit("error", {
-            message: "Ce bonus n'a plus de tours disponibles",
-          });
-          return;
-        }
-
-        // Trouver la carte personnage cible
-        const characterState = player.charactersState[targetCharacterId];
-        if (!characterState) {
-          socket.emit("error", { message: "Personnage cible non trouvé" });
-          return;
-        }
-
-        // Vérifier que le personnage est encore en vie
-        if (characterState.currentHealth <= 0) {
-          socket.emit("error", {
-            message:
-              "Ce personnage est vaincu et ne peut pas recevoir de bonus",
-          });
-          return;
-        }
-
-        // Marquer qu'un bonus a été joué ce tour-ci
-        game.bonusPlayedThisTurn = true;
-        game.lastBonusTarget = targetCharacterId;
-
-        // Appliquer le bonus
-        const bonusPercentage = parseInt(bonusCard.pourcentagebonus) || 0;
-
-        // Si c'est le premier bonus, sauvegarder l'attaque de base
-        if (!characterState.baseAttack) {
-          characterState.baseAttack = characterState.currentAttack;
-        }
-
-        // Appliquer le bonus sur la valeur ACTUELLE d'attaque
-        characterState.currentAttack = Math.floor(
-          characterState.currentAttack * (1 + bonusPercentage / 100)
-        );
-
-        // Ajouter le bonus aux bonus actifs
-        if (!characterState.activeBonus) {
-          characterState.activeBonus = [];
-        }
-
-        characterState.activeBonus.push({
-          bonusId: bonusId,
-          remainingTurns: bonusTours,
-          percentage: bonusPercentage,
-          name: bonusCard.nomcartebonus,
-        });
-
-        // Décrémenter le nombre de tours du bonus
-        bonusCard.tourbonus = String(bonusTours - 1);
-
-        // Si le bonus n'a plus de tours, le désactiver visuellement
-        if (parseInt(bonusCard.tourbonus) <= 0) {
-          bonusCard.disabled = true;
-        }
-
-        // Informer tous les joueurs
-        io.to(gameId).emit("bonusPlayed", {
-          playerId,
-          bonusId,
-          targetCharacterId,
-          bonusName: bonusCard.nomcartebonus,
-          targetName: player.cards.personnages.find(
-            (c) => c.id === targetCharacterId
-          )?.nomcarteperso,
-          percentage: bonusPercentage,
-          newGameState: JSON.parse(JSON.stringify(game)),
-        });
+      if (!game || !gameBonusState) {
+        socket.emit("error", { message: "Partie non trouvée" });
+        return;
       }
-    );
+
+      const playerKey = Object.keys(game.players).find(
+        (key) => game.players[key].id === playerId
+      );
+
+      if (!playerKey || game.currentTurn !== playerId) {
+        socket.emit("error", { message: "Ce n'est pas votre tour" });
+        return;
+      }
+
+      const player = game.players[playerKey];
+      const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
+
+      if (!bonusCard) {
+        socket.emit("error", { message: "Carte bonus non trouvée" });
+        return;
+      }
+
+      // Stocker le bonus dans la structure isolée
+      const playerBonusMap =
+        gameBonusState[playerKey === "player1" ? "player1" : "player2"];
+      if (!playerBonusMap.has(targetId)) {
+        playerBonusMap.set(targetId, []);
+      }
+
+      playerBonusMap.get(targetId).push({
+        id: bonusId,
+        turns: parseInt(bonusCard.tourbonus),
+        percentage: parseInt(bonusCard.pourcentagebonus),
+      });
+
+      // Retirer la carte bonus de la main du joueur
+      player.cards.bonus = player.cards.bonus.filter(
+        (card) => card.id !== bonusId
+      );
+
+      // Émettre l'événement de bonus joué
+      io.to(gameId).emit("bonusPlayed", {
+        gameId,
+        playerId,
+        bonusId,
+        targetId,
+        game,
+      });
+    });
 
     // Attaquer un personnage
-    socket.on(
-      "attackCharacter",
-      ({ gameId, playerId, attackerId, targetId }) => {
-        if (!games.has(gameId)) return;
+    socket.on("attack", (data) => {
+      const { gameId, playerId, attackerId, targetId } = data;
+      const game = games.get(gameId);
+      const gameBonusState = gameBonus.get(gameId);
 
-        const game = games.get(gameId);
-
-        if (game.currentTurn !== playerId) {
-          socket.emit("error", { message: "Pas votre tour" });
-          return;
-        }
-
-        // Vérifier si le joueur a déjà attaqué ce tour
-        if (game.attackPerformed) {
-          socket.emit("error", { message: "Vous avez déjà attaqué ce tour" });
-          return;
-        }
-
-        // Trouver l'attaquant
-        const player = game.players[playerId];
-        if (!player || !player.charactersState[attackerId]) {
-          socket.emit("error", { message: "Attaquant non trouvé" });
-          return;
-        }
-
-        const attacker = player.charactersState[attackerId];
-
-        // Vérifier si l'attaquant est en vie
-        if (attacker.currentHealth <= 0) {
-          socket.emit("error", {
-            message: "Ce personnage est vaincu et ne peut pas attaquer",
-          });
-          return;
-        }
-
-        // Vérifier si l'attaquant a des tours d'attaque
-        if (attacker.currentTurns <= 0) {
-          socket.emit("error", {
-            message: "Plus de tours d'attaque disponibles",
-          });
-          return;
-        }
-
-        // Trouver la cible
-        let targetPlayer = null;
-        let targetCharacter = null;
-
-        for (const pid in game.players) {
-          if (pid !== playerId) {
-            const p = game.players[pid];
-            if (p.charactersState[targetId]) {
-              targetPlayer = p;
-              targetCharacter = p.charactersState[targetId];
-              break;
-            }
-          }
-        }
-
-        if (!targetPlayer || !targetCharacter) {
-          socket.emit("error", { message: "Cible non trouvée" });
-          return;
-        }
-
-        // Calcul et application des dégâts
-        const damage = attacker.currentAttack;
-        targetCharacter.currentHealth = Math.max(
-          0,
-          targetCharacter.currentHealth - damage
-        );
-
-        // Réduire le nombre de tours d'attaque
-        attacker.currentTurns--;
-
-        // Marquer que le joueur a attaqué ce tour
-        game.attackPerformed = true;
-
-        // Vérifier si le joueur peut encore attaquer
-        const canStillAttack = Object.values(player.charactersState).some(
-          (char) => char.currentHealth > 0 && char.currentTurns > 0
-        );
-
-        // Si le joueur ne peut plus attaquer, passer le tour
-        if (!canStillAttack) {
-          const players = Object.keys(game.players);
-          const currentIndex = players.indexOf(playerId);
-          const nextIndex = (currentIndex + 1) % players.length;
-          game.currentTurn = players[nextIndex];
-          game.attackPerformed = false; // Réinitialiser pour le prochain joueur
-        }
-
-        // Vérifier la victoire/défaite
-        let gameOver = false;
-        let winner = null;
-        const playersTotalHealth = {};
-
-        // Calculer les points de vie totaux et vérifier les conditions de victoire
-        for (const pid in game.players) {
-          const p = game.players[pid];
-          const totalHealth = Object.values(p.charactersState).reduce(
-            (sum, char) => sum + Math.max(0, char.currentHealth),
-            0
-          );
-          playersTotalHealth[pid] = totalHealth;
-
-          const hasAliveCharacters = Object.values(p.charactersState).some(
-            (c) => c.currentHealth > 0
-          );
-
-          if (!hasAliveCharacters) {
-            gameOver = true;
-            winner = Object.keys(game.players).find((id) => id !== pid);
-          }
-        }
-
-        // Mettre à jour l'état du jeu
-        if (gameOver) {
-          game.status = "finished";
-          game.winner = winner;
-          game.playersTotalHealth = playersTotalHealth;
-        }
-
-        // Informer tous les joueurs
-        io.to(gameId).emit("characterAttacked", {
-          attackerId,
-          targetId,
-          damage,
-          attackerName: player.cards.personnages.find(
-            (c) => c.id === attackerId
-          )?.nomcarteperso,
-          targetName: targetPlayer.cards.personnages.find(
-            (c) => c.id === targetId
-          )?.nomcarteperso,
-          gameOver,
-          winner,
-          playersTotalHealth,
-          newGameState: JSON.parse(JSON.stringify(game)),
-          turnChanged: !canStillAttack, // Le tour change seulement si le joueur ne peut plus attaquer
-          newCurrentTurn: game.currentTurn,
-        });
-
-        // Si la partie est terminée, envoyer l'événement gameOver
-        if (gameOver) {
-          io.to(gameId).emit("gameOver", {
-            winner,
-            playersTotalHealth,
-            newGameState: JSON.parse(JSON.stringify(game)),
-          });
-        }
+      if (!game || !gameBonusState) {
+        socket.emit("error", { message: "Partie non trouvée" });
+        return;
       }
-    );
+
+      const playerKey = Object.keys(game.players).find(
+        (key) => game.players[key].id === playerId
+      );
+
+      if (!playerKey || game.currentTurn !== playerId) {
+        socket.emit("error", { message: "Ce n'est pas votre tour" });
+        return;
+      }
+
+      const player = game.players[playerKey];
+      const attackerCard = player.cards.personnages.find(
+        (card) => card.id === attackerId
+      );
+
+      if (!attackerCard || attackerCard.toursRestants <= 0) {
+        socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
+        return;
+      }
+
+      // Calculer la force d'attaque avec les bonus
+      let attackPower = parseInt(attackerCard.force_attaque);
+      const playerBonusMap =
+        gameBonusState[playerKey === "player1" ? "player1" : "player2"];
+      const activeBonus = playerBonusMap.get(attackerId) || [];
+
+      // Appliquer tous les bonus actifs
+      for (const bonus of activeBonus) {
+        attackPower = Math.floor(attackPower * (1 + bonus.percentage / 100));
+      }
+
+      // Trouver la cible
+      const opponentKey = playerKey === "player1" ? "player2" : "player1";
+      const opponent = game.players[opponentKey];
+      const targetCard = opponent.cards.personnages.find(
+        (card) => card.id === targetId
+      );
+
+      if (!targetCard) {
+        socket.emit("error", { message: "Cible non trouvée" });
+        return;
+      }
+
+      // Appliquer les dégâts
+      targetCard.pointsdevie = Math.max(
+        0,
+        parseInt(targetCard.pointsdevie) - attackPower
+      );
+
+      // Décrémenter le nombre de tours d'attaque
+      attackerCard.toursRestants--;
+
+      // Vérifier si la partie est terminée
+      const isGameOver = opponent.cards.personnages.every(
+        (card) => parseInt(card.pointsdevie) <= 0
+      );
+
+      if (isGameOver) {
+        game.status = "finished";
+        game.winner = playerId;
+
+        // Nettoyer les données de la partie
+        setTimeout(() => {
+          games.delete(gameId);
+          gameBonus.delete(gameId);
+        }, 300000); // Nettoyage après 5 minutes
+      }
+
+      // Émettre l'événement d'attaque
+      io.to(gameId).emit("characterAttacked", {
+        gameId,
+        attackerId,
+        targetId,
+        damage: attackPower,
+        newHealth: targetCard.pointsdevie,
+        isGameOver,
+        winner: game.winner,
+        game,
+      });
+    });
 
     // Gérer la déconnexion
     socket.on("disconnect", () => {
