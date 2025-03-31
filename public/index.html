@@ -290,9 +290,30 @@
 
       /* Amélioration des états visuels des cartes */
       .card.selected {
-        transform: translateY(-8px);
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
-        border: 2px solid gold;
+        transform: translateY(-12px);
+        border: 3px solid #ffd700;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.7),
+          inset 0 0 10px rgba(255, 215, 0, 0.3);
+        animation: selectedPulse 2s infinite;
+      }
+
+      @keyframes selectedPulse {
+        0% {
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.7),
+            inset 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 30px rgba(255, 215, 0, 0.9),
+            inset 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        100% {
+          box-shadow: 0 0 20px rgba(255, 215, 0, 0.7),
+            inset 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+      }
+
+      .card.selected .card-image {
+        filter: brightness(120%) contrast(110%);
       }
 
       @keyframes pulse {
@@ -561,26 +582,6 @@
       /* Style pour les cartes épuisées */
       .card.depleted .card-image {
         filter: grayscale(70%) brightness(70%);
-      }
-
-      /* Amélioration de l'effet de sélection */
-      .card.selected {
-        transform: translateY(-8px);
-        border: 2px solid gold;
-      }
-
-      .card.selected .card-image {
-        filter: brightness(110%);
-      }
-
-      .card.can-attack {
-        border: 2px solid rgba(76, 175, 80, 0.8);
-        box-shadow: 0 0 12px rgba(76, 175, 80, 0.6);
-      }
-
-      .card.can-target {
-        border: 2px solid rgba(244, 67, 54, 0.8);
-        box-shadow: 0 0 12px rgba(244, 67, 54, 0.6);
       }
 
       /* Boutons d'action flottants */
@@ -1126,6 +1127,29 @@
         function selectYourCharacter(cardId) {
           if (!gameState.isMyTurn) return;
 
+          // Récupérer l'état du personnage
+          const characterState =
+            gameState.gameData.players[gameState.playerId].charactersState[
+              cardId
+            ];
+
+          // Vérifier si le personnage est KO ou n'a plus de tours
+          if (characterState && characterState.currentHealth <= 0) {
+            showMessage(
+              "Ce personnage est KO et ne peut pas être sélectionné",
+              true
+            );
+            return;
+          }
+
+          if (characterState && characterState.currentTurns <= 0) {
+            showMessage(
+              "Ce personnage n'a plus de tours d'attaque disponibles",
+              true
+            );
+            return;
+          }
+
           // Si on a déjà joué un bonus ce tour-ci
           if (gameState.bonusPlayedThisTurn) {
             // On peut toujours désélectionner la carte actuelle
@@ -1152,6 +1176,9 @@
               gameState.selectedCharacter = cardId;
             }
           }
+
+          // Réinitialiser la cible si on change de personnage attaquant
+          gameState.targetCharacter = null;
 
           updateActionButtons();
           renderCards();
@@ -1530,7 +1557,7 @@
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
           showTurnChange(gameState.isMyTurn);
 
-          // Si c'est notre tour, réinitialiser l'attaque et les flags de bonus
+          // Si c'est notre tour, réinitialiser tous les flags
           if (gameState.isMyTurn && data.newGameState) {
             // Mettre à jour l'état du jeu avec les nouvelles données
             gameState.gameData = data.newGameState;
@@ -1539,6 +1566,10 @@
               gameState.gameData.attackPerformed = false;
               gameState.bonusPlayedThisTurn = false;
               gameState.lastBonusTarget = null;
+              // Réinitialiser aussi les sélections
+              gameState.selectedCharacter = null;
+              gameState.selectedBonus = null;
+              gameState.targetCharacter = null;
             }
           }
 
