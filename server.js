@@ -176,7 +176,12 @@ app.post("/api/games/:id/join", (req, res) => {
   }
 
   console.log(`Joueur ${name} (${playerId}) a rejoint la partie ${gameId}`);
-  res.json({ success: true, gameId, playerId });
+  res.json({
+    success: true,
+    gameId,
+    playerId,
+    game: JSON.parse(JSON.stringify(game)), // Ajouter l'état du jeu dans la réponse
+  });
 });
 
 // WebSocket
@@ -184,7 +189,7 @@ io.on("connection", (socket) => {
   console.log(`Nouvelle connexion WebSocket: ${socket.id}`);
 
   // Rejoindre une salle de jeu
-  socket.on("joinRoom", ({ gameId, playerId }) => {
+  socket.on("joinRoom", ({ gameId, playerId, playerName }) => {
     console.log(
       `Tentative de rejoindre la salle ${gameId} pour le joueur ${playerId}`
     );
@@ -215,15 +220,15 @@ io.on("connection", (socket) => {
     // Informer les autres joueurs
     socket.to(gameId).emit("playerJoined", {
       playerId: playerId,
-      playerName: game.players[playerId].name,
+      playerName: playerName,
+      game: JSON.parse(JSON.stringify(game)),
     });
 
     // Si tous les joueurs sont connectés et la partie est en cours
-    if (
-      game.status === "playing" &&
-      Object.values(game.players).every((p) => p.connected)
-    ) {
-      // Ne pas émettre gameOver ici, seulement l'état initial de la partie
+    const allPlayersConnected = Object.values(game.players).every(
+      (p) => p.connected
+    );
+    if (game.status === "playing" && allPlayersConnected) {
       io.to(gameId).emit("gameReady", {
         game: JSON.parse(JSON.stringify(game)),
         startingPlayer: game.currentTurn,

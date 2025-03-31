@@ -1317,6 +1317,7 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
+                currentGameId = data.gameId;
                 gameState.game = data.game;
                 gameIdDisplay.textContent = data.gameId;
                 showScreen("created");
@@ -1350,7 +1351,12 @@
             return;
           }
 
-          joinGame(gameState.game.id, name);
+          if (!currentGameId) {
+            showMessage("ID de partie non trouvé", true);
+            return;
+          }
+
+          joinGame(currentGameId, name);
         });
 
         copyGameIdBtn.addEventListener("click", () => {
@@ -1511,6 +1517,8 @@
                 gameState.game = data.game;
                 gameState.playerId = data.playerId;
                 gameState.playerName = playerName;
+                currentGameId = data.gameId;
+                currentPlayerId = data.playerId;
 
                 // Sauvegarder dans localStorage
                 localStorage.setItem("gameId", data.gameId);
@@ -1523,6 +1531,7 @@
                 socket.emit("joinRoom", {
                   gameId: data.gameId,
                   playerId: data.playerId,
+                  playerName: playerName,
                 });
               } else {
                 showMessage("Erreur: " + data.error, true);
