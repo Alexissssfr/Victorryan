@@ -86,8 +86,17 @@ function distributeCards() {
   const bonus = shuffleArray(bonusData).slice(0, 5);
 
   return {
-    personnages: personnages.map((card) => ({ ...card })), // Copie pour éviter le partage
-    bonus: bonus.map((card) => ({ ...card })),
+    personnages: personnages.map((card) => ({
+      ...card,
+      pointsdevie: parseInt(card.pointsdevie) || 100,
+      forceattaque: parseInt(card.forceattaque) || 30,
+      tourattaque: parseInt(card.tourattaque) || 2,
+    })),
+    bonus: bonus.map((card) => ({
+      ...card,
+      pourcentagebonus: parseInt(card.pourcentagebonus) || 10,
+      tourbonus: parseInt(card.tourbonus) || 2,
+    })),
   };
 }
 
@@ -531,27 +540,29 @@ io.on("connection", (socket) => {
     );
 
     if (isGameOver) {
-      game.status = "finished";
-      game.winner = playerId;
+      // Double vérification pour s'assurer que c'est vraiment game over
+      const allCharactersDead = Object.values(opponent.charactersState).every(
+        (char) => parseInt(char.pointsdevie) <= 0
+      );
 
-      // Calculer les points de vie restants pour chaque joueur
-      const calculateTotalHealth = (playerState) => {
-        return Object.values(playerState.charactersState).reduce(
-          (total, char) => total + Math.max(0, char.pointsdevie),
-          0
-        );
-      };
+      if (allCharactersDead) {
+        game.status = "finished";
+        game.winner = playerId;
 
-      game.finalStats = {
-        [playerKey]: calculateTotalHealth(player),
-        [opponentKey]: calculateTotalHealth(opponent),
-      };
+        // Calculer les points de vie restants pour chaque joueur
+        const calculateTotalHealth = (playerState) => {
+          return Object.values(playerState.charactersState).reduce(
+            (total, char) =>
+              total + Math.max(0, parseInt(char.pointsdevie) || 0),
+            0
+          );
+        };
 
-      // Nettoyer les données de la partie
-      setTimeout(() => {
-        games.delete(gameId);
-        gameBonus.delete(gameId);
-      }, 300000); // Nettoyage après 5 minutes
+        game.finalStats = {
+          [playerKey]: calculateTotalHealth(player),
+          [opponentKey]: calculateTotalHealth(opponent),
+        };
+      }
     }
 
     // Émettre l'événement d'attaque
@@ -559,8 +570,8 @@ io.on("connection", (socket) => {
       gameId,
       attackerId,
       targetId,
-      damage: attackerState.forceattaque,
-      newHealth: targetState.pointsdevie,
+      damage: parseInt(attackerState.forceattaque),
+      newHealth: parseInt(targetState.pointsdevie),
       attackerName: attackerCard.nomcarteperso,
       targetName: targetCard.nomcarteperso,
       isGameOver,
@@ -636,7 +647,8 @@ io.on("connection", (socket) => {
             // Calculer les points de vie restants
             const calculateTotalHealth = (playerState) => {
               return Object.values(playerState.charactersState).reduce(
-                (total, char) => total + Math.max(0, char.pointsdevie),
+                (total, char) =>
+                  total + Math.max(0, parseInt(char.pointsdevie) || 0),
                 0
               );
             };
@@ -771,7 +783,8 @@ io.on("connection", (socket) => {
           // Calculer les points de vie restants
           const calculateTotalHealth = (playerState) => {
             return Object.values(playerState.charactersState).reduce(
-              (total, char) => total + Math.max(0, char.pointsdevie),
+              (total, char) =>
+                total + Math.max(0, parseInt(char.pointsdevie) || 0),
               0
             );
           };
