@@ -160,7 +160,6 @@ app.post("/api/games/:id/join", (req, res) => {
     id: playerId,
     name: name,
     cards: cards,
-    // Initialiser l'état des personnages
     charactersState: {},
   };
 
@@ -177,11 +176,16 @@ app.post("/api/games/:id/join", (req, res) => {
   // Premier joueur devient le joueur actif
   if (Object.keys(game.players).length === 1) {
     game.currentTurn = playerId;
+    game.status = "waiting";
   }
 
   // Deux joueurs = partie commence
   if (Object.keys(game.players).length === 2) {
     game.status = "playing";
+    game.turnNumber = 1;
+    game.bonusPlayedThisTurn = false;
+    game.lastBonusTarget = null;
+    game.attackPerformed = false;
   }
 
   console.log(`Joueur ${name} (${playerId}) a rejoint la partie ${gameId}`);
@@ -189,7 +193,7 @@ app.post("/api/games/:id/join", (req, res) => {
     success: true,
     gameId,
     playerId,
-    game: JSON.parse(JSON.stringify(game)), // Ajouter l'état du jeu dans la réponse
+    game: JSON.parse(JSON.stringify(game)),
   });
 });
 
@@ -528,41 +532,37 @@ io.on("connection", (socket) => {
     // Appliquer les dégâts
     targetState.pointsdevie = Math.max(
       0,
-      targetState.pointsdevie - attackerState.forceattaque
+      parseInt(targetState.pointsdevie) - parseInt(attackerState.forceattaque)
     );
 
     // Décrémenter le nombre de tours d'attaque
     attackerState.tourattaque--;
 
+    // Marquer que l'attaque a été effectuée
+    game.attackPerformed = true;
+
     // Vérifier si la partie est terminée
-    const isGameOver = Object.values(opponent.charactersState).every(
-      (char) => char.pointsdevie <= 0
-    );
+    const opponentCharactersState = Object.values(opponent.charactersState);
+    const isGameOver =
+      opponentCharactersState.length > 0 &&
+      opponentCharactersState.every((char) => parseInt(char.pointsdevie) <= 0);
 
     if (isGameOver) {
-      // Double vérification pour s'assurer que c'est vraiment game over
-      const allCharactersDead = Object.values(opponent.charactersState).every(
-        (char) => parseInt(char.pointsdevie) <= 0
-      );
+      game.status = "finished";
+      game.winner = playerId;
 
-      if (allCharactersDead) {
-        game.status = "finished";
-        game.winner = playerId;
+      // Calculer les points de vie restants pour chaque joueur
+      const calculateTotalHealth = (playerState) => {
+        return Object.values(playerState.charactersState).reduce(
+          (total, char) => total + Math.max(0, parseInt(char.pointsdevie) || 0),
+          0
+        );
+      };
 
-        // Calculer les points de vie restants pour chaque joueur
-        const calculateTotalHealth = (playerState) => {
-          return Object.values(playerState.charactersState).reduce(
-            (total, char) =>
-              total + Math.max(0, parseInt(char.pointsdevie) || 0),
-            0
-          );
-        };
-
-        game.finalStats = {
-          [playerKey]: calculateTotalHealth(player),
-          [opponentKey]: calculateTotalHealth(opponent),
-        };
-      }
+      game.finalStats = {
+        [playerKey]: calculateTotalHealth(player),
+        [opponentKey]: calculateTotalHealth(opponent),
+      };
     }
 
     // Émettre l'événement d'attaque
