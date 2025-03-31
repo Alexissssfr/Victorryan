@@ -698,6 +698,73 @@ io.on("connection", (socket) => {
         playerName: game.players[playerId].name,
       });
     });
+
+    // Gérer l'événement leaveGame
+    socket.on("leaveGame", ({ gameId }) => {
+      if (!games.has(gameId)) return;
+
+      const game = games.get(gameId);
+      const playerId = Object.keys(game.players).find(
+        (key) => game.players[key].socketId === socket.id
+      );
+
+      if (playerId && game.players[playerId]) {
+        // Informer les autres joueurs
+        socket.to(gameId).emit("playerLeft", {
+          playerId,
+          playerName: game.players[playerId].name,
+          temporary: false,
+        });
+
+        // Si la partie est en cours, la terminer
+        if (game.status === "playing") {
+          const remainingPlayerId = Object.keys(game.players).find(
+            (pid) => pid !== playerId
+          );
+
+          if (remainingPlayerId) {
+            game.status = "finished";
+            game.winner = remainingPlayerId;
+            game.endReason = "player_left";
+
+            // Calculer les points de vie restants
+            const calculateTotalHealth = (playerState) => {
+              return Object.values(playerState.charactersState).reduce(
+                (total, char) => total + Math.max(0, char.pointsdevie),
+                0
+              );
+            };
+
+            game.finalStats = {
+              [playerId]: calculateTotalHealth(game.players[playerId]),
+              [remainingPlayerId]: calculateTotalHealth(
+                game.players[remainingPlayerId]
+              ),
+            };
+
+            // Informer les joueurs restants
+            io.to(gameId).emit("gameOver", {
+              reason: "player_left",
+              winner: remainingPlayerId,
+              leftBy: playerId,
+              finalStats: game.finalStats,
+              newGameState: JSON.parse(JSON.stringify(game)),
+            });
+          }
+        }
+
+        // Nettoyer après un délai
+        setTimeout(() => {
+          if (games.has(gameId)) {
+            games.delete(gameId);
+            gameBonus.delete(gameId);
+            console.log(`Partie ${gameId} nettoyée après départ du joueur`);
+          }
+        }, 300000); // 5 minutes
+      }
+
+      socket.leave(gameId);
+    });
   });
 });
 

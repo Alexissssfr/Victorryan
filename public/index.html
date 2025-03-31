@@ -1679,7 +1679,10 @@
         });
 
         socket.on("playerJoined", (data) => {
-          showMessage(`${data.playerName} a rejoint la partie`);
+          if (data && data.playerId && data.playerName) {
+            displayMessage(`${data.playerName} a rejoint la partie !`);
+            updateGameState();
+          }
         });
 
         socket.on("gameReady", (data) => {
@@ -1896,62 +1899,14 @@
 
         // Fonction pour retourner au menu principal
         function returnToMenu() {
-          console.log("Retour au menu principal");
-
-          // Effacer les données de la partie
-          localStorage.removeItem("gameId");
-          localStorage.removeItem("playerId");
-          localStorage.removeItem("playerName");
-
-          // Réinitialiser l'état du jeu
-          gameState = {
-            gameId: null,
-            playerId: null,
-            playerName: null,
-            isMyTurn: false,
-            gameData: null,
-            selectedCharacter: null,
-            selectedBonus: null,
-            targetCharacter: null,
-            bonusPlayedThisTurn: false,
-            lastBonusTarget: null,
-            currentTurnNumber: 1, // Ajout du compteur de tour global
-          };
-
-          // Cacher tous les écrans
-          gameOverScreen.classList.add("hidden");
-          screens.game.classList.add("hidden");
-          screens.waiting.classList.add("hidden");
-          screens.created.classList.add("hidden");
-
-          // Vider les conteneurs de cartes
-          yourCharacters.innerHTML = "";
-          yourBonus.innerHTML = "";
-          opponentCharacters.innerHTML = "";
-
-          // Réinitialiser les champs d'entrée
-          document.getElementById("playerNameInput").value = "";
-          document.getElementById("gameIdInput").value = "";
-          document.getElementById("creatorNameInput").value = "";
-
-          // Réinitialiser les messages
-          messages.innerHTML = "";
-
-          // Afficher l'écran d'accueil
-          screens.home.classList.remove("hidden");
-
-          // Réinitialiser le socket
-          socket.emit("disconnect");
-
-          // Forcer le rafraîchissement de la page si nécessaire
-          if (!screens.home.classList.contains("hidden")) {
-            console.log("Page d'accueil affichée avec succès");
-          } else {
-            console.log(
-              "Échec de l'affichage de la page d'accueil, tentative de rafraîchissement"
-            );
-            window.location.href = window.location.href;
+          if (socket) {
+            socket.emit("leaveGame", { gameId: currentGameId });
+            socket.disconnect();
           }
+          currentGameId = null;
+          currentPlayerId = null;
+          hideAllScreens();
+          showScreen("menuScreen");
         }
 
         // Fonction pour afficher l'écran de fin de partie
