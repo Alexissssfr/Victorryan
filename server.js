@@ -347,10 +347,26 @@ io.on("connection", (socket) => {
         return;
       }
 
-      // Vérifier si le personnage cible existe
-      if (!player.charactersState[targetId]) {
-        socket.emit("error", { message: "Personnage cible non trouvé" });
+      // Vérifier si le personnage cible existe dans les cartes du joueur
+      const targetCard = player.cards.personnages.find(
+        (card) => card.id === targetId
+      );
+      if (!targetCard) {
+        socket.emit("error", {
+          message: "Personnage cible non trouvé dans vos cartes",
+        });
         return;
+      }
+
+      // S'assurer que le personnage existe dans charactersState
+      if (!player.charactersState[targetId]) {
+        // Initialiser l'état du personnage s'il n'existe pas
+        player.charactersState[targetId] = {
+          currentHealth: parseInt(targetCard.pointsdevie),
+          currentAttack: parseInt(targetCard.forceattaque),
+          currentTurns: parseInt(targetCard.tourattaque),
+          activeBonus: [],
+        };
       }
 
       // Stocker le bonus dans la structure isolée
@@ -370,7 +386,7 @@ io.on("connection", (socket) => {
 
       // Mettre à jour l'attaque du personnage avec le bonus
       const characterState = player.charactersState[targetId];
-      const baseAttack = characterState.currentAttack;
+      const baseAttack = parseInt(targetCard.forceattaque); // Utiliser la force d'attaque de base de la carte
       characterState.currentAttack = Math.floor(
         baseAttack * (1 + bonusEffect.percentage / 100)
       );
@@ -391,8 +407,9 @@ io.on("connection", (socket) => {
         bonusId,
         targetId,
         bonusName: bonusCard.nomcartebonus,
-        targetName: player.cards.personnages.find((c) => c.id === targetId)
-          ?.nomcarteperso,
+        targetName: targetCard.nomcarteperso,
+        percentage: bonusEffect.percentage,
+        newAttack: characterState.currentAttack,
         game: JSON.parse(JSON.stringify(game)),
       });
     });
@@ -418,6 +435,25 @@ io.on("connection", (socket) => {
       }
 
       const player = game.players[playerKey];
+      const attackerCard = player.cards.personnages.find(
+        (card) => card.id === attackerId
+      );
+
+      if (!attackerCard) {
+        socket.emit("error", { message: "Carte attaquante non trouvée" });
+        return;
+      }
+
+      // S'assurer que l'attaquant existe dans charactersState
+      if (!player.charactersState[attackerId]) {
+        player.charactersState[attackerId] = {
+          currentHealth: parseInt(attackerCard.pointsdevie),
+          currentAttack: parseInt(attackerCard.forceattaque),
+          currentTurns: parseInt(attackerCard.tourattaque),
+          activeBonus: [],
+        };
+      }
+
       const attackerState = player.charactersState[attackerId];
 
       if (!attackerState || attackerState.currentTurns <= 0) {
@@ -436,12 +472,26 @@ io.on("connection", (socket) => {
       // Trouver la cible
       const opponentKey = playerKey === "player1" ? "player2" : "player1";
       const opponent = game.players[opponentKey];
-      const targetState = opponent.charactersState[targetId];
+      const targetCard = opponent.cards.personnages.find(
+        (card) => card.id === targetId
+      );
 
-      if (!targetState) {
-        socket.emit("error", { message: "Cible non trouvée" });
+      if (!targetCard) {
+        socket.emit("error", { message: "Carte cible non trouvée" });
         return;
       }
+
+      // S'assurer que la cible existe dans charactersState
+      if (!opponent.charactersState[targetId]) {
+        opponent.charactersState[targetId] = {
+          currentHealth: parseInt(targetCard.pointsdevie),
+          currentAttack: parseInt(targetCard.forceattaque),
+          currentTurns: parseInt(targetCard.tourattaque),
+          activeBonus: [],
+        };
+      }
+
+      const targetState = opponent.charactersState[targetId];
 
       // Appliquer les dégâts
       targetState.currentHealth = Math.max(
@@ -475,10 +525,8 @@ io.on("connection", (socket) => {
         targetId,
         damage: attackerState.currentAttack,
         newHealth: targetState.currentHealth,
-        attackerName: player.cards.personnages.find((c) => c.id === attackerId)
-          ?.nomcarteperso,
-        targetName: opponent.cards.personnages.find((c) => c.id === targetId)
-          ?.nomcarteperso,
+        attackerName: attackerCard.nomcarteperso,
+        targetName: targetCard.nomcarteperso,
         isGameOver,
         winner: game.winner,
         game: JSON.parse(JSON.stringify(game)),
