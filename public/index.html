@@ -2236,6 +2236,93 @@
 
         // Appeler cette fonction après le chargement du DOM
         setupCardZoom();
+
+        function displayMessage(message, type = "info") {
+          const messageContainer = document.getElementById("messages");
+          const messageElement = document.createElement("div");
+          messageElement.className = `message message-${type}`;
+          messageElement.textContent = message;
+          messageContainer.appendChild(messageElement);
+
+          // Auto-remove after 5 seconds
+          setTimeout(() => {
+            messageElement.remove();
+          }, 5000);
+        }
+
+        // Modifier la gestion de l'événement gameOver
+        socket.on("gameOver", function (data) {
+          if (!data || !data.newGameState) return;
+
+          const game = data.newGameState;
+          const winner = game.players[data.winner];
+
+          if (!winner) return;
+
+          // Calculer les points de vie totaux pour chaque joueur
+          const calculatePlayerHealth = (player) => {
+            if (!player || !player.charactersState) return 0;
+            return Object.values(player.charactersState).reduce(
+              (total, char) => {
+                return total + (parseInt(char.pointsdevie) || 0);
+              },
+              0
+            );
+          };
+
+          // Mettre à jour les statistiques
+          const stats = {
+            [game.players.player1?.id]: calculatePlayerHealth(
+              game.players.player1
+            ),
+            [game.players.player2?.id]: calculatePlayerHealth(
+              game.players.player2
+            ),
+          };
+
+          // Afficher l'écran de fin de partie avec les statistiques correctes
+          showGameOverScreen({
+            winner: data.winner,
+            playersTotalHealth: stats,
+            newGameState: game,
+          });
+        });
+
+        // Modifier la fonction showGameOverScreen
+        function showGameOverScreen(data) {
+          if (!data || !data.newGameState || !data.winner) return;
+
+          const game = data.newGameState;
+          const winner = game.players[data.winner];
+          const currentPlayer = game.players[currentPlayerId];
+
+          if (!winner || !currentPlayer) return;
+
+          // Cacher tous les autres écrans
+          hideAllScreens();
+
+          // Afficher l'écran de fin de partie
+          const gameOverScreen = document.getElementById("gameOverScreen");
+          gameOverScreen.classList.remove("hidden");
+
+          // Mettre à jour le titre et le message
+          const isWinner = currentPlayerId === data.winner;
+          const title = document.querySelector("#gameOverScreen h1");
+          const message = document.querySelector("#gameOverScreen .message");
+
+          if (isWinner) {
+            title.innerHTML = "🏆 Victoire !";
+            message.innerHTML = "Félicitations ! Vous avez gagné la partie !";
+            message.className = "message message-victory";
+          } else {
+            title.innerHTML = "💔 Défaite !";
+            message.innerHTML = "Vous avez perdu la partie. Réessayez !";
+            message.className = "message message-defeat";
+          }
+
+          // Mettre à jour les statistiques
+          updateGameStats(data.playersTotalHealth, game);
+        }
       });
     </script>
   </body>

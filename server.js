@@ -205,9 +205,6 @@ io.on("connection", (socket) => {
     socket.join(gameId);
     game.players[playerId].socketId = socket.id;
     game.players[playerId].connected = true;
-    console.log(
-      `Socket ${socket.id} (Joueur ${playerId}) a rejoint la salle ${gameId}`
-    );
 
     // Informer le joueur de l'état actuel
     socket.emit("gameState", {
@@ -226,6 +223,7 @@ io.on("connection", (socket) => {
       game.status === "playing" &&
       Object.values(game.players).every((p) => p.connected)
     ) {
+      // Ne pas émettre gameOver ici, seulement l'état initial de la partie
       io.to(gameId).emit("gameReady", {
         game: JSON.parse(JSON.stringify(game)),
         startingPlayer: game.currentTurn,
