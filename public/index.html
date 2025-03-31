@@ -1163,9 +1163,9 @@
           }
 
           // Si un bonus a été joué ce tour-ci
-          if (gameState.gameData.bonusPlayedThisTurn) {
-            // On ne peut sélectionner que le personnage qui a reçu le bonus
-            if (cardId === gameState.gameData.lastBonusTarget) {
+          if (gameState.bonusPlayedThisTurn) {
+            // On ne peut sélectionner que le personnage qui a reçu le bonus ce tour-ci
+            if (cardId === gameState.lastBonusTarget) {
               gameState.selectedCharacter =
                 gameState.selectedCharacter === cardId ? null : cardId;
             } else {
@@ -1478,6 +1478,12 @@
           gameState.bonusPlayedThisTurn = true;
           gameState.lastBonusTarget = gameState.selectedCharacter;
 
+          // Mettre à jour l'état du jeu avec les flags de bonus
+          if (gameState.gameData) {
+            gameState.gameData.bonusPlayedThisTurn = true;
+            gameState.gameData.lastBonusTarget = gameState.selectedCharacter;
+          }
+
           // Afficher un message explicite
           const bonusCard = gameState.gameData.players[
             gameState.playerId
@@ -1487,12 +1493,14 @@
           ].cards.personnages.find((c) => c.id === gameState.selectedCharacter);
 
           showMessage(
-            `${bonusCard?.nomcartebonus || "Bonus"} joué sur ${
+            `Tour ${gameState.currentTurnNumber}: ${
+              bonusCard?.nomcartebonus || "Bonus"
+            } joué sur ${
               characterCard?.nomcarteperso || gameState.selectedCharacter
             }`
           );
           showMessage(
-            "Vous ne pourrez plus sélectionner d'autres personnages ce tour-ci"
+            `Tour ${gameState.currentTurnNumber}: Vous ne pourrez plus sélectionner d'autres personnages ce tour-ci`
           );
 
           // Réinitialiser seulement la sélection de bonus, garder le personnage sélectionné
@@ -1601,18 +1609,20 @@
 
           // Si le tour passe de l'adversaire à nous
           if (newTurn && !previousTurn) {
-            // Incrémenter le compteur de tour
+            // Incrémenter le compteur de tour global
             gameState.currentTurnNumber =
               (gameState.currentTurnNumber || 1) + 1;
             console.log("Tour incrémenté à:", gameState.currentTurnNumber);
+
+            // Réinitialiser les flags de bonus au début d'un nouveau tour
+            gameState.bonusPlayedThisTurn = false;
+            gameState.lastBonusTarget = null;
           }
 
           gameState.isMyTurn = newTurn;
 
-          // Réinitialiser tous les flags au début de notre tour
+          // Réinitialiser les sélections au début de notre tour
           if (gameState.isMyTurn) {
-            gameState.bonusPlayedThisTurn = false;
-            gameState.lastBonusTarget = null;
             gameState.selectedCharacter = null;
             gameState.selectedBonus = null;
             gameState.targetCharacter = null;
@@ -1623,6 +1633,10 @@
             gameState.gameData = data.newGameState;
             if (gameState.gameData) {
               gameState.gameData.attackPerformed = false;
+              // Stocker les flags de bonus dans l'état du jeu
+              gameState.gameData.bonusPlayedThisTurn =
+                gameState.bonusPlayedThisTurn;
+              gameState.gameData.lastBonusTarget = gameState.lastBonusTarget;
             }
           }
 
