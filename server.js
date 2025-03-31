@@ -188,6 +188,9 @@ app.post("/api/games/:id/join", (req, res) => {
 io.on("connection", (socket) => {
   console.log(`Nouvelle connexion WebSocket: ${socket.id}`);
 
+  // Stocker les parties auxquelles ce socket est connecté
+  const playerGames = new Set();
+
   // Rejoindre une salle de jeu
   socket.on("joinRoom", ({ gameId, playerId, playerName }) => {
     console.log(
@@ -208,6 +211,7 @@ io.on("connection", (socket) => {
 
     // Connexion réussie
     socket.join(gameId);
+    playerGames.add(gameId);
     game.players[playerId].socketId = socket.id;
     game.players[playerId].connected = true;
 
@@ -234,329 +238,352 @@ io.on("connection", (socket) => {
         startingPlayer: game.currentTurn,
       });
     }
+  });
 
-    // Fin de tour
-    socket.on("endTurn", ({ gameId, playerId }) => {
-      if (!games.has(gameId)) return;
+  // Fin de tour
+  socket.on("endTurn", ({ gameId, playerId }) => {
+    if (!games.has(gameId)) return;
+    const game = games.get(gameId);
 
-      const game = games.get(gameId);
-      const gameBonusState = gameBonus.get(gameId);
+    // Vérifier que le socket est bien dans cette partie
+    if (!playerGames.has(gameId)) return;
 
-      if (!game || !gameBonusState) {
-        socket.emit("error", { message: "Partie non trouvée" });
-        return;
-      }
+    const gameBonusState = gameBonus.get(gameId);
 
-      if (game.currentTurn !== playerId) {
-        socket.emit("error", { message: "Ce n'est pas votre tour" });
-        return;
-      }
+    if (!game || !gameBonusState) {
+      socket.emit("error", { message: "Partie non trouvée" });
+      return;
+    }
 
-      // Trouver le joueur actuel et le prochain joueur
-      const currentPlayerKey = Object.keys(game.players).find(
-        (key) => game.players[key].id === playerId
+    if (game.currentTurn !== playerId) {
+      socket.emit("error", { message: "Ce n'est pas votre tour" });
+      return;
+    }
+
+    // Trouver le joueur actuel et le prochain joueur
+    const currentPlayerKey = Object.keys(game.players).find(
+      (key) => game.players[key].id === playerId
+    );
+    const nextPlayerKey = Object.keys(game.players).find(
+      (key) => game.players[key].id !== playerId
+    );
+
+    if (!currentPlayerKey || !nextPlayerKey) {
+      socket.emit("error", { message: "Joueurs non trouvés" });
+      return;
+    }
+
+    const currentPlayer = game.players[currentPlayerKey];
+    const nextPlayer = game.players[nextPlayerKey];
+
+    // Gérer les bonus du joueur actuel
+    const currentPlayerBonusMap =
+      gameBonusState[currentPlayerKey === "player1" ? "player1" : "player2"];
+    for (const [characterId, bonusList] of currentPlayerBonusMap.entries()) {
+      const characterState = currentPlayer.charactersState[characterId];
+      const baseCard = currentPlayer.cards.personnages.find(
+        (c) => c.id === characterId
       );
-      const nextPlayerKey = Object.keys(game.players).find(
-        (key) => game.players[key].id !== playerId
-      );
 
-      if (!currentPlayerKey || !nextPlayerKey) {
-        socket.emit("error", { message: "Joueurs non trouvés" });
-        return;
-      }
+      if (!characterState || !baseCard) continue;
 
-      const currentPlayer = game.players[currentPlayerKey];
-      const nextPlayer = game.players[nextPlayerKey];
+      const updatedBonusList = bonusList
+        .map((bonus) => ({ ...bonus, tourbonus: bonus.tourbonus - 1 }))
+        .filter((bonus) => bonus.tourbonus > 0);
 
-      // Gérer les bonus du joueur actuel
-      const currentPlayerBonusMap =
-        gameBonusState[currentPlayerKey === "player1" ? "player1" : "player2"];
-      for (const [characterId, bonusList] of currentPlayerBonusMap.entries()) {
-        const characterState = currentPlayer.charactersState[characterId];
-        const baseCard = currentPlayer.cards.personnages.find(
-          (c) => c.id === characterId
-        );
-
-        if (!characterState || !baseCard) continue;
-
-        const updatedBonusList = bonusList
-          .map((bonus) => ({ ...bonus, tourbonus: bonus.tourbonus - 1 }))
-          .filter((bonus) => bonus.tourbonus > 0);
-
-        if (updatedBonusList.length > 0) {
-          // Recalculer l'attaque avec les bonus restants
-          let newAttack = parseInt(baseCard.forceattaque);
-          updatedBonusList.forEach((bonus) => {
-            newAttack = Math.floor(
-              newAttack * (1 + bonus.pourcentagebonus / 100)
-            );
-          });
-          characterState.forceattaque = newAttack;
-          currentPlayerBonusMap.set(characterId, updatedBonusList);
-        } else {
-          // Réinitialiser l'attaque et supprimer les bonus
-          characterState.forceattaque = parseInt(baseCard.forceattaque);
-          currentPlayerBonusMap.delete(characterId);
-        }
-      }
-
-      // Réinitialiser les tours d'attaque pour le prochain joueur
-      Object.keys(nextPlayer.charactersState).forEach((characterId) => {
-        const baseCard = nextPlayer.cards.personnages.find(
-          (c) => c.id === characterId
-        );
-        if (baseCard) {
-          nextPlayer.charactersState[characterId].tourattaque = parseInt(
-            baseCard.tourattaque
+      if (updatedBonusList.length > 0) {
+        // Recalculer l'attaque avec les bonus restants
+        let newAttack = parseInt(baseCard.forceattaque);
+        updatedBonusList.forEach((bonus) => {
+          newAttack = Math.floor(
+            newAttack * (1 + bonus.pourcentagebonus / 100)
           );
-        }
-      });
+        });
+        characterState.forceattaque = newAttack;
+        currentPlayerBonusMap.set(characterId, updatedBonusList);
+      } else {
+        // Réinitialiser l'attaque et supprimer les bonus
+        characterState.forceattaque = parseInt(baseCard.forceattaque);
+        currentPlayerBonusMap.delete(characterId);
+      }
+    }
 
-      // Mettre à jour l'état du jeu
-      game.currentTurn = nextPlayer.id;
-      game.bonusPlayedThisTurn = false;
-      game.lastBonusTarget = null;
-
-      // Émettre l'événement de changement de tour
-      io.to(gameId).emit("turnChanged", {
-        currentTurn: game.currentTurn,
-        newGameState: JSON.parse(JSON.stringify(game)),
-      });
+    // Réinitialiser les tours d'attaque pour le prochain joueur
+    Object.keys(nextPlayer.charactersState).forEach((characterId) => {
+      const baseCard = nextPlayer.cards.personnages.find(
+        (c) => c.id === characterId
+      );
+      if (baseCard) {
+        nextPlayer.charactersState[characterId].tourattaque = parseInt(
+          baseCard.tourattaque
+        );
+      }
     });
 
-    // Jouer une carte bonus
-    socket.on("playBonus", (data) => {
-      const { gameId, playerId, bonusId, targetId } = data;
-      const game = games.get(gameId);
-      const gameBonusState = gameBonus.get(gameId);
+    // Mettre à jour l'état du jeu
+    game.currentTurn = nextPlayer.id;
+    game.bonusPlayedThisTurn = false;
+    game.lastBonusTarget = null;
 
-      if (!game || !gameBonusState) {
-        socket.emit("error", { message: "Partie non trouvée" });
-        return;
-      }
+    // Émettre l'événement de changement de tour
+    io.to(gameId).emit("turnChanged", {
+      currentTurn: game.currentTurn,
+      newGameState: JSON.parse(JSON.stringify(game)),
+    });
+  });
 
-      const playerKey = Object.keys(game.players).find(
-        (key) => game.players[key].id === playerId
-      );
+  // Jouer une carte bonus
+  socket.on("playBonus", (data) => {
+    const { gameId, playerId, bonusId, targetId } = data;
+    if (!games.has(gameId)) return;
 
-      if (!playerKey || game.currentTurn !== playerId) {
-        socket.emit("error", { message: "Ce n'est pas votre tour" });
-        return;
-      }
+    // Vérifier que le socket est bien dans cette partie
+    if (!playerGames.has(gameId)) return;
 
-      const player = game.players[playerKey];
-      const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
+    const game = games.get(gameId);
+    const gameBonusState = gameBonus.get(gameId);
 
-      if (!bonusCard) {
-        socket.emit("error", { message: "Carte bonus non trouvée" });
-        return;
-      }
+    if (!game || !gameBonusState) {
+      socket.emit("error", { message: "Partie non trouvée" });
+      return;
+    }
 
-      // Vérifier si le personnage cible existe dans les cartes du joueur
-      const targetCard = player.cards.personnages.find(
-        (card) => card.id === targetId
-      );
-      if (!targetCard) {
-        socket.emit("error", {
-          message: "Personnage cible non trouvé dans vos cartes",
-        });
-        return;
-      }
+    const playerKey = Object.keys(game.players).find(
+      (key) => game.players[key].id === playerId
+    );
 
-      // S'assurer que le personnage existe dans charactersState
-      if (!player.charactersState[targetId]) {
-        // Initialiser l'état du personnage s'il n'existe pas
-        player.charactersState[targetId] = {
-          pointsdevie: parseInt(targetCard.pointsdevie),
-          forceattaque: parseInt(targetCard.forceattaque),
-          tourattaque: parseInt(targetCard.tourattaque),
-          activeBonus: [],
-        };
-      }
+    if (!playerKey || game.currentTurn !== playerId) {
+      socket.emit("error", { message: "Ce n'est pas votre tour" });
+      return;
+    }
 
-      // Stocker le bonus dans la structure isolée
-      const playerBonusMap =
-        gameBonusState[playerKey === "player1" ? "player1" : "player2"];
-      if (!playerBonusMap.has(targetId)) {
-        playerBonusMap.set(targetId, []);
-      }
+    const player = game.players[playerKey];
+    const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
 
-      const bonusEffect = {
-        id: bonusId,
-        tourbonus: parseInt(bonusCard.tourbonus),
-        pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
+    if (!bonusCard) {
+      socket.emit("error", { message: "Carte bonus non trouvée" });
+      return;
+    }
+
+    // Vérifier si le personnage cible existe dans les cartes du joueur
+    const targetCard = player.cards.personnages.find(
+      (card) => card.id === targetId
+    );
+    if (!targetCard) {
+      socket.emit("error", {
+        message: "Personnage cible non trouvé dans vos cartes",
+      });
+      return;
+    }
+
+    // S'assurer que le personnage existe dans charactersState
+    if (!player.charactersState[targetId]) {
+      // Initialiser l'état du personnage s'il n'existe pas
+      player.charactersState[targetId] = {
+        pointsdevie: parseInt(targetCard.pointsdevie),
+        forceattaque: parseInt(targetCard.forceattaque),
+        tourattaque: parseInt(targetCard.tourattaque),
+        activeBonus: [],
+      };
+    }
+
+    // Stocker le bonus dans la structure isolée
+    const playerBonusMap =
+      gameBonusState[playerKey === "player1" ? "player1" : "player2"];
+    if (!playerBonusMap.has(targetId)) {
+      playerBonusMap.set(targetId, []);
+    }
+
+    const bonusEffect = {
+      id: bonusId,
+      tourbonus: parseInt(bonusCard.tourbonus),
+      pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
+    };
+
+    playerBonusMap.get(targetId).push(bonusEffect);
+
+    // Mettre à jour l'attaque du personnage avec le bonus
+    const characterState = player.charactersState[targetId];
+    const baseAttack = parseInt(targetCard.forceattaque);
+    characterState.forceattaque = Math.floor(
+      baseAttack * (1 + bonusEffect.pourcentagebonus / 100)
+    );
+
+    // Retirer la carte bonus de la main du joueur
+    player.cards.bonus = player.cards.bonus.filter(
+      (card) => card.id !== bonusId
+    );
+
+    // Marquer qu'un bonus a été joué ce tour
+    game.bonusPlayedThisTurn = true;
+    game.lastBonusTarget = targetId;
+
+    // Émettre l'événement de bonus joué
+    io.to(gameId).emit("bonusPlayed", {
+      gameId,
+      playerId,
+      bonusId,
+      targetId,
+      bonusName: bonusCard.nomcartebonus,
+      targetName: targetCard.nomcarteperso,
+      pourcentagebonus: bonusEffect.pourcentagebonus,
+      newAttack: characterState.forceattaque,
+      game: JSON.parse(JSON.stringify(game)),
+    });
+  });
+
+  // Attaquer un personnage
+  socket.on("attack", (data) => {
+    const { gameId, playerId, attackerId, targetId } = data;
+    if (!games.has(gameId)) return;
+
+    // Vérifier que le socket est bien dans cette partie
+    if (!playerGames.has(gameId)) return;
+
+    const game = games.get(gameId);
+    const gameBonusState = gameBonus.get(gameId);
+
+    if (!game || !gameBonusState) {
+      socket.emit("error", { message: "Partie non trouvée" });
+      return;
+    }
+
+    const playerKey = Object.keys(game.players).find(
+      (key) => game.players[key].id === playerId
+    );
+
+    if (!playerKey || game.currentTurn !== playerId) {
+      socket.emit("error", { message: "Ce n'est pas votre tour" });
+      return;
+    }
+
+    const player = game.players[playerKey];
+    const attackerCard = player.cards.personnages.find(
+      (card) => card.id === attackerId
+    );
+
+    if (!attackerCard) {
+      socket.emit("error", { message: "Carte attaquante non trouvée" });
+      return;
+    }
+
+    // S'assurer que l'attaquant existe dans charactersState
+    if (!player.charactersState[attackerId]) {
+      player.charactersState[attackerId] = {
+        pointsdevie: parseInt(attackerCard.pointsdevie),
+        forceattaque: parseInt(attackerCard.forceattaque),
+        tourattaque: parseInt(attackerCard.tourattaque),
+        activeBonus: [],
+      };
+    }
+
+    const attackerState = player.charactersState[attackerId];
+
+    if (!attackerState || attackerState.tourattaque <= 0) {
+      socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
+      return;
+    }
+
+    // Si un bonus a été joué ce tour, vérifier que c'est le bon personnage
+    if (game.bonusPlayedThisTurn && attackerId !== game.lastBonusTarget) {
+      socket.emit("error", {
+        message: "Vous devez attaquer avec le personnage qui a reçu le bonus",
+      });
+      return;
+    }
+
+    // Trouver la cible
+    const opponentKey = playerKey === "player1" ? "player2" : "player1";
+    const opponent = game.players[opponentKey];
+    const targetCard = opponent.cards.personnages.find(
+      (card) => card.id === targetId
+    );
+
+    if (!targetCard) {
+      socket.emit("error", { message: "Carte cible non trouvée" });
+      return;
+    }
+
+    // S'assurer que la cible existe dans charactersState
+    if (!opponent.charactersState[targetId]) {
+      opponent.charactersState[targetId] = {
+        pointsdevie: parseInt(targetCard.pointsdevie),
+        forceattaque: parseInt(targetCard.forceattaque),
+        tourattaque: parseInt(targetCard.tourattaque),
+        activeBonus: [],
+      };
+    }
+
+    const targetState = opponent.charactersState[targetId];
+
+    // Appliquer les dégâts
+    targetState.pointsdevie = Math.max(
+      0,
+      targetState.pointsdevie - attackerState.forceattaque
+    );
+
+    // Décrémenter le nombre de tours d'attaque
+    attackerState.tourattaque--;
+
+    // Vérifier si la partie est terminée
+    const isGameOver = Object.values(opponent.charactersState).every(
+      (char) => char.pointsdevie <= 0
+    );
+
+    if (isGameOver) {
+      game.status = "finished";
+      game.winner = playerId;
+
+      // Calculer les points de vie restants pour chaque joueur
+      const calculateTotalHealth = (playerState) => {
+        return Object.values(playerState.charactersState).reduce(
+          (total, char) => total + Math.max(0, char.pointsdevie),
+          0
+        );
       };
 
-      playerBonusMap.get(targetId).push(bonusEffect);
+      game.finalStats = {
+        [playerKey]: calculateTotalHealth(player),
+        [opponentKey]: calculateTotalHealth(opponent),
+      };
 
-      // Mettre à jour l'attaque du personnage avec le bonus
-      const characterState = player.charactersState[targetId];
-      const baseAttack = parseInt(targetCard.forceattaque);
-      characterState.forceattaque = Math.floor(
-        baseAttack * (1 + bonusEffect.pourcentagebonus / 100)
-      );
+      // Nettoyer les données de la partie
+      setTimeout(() => {
+        games.delete(gameId);
+        gameBonus.delete(gameId);
+      }, 300000); // Nettoyage après 5 minutes
+    }
 
-      // Retirer la carte bonus de la main du joueur
-      player.cards.bonus = player.cards.bonus.filter(
-        (card) => card.id !== bonusId
-      );
-
-      // Marquer qu'un bonus a été joué ce tour
-      game.bonusPlayedThisTurn = true;
-      game.lastBonusTarget = targetId;
-
-      // Émettre l'événement de bonus joué
-      io.to(gameId).emit("bonusPlayed", {
-        gameId,
-        playerId,
-        bonusId,
-        targetId,
-        bonusName: bonusCard.nomcartebonus,
-        targetName: targetCard.nomcarteperso,
-        pourcentagebonus: bonusEffect.pourcentagebonus,
-        newAttack: characterState.forceattaque,
-        game: JSON.parse(JSON.stringify(game)),
-      });
+    // Émettre l'événement d'attaque
+    io.to(gameId).emit("characterAttacked", {
+      gameId,
+      attackerId,
+      targetId,
+      damage: attackerState.forceattaque,
+      newHealth: targetState.pointsdevie,
+      attackerName: attackerCard.nomcarteperso,
+      targetName: targetCard.nomcarteperso,
+      isGameOver,
+      winner: game.winner,
+      finalStats: game.finalStats,
+      game: JSON.parse(JSON.stringify(game)),
     });
+  });
 
-    // Attaquer un personnage
-    socket.on("attack", (data) => {
-      const { gameId, playerId, attackerId, targetId } = data;
+  // Gérer la déconnexion
+  socket.on("disconnect", () => {
+    // Gérer la déconnexion pour toutes les parties auxquelles ce socket participait
+    for (const gameId of playerGames) {
       const game = games.get(gameId);
-      const gameBonusState = gameBonus.get(gameId);
+      if (!game) continue;
 
-      if (!game || !gameBonusState) {
-        socket.emit("error", { message: "Partie non trouvée" });
-        return;
-      }
-
-      const playerKey = Object.keys(game.players).find(
-        (key) => game.players[key].id === playerId
+      const playerId = Object.keys(game.players).find(
+        (key) => game.players[key].socketId === socket.id
       );
 
-      if (!playerKey || game.currentTurn !== playerId) {
-        socket.emit("error", { message: "Ce n'est pas votre tour" });
-        return;
-      }
+      if (!playerId) continue;
 
-      const player = game.players[playerKey];
-      const attackerCard = player.cards.personnages.find(
-        (card) => card.id === attackerId
-      );
-
-      if (!attackerCard) {
-        socket.emit("error", { message: "Carte attaquante non trouvée" });
-        return;
-      }
-
-      // S'assurer que l'attaquant existe dans charactersState
-      if (!player.charactersState[attackerId]) {
-        player.charactersState[attackerId] = {
-          pointsdevie: parseInt(attackerCard.pointsdevie),
-          forceattaque: parseInt(attackerCard.forceattaque),
-          tourattaque: parseInt(attackerCard.tourattaque),
-          activeBonus: [],
-        };
-      }
-
-      const attackerState = player.charactersState[attackerId];
-
-      if (!attackerState || attackerState.tourattaque <= 0) {
-        socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
-        return;
-      }
-
-      // Si un bonus a été joué ce tour, vérifier que c'est le bon personnage
-      if (game.bonusPlayedThisTurn && attackerId !== game.lastBonusTarget) {
-        socket.emit("error", {
-          message: "Vous devez attaquer avec le personnage qui a reçu le bonus",
-        });
-        return;
-      }
-
-      // Trouver la cible
-      const opponentKey = playerKey === "player1" ? "player2" : "player1";
-      const opponent = game.players[opponentKey];
-      const targetCard = opponent.cards.personnages.find(
-        (card) => card.id === targetId
-      );
-
-      if (!targetCard) {
-        socket.emit("error", { message: "Carte cible non trouvée" });
-        return;
-      }
-
-      // S'assurer que la cible existe dans charactersState
-      if (!opponent.charactersState[targetId]) {
-        opponent.charactersState[targetId] = {
-          pointsdevie: parseInt(targetCard.pointsdevie),
-          forceattaque: parseInt(targetCard.forceattaque),
-          tourattaque: parseInt(targetCard.tourattaque),
-          activeBonus: [],
-        };
-      }
-
-      const targetState = opponent.charactersState[targetId];
-
-      // Appliquer les dégâts
-      targetState.pointsdevie = Math.max(
-        0,
-        targetState.pointsdevie - attackerState.forceattaque
-      );
-
-      // Décrémenter le nombre de tours d'attaque
-      attackerState.tourattaque--;
-
-      // Vérifier si la partie est terminée
-      const isGameOver = Object.values(opponent.charactersState).every(
-        (char) => char.pointsdevie <= 0
-      );
-
-      if (isGameOver) {
-        game.status = "finished";
-        game.winner = playerId;
-
-        // Calculer les points de vie restants pour chaque joueur
-        const calculateTotalHealth = (playerState) => {
-          return Object.values(playerState.charactersState).reduce(
-            (total, char) => total + Math.max(0, char.pointsdevie),
-            0
-          );
-        };
-
-        game.finalStats = {
-          [playerKey]: calculateTotalHealth(player),
-          [opponentKey]: calculateTotalHealth(opponent),
-        };
-
-        // Nettoyer les données de la partie
-        setTimeout(() => {
-          games.delete(gameId);
-          gameBonus.delete(gameId);
-        }, 300000); // Nettoyage après 5 minutes
-      }
-
-      // Émettre l'événement d'attaque
-      io.to(gameId).emit("characterAttacked", {
-        gameId,
-        attackerId,
-        targetId,
-        damage: attackerState.forceattaque,
-        newHealth: targetState.pointsdevie,
-        attackerName: attackerCard.nomcarteperso,
-        targetName: targetCard.nomcarteperso,
-        isGameOver,
-        winner: game.winner,
-        finalStats: game.finalStats,
-        game: JSON.parse(JSON.stringify(game)),
-      });
-    });
-
-    // Gérer la déconnexion
-    socket.on("disconnect", () => {
       console.log(`Joueur ${playerId} déconnecté de la partie ${gameId}`);
-
-      if (!game || !game.players[playerId]) return;
 
       // Marquer le joueur comme déconnecté
       game.players[playerId].connected = false;
@@ -650,124 +677,136 @@ io.on("connection", (socket) => {
           }
         }, 120000); // 2 minutes
       }
-    });
+    }
+    playerGames.clear();
+  });
 
-    // Gérer la reconnexion
-    socket.on("reconnectToGame", ({ gameId, playerId }) => {
-      if (!games.has(gameId) || !game.players[playerId]) {
-        socket.emit("error", { message: "Partie ou joueur non trouvé" });
-        return;
-      }
+  // Gérer la reconnexion
+  socket.on("reconnectToGame", ({ gameId, playerId }) => {
+    if (!games.has(gameId)) return;
 
-      console.log(
-        `Joueur ${playerId} tente de se reconnecter à la partie ${gameId}`
-      );
+    const game = games.get(gameId);
+    if (!game.players[playerId]) {
+      socket.emit("error", { message: "Partie ou joueur non trouvé" });
+      return;
+    }
 
-      // Mettre à jour le socket et l'état de connexion
-      game.players[playerId].socketId = socket.id;
-      game.players[playerId].connected = true;
+    // Ajouter la partie à la liste des parties du socket
+    playerGames.add(gameId);
 
-      // Si la partie était en pause à cause de ce joueur
-      if (game.status === "paused" && game.pausedBy === playerId) {
-        // Restaurer l'état de la partie
-        game.status = "playing";
-        game.currentTurn = game.pausedState.currentTurn;
-        game.attackPerformed = game.pausedState.attackPerformed;
-        game.bonusPlayedThisTurn = game.pausedState.bonusPlayedThisTurn;
-        game.lastBonusTarget = game.pausedState.lastBonusTarget;
+    console.log(
+      `Joueur ${playerId} tente de se reconnecter à la partie ${gameId}`
+    );
 
-        delete game.pausedAt;
-        delete game.pausedBy;
-        delete game.pausedState;
+    // Mettre à jour le socket et l'état de connexion
+    game.players[playerId].socketId = socket.id;
+    game.players[playerId].connected = true;
 
-        // Informer tous les joueurs de la reprise
-        io.to(gameId).emit("gameResumed", {
-          playerId: playerId,
-          playerName: game.players[playerId].name,
-          newGameState: JSON.parse(JSON.stringify(game)),
-        });
-      }
+    // Si la partie était en pause à cause de ce joueur
+    if (game.status === "paused" && game.pausedBy === playerId) {
+      // Restaurer l'état de la partie
+      game.status = "playing";
+      game.currentTurn = game.pausedState.currentTurn;
+      game.attackPerformed = game.pausedState.attackPerformed;
+      game.bonusPlayedThisTurn = game.pausedState.bonusPlayedThisTurn;
+      game.lastBonusTarget = game.pausedState.lastBonusTarget;
 
-      // Envoyer l'état actuel au joueur reconnecté
-      socket.emit("gameState", {
-        game: JSON.parse(JSON.stringify(game)),
-        playerId: playerId,
-        reconnected: true,
-      });
+      delete game.pausedAt;
+      delete game.pausedBy;
+      delete game.pausedState;
 
-      // Informer les autres joueurs
-      socket.to(gameId).emit("playerReconnected", {
+      // Informer tous les joueurs de la reprise
+      io.to(gameId).emit("gameResumed", {
         playerId: playerId,
         playerName: game.players[playerId].name,
+        newGameState: JSON.parse(JSON.stringify(game)),
       });
+    }
+
+    // Envoyer l'état actuel au joueur reconnecté
+    socket.emit("gameState", {
+      game: JSON.parse(JSON.stringify(game)),
+      playerId: playerId,
+      reconnected: true,
     });
 
-    // Gérer l'événement leaveGame
-    socket.on("leaveGame", ({ gameId }) => {
-      if (!games.has(gameId)) return;
+    // Informer les autres joueurs
+    socket.to(gameId).emit("playerReconnected", {
+      playerId: playerId,
+      playerName: game.players[playerId].name,
+    });
+  });
 
-      const game = games.get(gameId);
-      const playerId = Object.keys(game.players).find(
-        (key) => game.players[key].socketId === socket.id
-      );
+  // Gérer l'événement leaveGame
+  socket.on("leaveGame", ({ gameId }) => {
+    if (!games.has(gameId)) return;
 
-      if (playerId && game.players[playerId]) {
-        // Informer les autres joueurs
-        socket.to(gameId).emit("playerLeft", {
-          playerId,
-          playerName: game.players[playerId].name,
-          temporary: false,
-        });
+    // Vérifier que le socket est bien dans cette partie
+    if (!playerGames.has(gameId)) return;
 
-        // Si la partie est en cours, la terminer
-        if (game.status === "playing") {
-          const remainingPlayerId = Object.keys(game.players).find(
-            (pid) => pid !== playerId
-          );
+    const game = games.get(gameId);
+    const playerId = Object.keys(game.players).find(
+      (key) => game.players[key].socketId === socket.id
+    );
 
-          if (remainingPlayerId) {
-            game.status = "finished";
-            game.winner = remainingPlayerId;
-            game.endReason = "player_left";
+    if (playerId && game.players[playerId]) {
+      // Informer les autres joueurs
+      socket.to(gameId).emit("playerLeft", {
+        playerId,
+        playerName: game.players[playerId].name,
+        temporary: false,
+      });
 
-            // Calculer les points de vie restants
-            const calculateTotalHealth = (playerState) => {
-              return Object.values(playerState.charactersState).reduce(
-                (total, char) => total + Math.max(0, char.pointsdevie),
-                0
-              );
-            };
+      // Si la partie est en cours, la terminer
+      if (game.status === "playing") {
+        const remainingPlayerId = Object.keys(game.players).find(
+          (pid) => pid !== playerId
+        );
 
-            game.finalStats = {
-              [playerId]: calculateTotalHealth(game.players[playerId]),
-              [remainingPlayerId]: calculateTotalHealth(
-                game.players[remainingPlayerId]
-              ),
-            };
+        if (remainingPlayerId) {
+          game.status = "finished";
+          game.winner = remainingPlayerId;
+          game.endReason = "player_left";
 
-            // Informer les joueurs restants
-            io.to(gameId).emit("gameOver", {
-              reason: "player_left",
-              winner: remainingPlayerId,
-              leftBy: playerId,
-              finalStats: game.finalStats,
-              newGameState: JSON.parse(JSON.stringify(game)),
-            });
-          }
+          // Calculer les points de vie restants
+          const calculateTotalHealth = (playerState) => {
+            return Object.values(playerState.charactersState).reduce(
+              (total, char) => total + Math.max(0, char.pointsdevie),
+              0
+            );
+          };
+
+          game.finalStats = {
+            [playerId]: calculateTotalHealth(game.players[playerId]),
+            [remainingPlayerId]: calculateTotalHealth(
+              game.players[remainingPlayerId]
+            ),
+          };
+
+          // Informer les joueurs restants
+          io.to(gameId).emit("gameOver", {
+            reason: "player_left",
+            winner: remainingPlayerId,
+            leftBy: playerId,
+            finalStats: game.finalStats,
+            newGameState: JSON.parse(JSON.stringify(game)),
+          });
         }
-
-        // Nettoyer après un délai
-        setTimeout(() => {
-          if (games.has(gameId)) {
-            games.delete(gameId);
-            gameBonus.delete(gameId);
-            console.log(`Partie ${gameId} nettoyée après départ du joueur`);
-          }
-        }, 300000); // 5 minutes
       }
 
-      socket.leave(gameId);
-    });
+      // Nettoyer après un délai
+      setTimeout(() => {
+        if (games.has(gameId)) {
+          games.delete(gameId);
+          gameBonus.delete(gameId);
+          console.log(`Partie ${gameId} nettoyée après départ du joueur`);
+        }
+      }, 300000); // 5 minutes
+    }
+
+    // Retirer la partie de la liste des parties du socket
+    playerGames.delete(gameId);
+    socket.leave(gameId);
   });
 });
 
