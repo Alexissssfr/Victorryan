@@ -237,79 +237,82 @@ io.on("connection", (socket) => {
       if (!games.has(gameId)) return;
 
       const game = games.get(gameId);
+      const gameBonusState = gameBonus.get(gameId);
+
+      if (!game || !gameBonusState) {
+        socket.emit("error", { message: "Partie non trouvée" });
+        return;
+      }
 
       if (game.currentTurn !== playerId) {
-        socket.emit("error", { message: "Pas votre tour" });
+        socket.emit("error", { message: "Ce n'est pas votre tour" });
         return;
       }
 
-      // Vérifier si la partie est terminée car plus de tours d'attaque
-      let allPlayersOutOfTurns = true;
+      // Trouver le joueur actuel et le prochain joueur
+      const currentPlayerKey = Object.keys(game.players).find(
+        (key) => game.players[key].id === playerId
+      );
+      const nextPlayerKey = Object.keys(game.players).find(
+        (key) => game.players[key].id !== playerId
+      );
 
-      for (const pid in game.players) {
-        const p = game.players[pid];
-        const hasAttackTurnsLeft = Object.values(p.charactersState).some(
-          (c) => c.currentHealth > 0 && c.currentTurns > 0
+      if (!currentPlayerKey || !nextPlayerKey) {
+        socket.emit("error", { message: "Joueurs non trouvés" });
+        return;
+      }
+
+      const currentPlayer = game.players[currentPlayerKey];
+      const nextPlayer = game.players[nextPlayerKey];
+
+      // Gérer les bonus du joueur actuel
+      const currentPlayerBonusMap =
+        gameBonusState[currentPlayerKey === "player1" ? "player1" : "player2"];
+      for (const [characterId, bonusList] of currentPlayerBonusMap.entries()) {
+        const characterState = currentPlayer.charactersState[characterId];
+        const baseCard = currentPlayer.cards.personnages.find(
+          (c) => c.id === characterId
         );
 
-        if (hasAttackTurnsLeft) {
-          allPlayersOutOfTurns = false;
-          break;
+        if (!characterState || !baseCard) continue;
+
+        const updatedBonusList = bonusList
+          .map((bonus) => ({ ...bonus, turns: bonus.turns - 1 }))
+          .filter((bonus) => bonus.turns > 0);
+
+        if (updatedBonusList.length > 0) {
+          // Recalculer l'attaque avec les bonus restants
+          let newAttack = parseInt(baseCard.forceattaque);
+          updatedBonusList.forEach((bonus) => {
+            newAttack = Math.floor(newAttack * (1 + bonus.percentage / 100));
+          });
+          characterState.currentAttack = newAttack;
+          currentPlayerBonusMap.set(characterId, updatedBonusList);
+        } else {
+          // Réinitialiser l'attaque et supprimer les bonus
+          characterState.currentAttack = parseInt(baseCard.forceattaque);
+          currentPlayerBonusMap.delete(characterId);
         }
       }
 
-      if (allPlayersOutOfTurns) {
-        // Si plus de tours d'attaque pour personne, terminer la partie
-        game.status = "finished";
-
-        // Déterminer le vainqueur en comparant les PV restants
-        const playersTotalHealth = {};
-
-        for (const pid in game.players) {
-          playersTotalHealth[pid] = Object.values(
-            game.players[pid].charactersState
-          ).reduce((total, char) => total + char.currentHealth, 0);
+      // Réinitialiser les tours d'attaque pour le prochain joueur
+      Object.keys(nextPlayer.charactersState).forEach((characterId) => {
+        const baseCard = nextPlayer.cards.personnages.find(
+          (c) => c.id === characterId
+        );
+        if (baseCard) {
+          nextPlayer.charactersState[characterId].currentTurns = parseInt(
+            baseCard.tourattaque
+          );
         }
+      });
 
-        const playerIds = Object.keys(playersTotalHealth);
-
-        if (playerIds.length === 2) {
-          if (
-            playersTotalHealth[playerIds[0]] > playersTotalHealth[playerIds[1]]
-          ) {
-            game.winner = playerIds[0];
-          } else if (
-            playersTotalHealth[playerIds[1]] > playersTotalHealth[playerIds[0]]
-          ) {
-            game.winner = playerIds[1];
-          } else {
-            game.winner = "tie"; // Match nul
-          }
-        }
-
-        // Informer tous les joueurs de la fin de partie
-        io.to(gameId).emit("gameOver", {
-          reason: "no_attack_turns",
-          winner: game.winner,
-          playersTotalHealth: playersTotalHealth,
-          newGameState: JSON.parse(JSON.stringify(game)),
-        });
-
-        return;
-      }
-
-      // Si la partie continue, passer au joueur suivant
-      const players = Object.keys(game.players);
-      const currentIndex = players.indexOf(playerId);
-      const nextIndex = (currentIndex + 1) % players.length;
-      game.currentTurn = players[nextIndex];
-
-      // Réinitialiser les flags pour le nouveau joueur
-      game.attackPerformed = false;
+      // Mettre à jour l'état du jeu
+      game.currentTurn = nextPlayer.id;
       game.bonusPlayedThisTurn = false;
       game.lastBonusTarget = null;
 
-      // Informer tous les joueurs
+      // Émettre l'événement de changement de tour
       io.to(gameId).emit("turnChanged", {
         currentTurn: game.currentTurn,
         newGameState: JSON.parse(JSON.stringify(game)),
@@ -344,6 +347,12 @@ io.on("connection", (socket) => {
         return;
       }
 
+      // Vérifier si le personnage cible existe
+      if (!player.charactersState[targetId]) {
+        socket.emit("error", { message: "Personnage cible non trouvé" });
+        return;
+      }
+
       // Stocker le bonus dans la structure isolée
       const playerBonusMap =
         gameBonusState[playerKey === "player1" ? "player1" : "player2"];
@@ -351,16 +360,29 @@ io.on("connection", (socket) => {
         playerBonusMap.set(targetId, []);
       }
 
-      playerBonusMap.get(targetId).push({
+      const bonusEffect = {
         id: bonusId,
         turns: parseInt(bonusCard.tourbonus),
         percentage: parseInt(bonusCard.pourcentagebonus),
-      });
+      };
+
+      playerBonusMap.get(targetId).push(bonusEffect);
+
+      // Mettre à jour l'attaque du personnage avec le bonus
+      const characterState = player.charactersState[targetId];
+      const baseAttack = characterState.currentAttack;
+      characterState.currentAttack = Math.floor(
+        baseAttack * (1 + bonusEffect.percentage / 100)
+      );
 
       // Retirer la carte bonus de la main du joueur
       player.cards.bonus = player.cards.bonus.filter(
         (card) => card.id !== bonusId
       );
+
+      // Marquer qu'un bonus a été joué ce tour
+      game.bonusPlayedThisTurn = true;
+      game.lastBonusTarget = targetId;
 
       // Émettre l'événement de bonus joué
       io.to(gameId).emit("bonusPlayed", {
@@ -368,7 +390,10 @@ io.on("connection", (socket) => {
         playerId,
         bonusId,
         targetId,
-        game,
+        bonusName: bonusCard.nomcartebonus,
+        targetName: player.cards.personnages.find((c) => c.id === targetId)
+          ?.nomcarteperso,
+        game: JSON.parse(JSON.stringify(game)),
       });
     });
 
@@ -393,50 +418,43 @@ io.on("connection", (socket) => {
       }
 
       const player = game.players[playerKey];
-      const attackerCard = player.cards.personnages.find(
-        (card) => card.id === attackerId
-      );
+      const attackerState = player.charactersState[attackerId];
 
-      if (!attackerCard || attackerCard.toursRestants <= 0) {
+      if (!attackerState || attackerState.currentTurns <= 0) {
         socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
         return;
       }
 
-      // Calculer la force d'attaque avec les bonus
-      let attackPower = parseInt(attackerCard.force_attaque);
-      const playerBonusMap =
-        gameBonusState[playerKey === "player1" ? "player1" : "player2"];
-      const activeBonus = playerBonusMap.get(attackerId) || [];
-
-      // Appliquer tous les bonus actifs
-      for (const bonus of activeBonus) {
-        attackPower = Math.floor(attackPower * (1 + bonus.percentage / 100));
+      // Si un bonus a été joué ce tour, vérifier que c'est le bon personnage
+      if (game.bonusPlayedThisTurn && attackerId !== game.lastBonusTarget) {
+        socket.emit("error", {
+          message: "Vous devez attaquer avec le personnage qui a reçu le bonus",
+        });
+        return;
       }
 
       // Trouver la cible
       const opponentKey = playerKey === "player1" ? "player2" : "player1";
       const opponent = game.players[opponentKey];
-      const targetCard = opponent.cards.personnages.find(
-        (card) => card.id === targetId
-      );
+      const targetState = opponent.charactersState[targetId];
 
-      if (!targetCard) {
+      if (!targetState) {
         socket.emit("error", { message: "Cible non trouvée" });
         return;
       }
 
       // Appliquer les dégâts
-      targetCard.pointsdevie = Math.max(
+      targetState.currentHealth = Math.max(
         0,
-        parseInt(targetCard.pointsdevie) - attackPower
+        targetState.currentHealth - attackerState.currentAttack
       );
 
       // Décrémenter le nombre de tours d'attaque
-      attackerCard.toursRestants--;
+      attackerState.currentTurns--;
 
       // Vérifier si la partie est terminée
-      const isGameOver = opponent.cards.personnages.every(
-        (card) => parseInt(card.pointsdevie) <= 0
+      const isGameOver = Object.values(opponent.charactersState).every(
+        (char) => char.currentHealth <= 0
       );
 
       if (isGameOver) {
@@ -455,11 +473,15 @@ io.on("connection", (socket) => {
         gameId,
         attackerId,
         targetId,
-        damage: attackPower,
-        newHealth: targetCard.pointsdevie,
+        damage: attackerState.currentAttack,
+        newHealth: targetState.currentHealth,
+        attackerName: player.cards.personnages.find((c) => c.id === attackerId)
+          ?.nomcarteperso,
+        targetName: opponent.cards.personnages.find((c) => c.id === targetId)
+          ?.nomcarteperso,
         isGameOver,
         winner: game.winner,
-        game,
+        game: JSON.parse(JSON.stringify(game)),
       });
     });
 
