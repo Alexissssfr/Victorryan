@@ -295,8 +295,10 @@ io.on("connection", (socket) => {
       const nextIndex = (currentIndex + 1) % players.length;
       game.currentTurn = players[nextIndex];
 
-      // IMPORTANT: Réinitialiser le flag d'attaque pour le nouveau joueur
+      // Réinitialiser les flags pour le nouveau joueur
       game.attackPerformed = false;
+      game.bonusPlayedThisTurn = false;
+      game.lastBonusTarget = null;
 
       // Informer tous les joueurs
       io.to(gameId).emit("turnChanged", {
@@ -357,6 +359,10 @@ io.on("connection", (socket) => {
           return;
         }
 
+        // Marquer qu'un bonus a été joué ce tour-ci
+        game.bonusPlayedThisTurn = true;
+        game.lastBonusTarget = targetCharacterId;
+
         // Appliquer le bonus
         const bonusPercentage = parseInt(bonusCard.pourcentagebonus) || 0;
 
@@ -366,7 +372,6 @@ io.on("connection", (socket) => {
         }
 
         // Appliquer le bonus sur la valeur ACTUELLE d'attaque
-        // Nouvelle attaque = attaque actuelle * (1 + bonus/100)
         characterState.currentAttack = Math.floor(
           characterState.currentAttack * (1 + bonusPercentage / 100)
         );

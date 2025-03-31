@@ -1163,14 +1163,14 @@
           }
 
           // Si un bonus a été joué ce tour-ci
-          if (gameState.bonusPlayedThisTurn) {
+          if (gameState.gameData.bonusPlayedThisTurn) {
             // On ne peut sélectionner que le personnage qui a reçu le bonus
-            if (cardId === gameState.lastBonusTarget) {
+            if (cardId === gameState.gameData.lastBonusTarget) {
               gameState.selectedCharacter =
                 gameState.selectedCharacter === cardId ? null : cardId;
             } else {
               showMessage(
-                `Tour ${gameState.gameData.turnNumber}: Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci`,
+                `Tour ${gameState.currentTurnNumber}: Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci`,
                 true
               );
               return;
@@ -1720,16 +1720,30 @@
               gameState.selectedCharacter = null;
               gameState.targetCharacter = null;
               gameState.selectedBonus = null;
+              gameState.bonusPlayedThisTurn = false;
+              gameState.lastBonusTarget = null;
 
               gameState.isMyTurn = data.newCurrentTurn === gameState.playerId;
+
+              // Si le tour passe à nous, incrémenter le compteur
+              if (gameState.isMyTurn) {
+                gameState.currentTurnNumber =
+                  (gameState.currentTurnNumber || 1) + 1;
+                console.log(
+                  "Nouveau tour après attaque:",
+                  gameState.currentTurnNumber
+                );
+              }
 
               // Message approprié pour le changement de tour
               if (gameState.isMyTurn) {
                 showMessage(
-                  "L'adversaire a attaqué. C'est maintenant votre tour!"
+                  `Tour ${gameState.currentTurnNumber}: L'adversaire a attaqué. C'est maintenant votre tour!`
                 );
               } else {
-                showMessage("Vous avez attaqué. Au tour de l'adversaire!");
+                showMessage(
+                  `Tour ${gameState.currentTurnNumber}: Vous avez attaqué. Au tour de l'adversaire!`
+                );
               }
             }
 
