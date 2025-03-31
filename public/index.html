@@ -789,6 +789,7 @@
           selectedCharacter: null,
           selectedBonus: null,
           targetCharacter: null,
+          bonusPlayedThisTurn: false,
         };
 
         // Socket.io
@@ -1124,6 +1125,18 @@
         function selectYourCharacter(cardId) {
           if (!gameState.isMyTurn) return;
 
+          // Si on a déjà joué un bonus ce tour-ci, on ne peut sélectionner que le même personnage
+          if (
+            gameState.bonusPlayedThisTurn &&
+            gameState.selectedCharacter !== cardId
+          ) {
+            showMessage(
+              "Vous ne pouvez appliquer des bonus qu'au même personnage pendant votre tour",
+              true
+            );
+            return;
+          }
+
           if (gameState.selectedCharacter === cardId) {
             gameState.selectedCharacter = null;
           } else {
@@ -1412,8 +1425,10 @@
             `Bonus ${gameState.selectedBonus} joué sur ${gameState.selectedCharacter}`
           );
 
+          // Marquer qu'un bonus a été joué ce tour-ci sur ce personnage
+          gameState.bonusPlayedThisTurn = true;
+
           // Réinitialiser seulement la sélection de bonus, pas le personnage
-          // pour permettre d'appliquer plusieurs bonus sur le même personnage
           gameState.selectedBonus = null;
           renderCards();
         });
@@ -1504,13 +1519,14 @@
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
           showTurnChange(gameState.isMyTurn);
 
-          // Si c'est notre tour, réinitialiser l'attaque
+          // Si c'est notre tour, réinitialiser l'attaque et le flag de bonus
           if (gameState.isMyTurn && data.newGameState) {
             // Mettre à jour l'état du jeu avec les nouvelles données
             gameState.gameData = data.newGameState;
-            // Réinitialiser le flag d'attaque pour le nouveau tour
+            // Réinitialiser les flags pour le nouveau tour
             if (gameState.gameData) {
               gameState.gameData.attackPerformed = false;
+              gameState.bonusPlayedThisTurn = false;
             }
           }
 
@@ -1729,26 +1745,24 @@
           let playersTotalHealth = {};
 
           // Calculer les points de vie totaux
-          const playerTotalHealth = Object.values(player.charactersState).reduce(
-            (total, char) => total + Math.max(0, char.currentHealth),
-            0
-          );
+          const playerTotalHealth = Object.values(
+            player.charactersState
+          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
 
-          const opponentTotalHealth = Object.values(opponent.charactersState).reduce(
-            (total, char) => total + Math.max(0, char.currentHealth),
-            0
-          );
+          const opponentTotalHealth = Object.values(
+            opponent.charactersState
+          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
 
           playersTotalHealth[gameState.playerId] = playerTotalHealth;
           playersTotalHealth[opponent.id] = opponentTotalHealth;
 
           // RÈGLE 1: Vérifier si tous les personnages d'un joueur sont à 0 PV
-          const playerHasAliveChars = Object.values(player.charactersState).some(
-            (char) => char.currentHealth > 0
-          );
-          const opponentHasAliveChars = Object.values(opponent.charactersState).some(
-            (char) => char.currentHealth > 0
-          );
+          const playerHasAliveChars = Object.values(
+            player.charactersState
+          ).some((char) => char.currentHealth > 0);
+          const opponentHasAliveChars = Object.values(
+            opponent.charactersState
+          ).some((char) => char.currentHealth > 0);
 
           // Si un joueur n'a plus de personnages en vie, il a perdu
           if (!playerHasAliveChars) {
@@ -1765,9 +1779,9 @@
               (char) => char.currentHealth > 0 && char.currentTurns > 0
             );
 
-            const opponentCanAttack = Object.values(opponent.charactersState).some(
-              (char) => char.currentHealth > 0 && char.currentTurns > 0
-            );
+            const opponentCanAttack = Object.values(
+              opponent.charactersState
+            ).some((char) => char.currentHealth > 0 && char.currentTurns > 0);
 
             // Si aucun des deux joueurs ne peut attaquer, la partie se termine
             if (!playerCanAttack && !opponentCanAttack) {
@@ -1797,7 +1811,7 @@
             socket.emit("gameEnded", {
               gameId: gameState.gameId,
               winner: winner,
-              playersTotalHealth: playersTotalHealth
+              playersTotalHealth: playersTotalHealth,
             });
 
             // Afficher directement l'écran de fin de partie
@@ -1805,7 +1819,7 @@
               showGameOverScreen({
                 winner: winner,
                 playersTotalHealth: playersTotalHealth,
-                newGameState: game
+                newGameState: game,
               });
             }, 1000);
 
@@ -1974,12 +1988,12 @@
         // Fonction pour retourner au menu principal
         function returnToMenu() {
           console.log("Retour au menu principal");
-          
+
           // Effacer les données de la partie
           localStorage.removeItem("gameId");
           localStorage.removeItem("playerId");
           localStorage.removeItem("playerName");
-          
+
           // Réinitialiser l'état du jeu
           gameState = {
             gameId: null,
@@ -1990,38 +2004,41 @@
             selectedCharacter: null,
             selectedBonus: null,
             targetCharacter: null,
+            bonusPlayedThisTurn: false,
           };
-          
+
           // Cacher tous les écrans
           gameOverScreen.classList.add("hidden");
           screens.game.classList.add("hidden");
           screens.waiting.classList.add("hidden");
           screens.created.classList.add("hidden");
-          
+
           // Vider les conteneurs de cartes
           yourCharacters.innerHTML = "";
           yourBonus.innerHTML = "";
           opponentCharacters.innerHTML = "";
-          
+
           // Réinitialiser les champs d'entrée
           document.getElementById("playerNameInput").value = "";
           document.getElementById("gameIdInput").value = "";
           document.getElementById("creatorNameInput").value = "";
-          
+
           // Réinitialiser les messages
           messages.innerHTML = "";
-          
+
           // Afficher l'écran d'accueil
           screens.home.classList.remove("hidden");
-          
+
           // Réinitialiser le socket
           socket.emit("disconnect");
-          
+
           // Forcer le rafraîchissement de la page si nécessaire
           if (!screens.home.classList.contains("hidden")) {
             console.log("Page d'accueil affichée avec succès");
           } else {
-            console.log("Échec de l'affichage de la page d'accueil, tentative de rafraîchissement");
+            console.log(
+              "Échec de l'affichage de la page d'accueil, tentative de rafraîchissement"
+            );
             window.location.href = window.location.href;
           }
         }
@@ -2029,59 +2046,66 @@
         // Fonction pour afficher l'écran de fin de partie
         function showGameOverScreen(data) {
           console.log("Affichage de l'écran de fin de partie", data);
-          
+
           // Arrêter toutes les activités de la partie en cours
           socket.emit("leaveRoom", {
             gameId: gameState.gameId,
-            playerId: gameState.playerId
+            playerId: gameState.playerId,
           });
-          
+
           // Cacher tous les écrans
           Object.keys(screens).forEach((key) => {
             screens[key].classList.add("hidden");
           });
-          
+
           // Réinitialiser les sélections
           gameState.selectedCharacter = null;
           gameState.selectedBonus = null;
           gameState.targetCharacter = null;
-          
+
           // Configurer le message selon le résultat
           if (data.winner === gameState.playerId) {
             gameOverTitle.textContent = "🏆 Victoire !";
-            gameOverMessage.textContent = "Félicitations, vous avez gagné la partie !";
+            gameOverMessage.textContent =
+              "Félicitations, vous avez gagné la partie !";
             gameOverMessage.className = "message-victory";
           } else if (data.winner === "tie") {
             gameOverTitle.textContent = "🤝 Match nul !";
-            gameOverMessage.textContent = "La partie s'est terminée par une égalité.";
+            gameOverMessage.textContent =
+              "La partie s'est terminée par une égalité.";
             gameOverMessage.className = "message-tie";
           } else {
             gameOverTitle.textContent = "💔 Défaite !";
-            gameOverMessage.textContent = "Vous avez perdu la partie. Réessayez !";
+            gameOverMessage.textContent =
+              "Vous avez perdu la partie. Réessayez !";
             gameOverMessage.className = "message-defeat";
           }
-          
+
           // Afficher les statistiques des joueurs
           playerStats.innerHTML = "";
-          
+
           // Si nous avons les données des PV restants
           if (data.playersTotalHealth) {
             const playerIds = Object.keys(data.playersTotalHealth);
             playerIds.forEach((pid) => {
               let playerName = "Joueur inconnu";
-              if (gameState.gameData && gameState.gameData.players && gameState.gameData.players[pid]) {
+              if (
+                gameState.gameData &&
+                gameState.gameData.players &&
+                gameState.gameData.players[pid]
+              ) {
                 playerName = gameState.gameData.players[pid].name;
               }
               const totalHealth = data.playersTotalHealth[pid];
               const isWinner = pid === data.winner;
-              
+
               const statDiv = document.createElement("div");
               statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
               statDiv.innerHTML = `
                 <span>${playerName} ${isWinner ? "🏆" : ""}</span>
                 <span>${totalHealth} PV restants</span>
               `;
-              
+
               playerStats.appendChild(statDiv);
             });
           } else if (gameState.gameData && gameState.gameData.players) {
@@ -2089,51 +2113,42 @@
             for (const pid in gameState.gameData.players) {
               const playerName = gameState.gameData.players[pid].name;
               const isWinner = pid === data.winner;
-              
+
               const statDiv = document.createElement("div");
               statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
               statDiv.innerHTML = `
                 <span>${playerName} ${isWinner ? "🏆" : ""}</span>
-                <span>${isWinner ? "Tous les personnages adverses sont K.O." : ""}</span>
+                <span>${
+                  isWinner ? "Tous les personnages adverses sont K.O." : ""
+                }</span>
               `;
-              
+
               playerStats.appendChild(statDiv);
             }
           }
-          
+
           // S'assurer que l'écran de fin est visible
           gameOverScreen.classList.remove("hidden");
-          
+
           // Définir explicitement les fonctions des boutons et s'assurer qu'ils sont visibles
           newGameBtn.style.display = "block";
           quitGameBtn.style.display = "block";
-          
+
           // Supprimer tous les gestionnaires d'événements existants
           newGameBtn.replaceWith(newGameBtn.cloneNode(true));
           quitGameBtn.replaceWith(quitGameBtn.cloneNode(true));
-          
+
           // Récupérer les références des nouveaux boutons
           const newNewGameBtn = document.getElementById("newGameBtn");
           const newQuitGameBtn = document.getElementById("quitGameBtn");
-          
+
           // Ajouter les nouveaux gestionnaires d'événements
-          newNewGameBtn.addEventListener("click", function() {
+          newNewGameBtn.addEventListener("click", function () {
             gameOverScreen.classList.add("hidden");
             startNewGame();
           });
-          
-          newQuitGameBtn.addEventListener("click", function() {
-            gameOverScreen.classList.add("hidden");
-            returnToMenu();
-          });
-          
-          console.log("Écran de fin de partie affiché avec boutons");
-        }
-      });
-    </script>
-  </body>
-</html>
 
+          newQuitGameBtn.addEventListener("click", function () {
             gameOverScreen.classList.add("hidden");
             returnToMenu();
           });
