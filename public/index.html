@@ -1152,16 +1152,14 @@
 
           // Si on a déjà joué un bonus ce tour-ci
           if (gameState.bonusPlayedThisTurn) {
-            // On peut toujours désélectionner la carte actuelle
-            if (gameState.selectedCharacter === cardId) {
-              gameState.selectedCharacter = null;
-            }
-            // On peut seulement sélectionner la même carte que précédemment
-            else if (gameState.lastBonusTarget === cardId) {
-              gameState.selectedCharacter = cardId;
-            }
-            // Message d'erreur si on essaie de sélectionner une autre carte
-            else {
+            // On ne peut sélectionner que le personnage qui a reçu le bonus
+            if (gameState.lastBonusTarget === cardId) {
+              if (gameState.selectedCharacter === cardId) {
+                gameState.selectedCharacter = null;
+              } else {
+                gameState.selectedCharacter = cardId;
+              }
+            } else {
               showMessage(
                 "Vous ne pouvez attaquer qu'avec le personnage auquel vous avez appliqué un bonus ce tour-ci",
                 true
@@ -1169,7 +1167,7 @@
               return;
             }
           } else {
-            // Comportement normal si aucun bonus n'a été joué
+            // Si aucun bonus n'a été joué, on peut sélectionner n'importe quel personnage valide
             if (gameState.selectedCharacter === cardId) {
               gameState.selectedCharacter = null;
             } else {
@@ -1557,19 +1555,21 @@
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
           showTurnChange(gameState.isMyTurn);
 
-          // Si c'est notre tour, réinitialiser tous les flags
-          if (gameState.isMyTurn && data.newGameState) {
+          // Si c'est notre tour, réinitialiser tous les flags et sélections
+          if (gameState.isMyTurn) {
+            // Réinitialiser tous les flags
+            gameState.bonusPlayedThisTurn = false;
+            gameState.lastBonusTarget = null;
+            gameState.selectedCharacter = null;
+            gameState.selectedBonus = null;
+            gameState.targetCharacter = null;
+
             // Mettre à jour l'état du jeu avec les nouvelles données
-            gameState.gameData = data.newGameState;
-            // Réinitialiser les flags pour le nouveau tour
-            if (gameState.gameData) {
-              gameState.gameData.attackPerformed = false;
-              gameState.bonusPlayedThisTurn = false;
-              gameState.lastBonusTarget = null;
-              // Réinitialiser aussi les sélections
-              gameState.selectedCharacter = null;
-              gameState.selectedBonus = null;
-              gameState.targetCharacter = null;
+            if (data.newGameState) {
+              gameState.gameData = data.newGameState;
+              if (gameState.gameData) {
+                gameState.gameData.attackPerformed = false;
+              }
             }
           }
 
