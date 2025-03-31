@@ -1587,25 +1587,26 @@
 
           // Si c'est notre tour
           if (gameState.isMyTurn) {
-            // Incrémenter le compteur de tour si c'est le même joueur qui joue à nouveau
-            if (
-              data.newGameState &&
-              data.newGameState.currentTurn === data.previousTurn
-            ) {
+            // Incrémenter le compteur de tour si l'adversaire vient de jouer
+            if (data.previousTurn && data.previousTurn !== gameState.playerId) {
               gameState.gameData.turnNumber =
-                (gameState.gameData.turnNumber || 0) + 1;
+                (gameState.gameData.turnNumber || 1) + 1;
+              console.log("Nouveau tour:", gameState.gameData.turnNumber);
             }
 
             // IMPORTANT: Réinitialiser TOUS les flags au début de notre tour
-            gameState.bonusPlayedThisTurn = false;
-            gameState.lastBonusTarget = null;
+            gameState.bonusPlayedThisTurn = false; // Réinitialiser le flag de bonus
+            gameState.lastBonusTarget = null; // Réinitialiser la dernière cible
             gameState.selectedCharacter = null;
             gameState.selectedBonus = null;
             gameState.targetCharacter = null;
 
             // Mettre à jour l'état du jeu
             if (data.newGameState) {
+              const oldTurnNumber = gameState.gameData.turnNumber;
               gameState.gameData = data.newGameState;
+              // Préserver le numéro de tour
+              gameState.gameData.turnNumber = oldTurnNumber;
               if (gameState.gameData) {
                 gameState.gameData.attackPerformed = false;
               }
