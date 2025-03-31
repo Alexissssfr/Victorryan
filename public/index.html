@@ -790,6 +790,7 @@
           selectedBonus: null,
           targetCharacter: null,
           bonusPlayedThisTurn: false,
+          lastBonusTarget: null,
         };
 
         // Socket.io
@@ -1125,22 +1126,31 @@
         function selectYourCharacter(cardId) {
           if (!gameState.isMyTurn) return;
 
-          // Si on a déjà joué un bonus ce tour-ci, on ne peut sélectionner que le même personnage
-          if (
-            gameState.bonusPlayedThisTurn &&
-            gameState.selectedCharacter !== cardId
-          ) {
-            showMessage(
-              "Vous ne pouvez appliquer des bonus qu'au même personnage pendant votre tour",
-              true
-            );
-            return;
-          }
-
-          if (gameState.selectedCharacter === cardId) {
-            gameState.selectedCharacter = null;
+          // Si on a déjà joué un bonus ce tour-ci
+          if (gameState.bonusPlayedThisTurn) {
+            // On peut toujours désélectionner la carte actuelle
+            if (gameState.selectedCharacter === cardId) {
+              gameState.selectedCharacter = null;
+            }
+            // On peut seulement sélectionner la même carte que précédemment
+            else if (gameState.lastBonusTarget === cardId) {
+              gameState.selectedCharacter = cardId;
+            }
+            // Message d'erreur si on essaie de sélectionner une autre carte
+            else {
+              showMessage(
+                "Vous ne pouvez attaquer qu'avec le personnage auquel vous avez appliqué un bonus ce tour-ci",
+                true
+              );
+              return;
+            }
           } else {
-            gameState.selectedCharacter = cardId;
+            // Comportement normal si aucun bonus n'a été joué
+            if (gameState.selectedCharacter === cardId) {
+              gameState.selectedCharacter = null;
+            } else {
+              gameState.selectedCharacter = cardId;
+            }
           }
 
           updateActionButtons();
@@ -1425,8 +1435,9 @@
             `Bonus ${gameState.selectedBonus} joué sur ${gameState.selectedCharacter}`
           );
 
-          // Marquer qu'un bonus a été joué ce tour-ci sur ce personnage
+          // Marquer qu'un bonus a été joué ce tour-ci et sauvegarder la cible
           gameState.bonusPlayedThisTurn = true;
+          gameState.lastBonusTarget = gameState.selectedCharacter;
 
           // Réinitialiser seulement la sélection de bonus, pas le personnage
           gameState.selectedBonus = null;
@@ -1519,7 +1530,7 @@
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
           showTurnChange(gameState.isMyTurn);
 
-          // Si c'est notre tour, réinitialiser l'attaque et le flag de bonus
+          // Si c'est notre tour, réinitialiser l'attaque et les flags de bonus
           if (gameState.isMyTurn && data.newGameState) {
             // Mettre à jour l'état du jeu avec les nouvelles données
             gameState.gameData = data.newGameState;
@@ -1527,6 +1538,7 @@
             if (gameState.gameData) {
               gameState.gameData.attackPerformed = false;
               gameState.bonusPlayedThisTurn = false;
+              gameState.lastBonusTarget = null;
             }
           }
 
@@ -2005,6 +2017,7 @@
             selectedBonus: null,
             targetCharacter: null,
             bonusPlayedThisTurn: false,
+            lastBonusTarget: null,
           };
 
           // Cacher tous les écrans
