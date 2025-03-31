@@ -1459,6 +1459,13 @@
           )
             return;
 
+          if (gameState.bonusPlayedThisTurn) {
+            socket.emit("error", {
+              message: "Vous avez déjà joué un bonus ce tour",
+            });
+            return;
+          }
+
           socket.emit("playBonus", {
             gameId: gameState.game.id,
             playerId: gameState.playerId,
@@ -1788,9 +1795,14 @@
                   ? parseInt(bonusCard.pourcentagebonus)
                   : 0;
 
-                // Appliquer le bonus: force * (1 + bonus/100)
-                characterState.currentAttack = Math.floor(
-                  baseAttack * (1 + bonusPercentage / 100)
+                let totalBonus = 1; // Commencer à 1 (100%)
+                // Calculer l'effet cumulé de tous les bonus actifs
+                player.cards.bonus.forEach((bonus) => {
+                  totalBonus += bonus.pourcentagebonus / 100;
+                });
+                // Appliquer le bonus total
+                characterState.forceattaque = Math.floor(
+                  baseAttack * totalBonus
                 );
 
                 // Sauvegarder la valeur d'attaque originale si ce n'est pas déjà fait

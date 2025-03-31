@@ -292,6 +292,7 @@ io.on("connection", (socket) => {
     // Gérer les bonus du joueur actuel
     const currentPlayerBonusMap =
       gameBonusState[currentPlayerKey === "player1" ? "player1" : "player2"];
+
     for (const [characterId, bonusList] of currentPlayerBonusMap.entries()) {
       const characterState = currentPlayer.charactersState[characterId];
       const baseCard = currentPlayer.cards.personnages.find(
@@ -300,19 +301,20 @@ io.on("connection", (socket) => {
 
       if (!characterState || !baseCard) continue;
 
+      // Décrémenter les tours de bonus seulement à la fin du tour
       const updatedBonusList = bonusList
         .map((bonus) => ({ ...bonus, tourbonus: bonus.tourbonus - 1 }))
         .filter((bonus) => bonus.tourbonus > 0);
 
       if (updatedBonusList.length > 0) {
-        // Recalculer l'attaque avec les bonus restants
-        let newAttack = parseInt(baseCard.forceattaque);
+        // Recalculer l'attaque avec tous les bonus restants
+        let totalBonus = 1; // Commencer à 1 (100%)
         updatedBonusList.forEach((bonus) => {
-          newAttack = Math.floor(
-            newAttack * (1 + bonus.pourcentagebonus / 100)
-          );
+          totalBonus += bonus.pourcentagebonus / 100;
         });
-        characterState.forceattaque = newAttack;
+        characterState.forceattaque = Math.floor(
+          parseInt(baseCard.forceattaque) * totalBonus
+        );
         currentPlayerBonusMap.set(characterId, updatedBonusList);
       } else {
         // Réinitialiser l'attaque et supprimer les bonus
@@ -370,6 +372,12 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Vérifier si un bonus a déjà été joué ce tour
+    if (game.bonusPlayedThisTurn) {
+      socket.emit("error", { message: "Vous avez déjà joué un bonus ce tour" });
+      return;
+    }
+
     const player = game.players[playerKey];
     const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
 
@@ -391,7 +399,6 @@ io.on("connection", (socket) => {
 
     // S'assurer que le personnage existe dans charactersState
     if (!player.charactersState[targetId]) {
-      // Initialiser l'état du personnage s'il n'existe pas
       player.charactersState[targetId] = {
         pointsdevie: parseInt(targetCard.pointsdevie),
         forceattaque: parseInt(targetCard.forceattaque),
@@ -413,14 +420,21 @@ io.on("connection", (socket) => {
       pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
     };
 
+    // Ajouter le nouveau bonus
     playerBonusMap.get(targetId).push(bonusEffect);
 
-    // Mettre à jour l'attaque du personnage avec le bonus
+    // Mettre à jour l'attaque du personnage avec tous les bonus actifs
     const characterState = player.charactersState[targetId];
     const baseAttack = parseInt(targetCard.forceattaque);
-    characterState.forceattaque = Math.floor(
-      baseAttack * (1 + bonusEffect.pourcentagebonus / 100)
-    );
+    let totalBonus = 1; // Commencer à 1 (100%)
+
+    // Calculer l'effet cumulé de tous les bonus actifs
+    playerBonusMap.get(targetId).forEach((bonus) => {
+      totalBonus += bonus.pourcentagebonus / 100;
+    });
+
+    // Appliquer le bonus total
+    characterState.forceattaque = Math.floor(baseAttack * totalBonus);
 
     // Retirer la carte bonus de la main du joueur
     player.cards.bonus = player.cards.bonus.filter(
@@ -441,6 +455,7 @@ io.on("connection", (socket) => {
       targetName: targetCard.nomcarteperso,
       pourcentagebonus: bonusEffect.pourcentagebonus,
       newAttack: characterState.forceattaque,
+      remainingTurns: bonusEffect.tourbonus,
       game: JSON.parse(JSON.stringify(game)),
     });
   });
