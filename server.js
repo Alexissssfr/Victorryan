@@ -513,6 +513,19 @@ io.on("connection", (socket) => {
         game.status = "finished";
         game.winner = playerId;
 
+        // Calculer les points de vie restants pour chaque joueur
+        const calculateTotalHealth = (playerState) => {
+          return Object.values(playerState.charactersState).reduce(
+            (total, char) => total + Math.max(0, char.pointsdevie),
+            0
+          );
+        };
+
+        game.finalStats = {
+          [playerKey]: calculateTotalHealth(player),
+          [opponentKey]: calculateTotalHealth(opponent),
+        };
+
         // Nettoyer les données de la partie
         setTimeout(() => {
           games.delete(gameId);
@@ -531,6 +544,7 @@ io.on("connection", (socket) => {
         targetName: targetCard.nomcarteperso,
         isGameOver,
         winner: game.winner,
+        finalStats: game.finalStats,
         game: JSON.parse(JSON.stringify(game)),
       });
     });
@@ -583,16 +597,43 @@ io.on("connection", (socket) => {
           ) {
             // Si le joueur ne s'est pas reconnecté après le délai
             game.status = "finished";
-            game.winner = Object.keys(game.players).find(
+            const remainingPlayerId = Object.keys(game.players).find(
               (pid) => pid !== playerId
             );
+            game.winner = remainingPlayerId;
             game.endReason = "player_abandoned";
+
+            // Calculer les points de vie restants
+            const calculateTotalHealth = (playerState) => {
+              return Object.values(playerState.charactersState).reduce(
+                (total, char) => total + Math.max(0, char.pointsdevie),
+                0
+              );
+            };
+
+            // Trouver les clés des joueurs
+            const disconnectedPlayerKey = Object.keys(game.players).find(
+              (key) => game.players[key].id === playerId
+            );
+            const remainingPlayerKey = Object.keys(game.players).find(
+              (key) => game.players[key].id === remainingPlayerId
+            );
+
+            game.finalStats = {
+              [disconnectedPlayerKey]: calculateTotalHealth(
+                game.players[disconnectedPlayerKey]
+              ),
+              [remainingPlayerKey]: calculateTotalHealth(
+                game.players[remainingPlayerKey]
+              ),
+            };
 
             // Informer les joueurs restants
             io.to(gameId).emit("gameOver", {
               reason: "player_abandoned",
               winner: game.winner,
               abandonedBy: playerId,
+              finalStats: game.finalStats,
               newGameState: JSON.parse(JSON.stringify(game)),
             });
 
