@@ -158,9 +158,9 @@ app.post("/api/games/:id/join", (req, res) => {
   // Initialiser l'état des personnages du joueur
   cards.personnages.forEach((card) => {
     game.players[playerId].charactersState[card.id] = {
-      currentHealth: parseInt(card.pointsdevie) || 100,
-      currentAttack: parseInt(card.forceattaque) || 30,
-      currentTurns: parseInt(card.tourattaque) || 2,
+      pointsdevie: parseInt(card.pointsdevie) || 100,
+      forceattaque: parseInt(card.forceattaque) || 30,
+      tourattaque: parseInt(card.tourattaque) || 2,
       activeBonus: [],
     };
   });
@@ -277,20 +277,22 @@ io.on("connection", (socket) => {
         if (!characterState || !baseCard) continue;
 
         const updatedBonusList = bonusList
-          .map((bonus) => ({ ...bonus, turns: bonus.turns - 1 }))
-          .filter((bonus) => bonus.turns > 0);
+          .map((bonus) => ({ ...bonus, tourbonus: bonus.tourbonus - 1 }))
+          .filter((bonus) => bonus.tourbonus > 0);
 
         if (updatedBonusList.length > 0) {
           // Recalculer l'attaque avec les bonus restants
           let newAttack = parseInt(baseCard.forceattaque);
           updatedBonusList.forEach((bonus) => {
-            newAttack = Math.floor(newAttack * (1 + bonus.percentage / 100));
+            newAttack = Math.floor(
+              newAttack * (1 + bonus.pourcentagebonus / 100)
+            );
           });
-          characterState.currentAttack = newAttack;
+          characterState.forceattaque = newAttack;
           currentPlayerBonusMap.set(characterId, updatedBonusList);
         } else {
           // Réinitialiser l'attaque et supprimer les bonus
-          characterState.currentAttack = parseInt(baseCard.forceattaque);
+          characterState.forceattaque = parseInt(baseCard.forceattaque);
           currentPlayerBonusMap.delete(characterId);
         }
       }
@@ -301,7 +303,7 @@ io.on("connection", (socket) => {
           (c) => c.id === characterId
         );
         if (baseCard) {
-          nextPlayer.charactersState[characterId].currentTurns = parseInt(
+          nextPlayer.charactersState[characterId].tourattaque = parseInt(
             baseCard.tourattaque
           );
         }
@@ -362,9 +364,9 @@ io.on("connection", (socket) => {
       if (!player.charactersState[targetId]) {
         // Initialiser l'état du personnage s'il n'existe pas
         player.charactersState[targetId] = {
-          currentHealth: parseInt(targetCard.pointsdevie),
-          currentAttack: parseInt(targetCard.forceattaque),
-          currentTurns: parseInt(targetCard.tourattaque),
+          pointsdevie: parseInt(targetCard.pointsdevie),
+          forceattaque: parseInt(targetCard.forceattaque),
+          tourattaque: parseInt(targetCard.tourattaque),
           activeBonus: [],
         };
       }
@@ -378,17 +380,17 @@ io.on("connection", (socket) => {
 
       const bonusEffect = {
         id: bonusId,
-        turns: parseInt(bonusCard.tourbonus),
-        percentage: parseInt(bonusCard.pourcentagebonus),
+        tourbonus: parseInt(bonusCard.tourbonus),
+        pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
       };
 
       playerBonusMap.get(targetId).push(bonusEffect);
 
       // Mettre à jour l'attaque du personnage avec le bonus
       const characterState = player.charactersState[targetId];
-      const baseAttack = parseInt(targetCard.forceattaque); // Utiliser la force d'attaque de base de la carte
-      characterState.currentAttack = Math.floor(
-        baseAttack * (1 + bonusEffect.percentage / 100)
+      const baseAttack = parseInt(targetCard.forceattaque);
+      characterState.forceattaque = Math.floor(
+        baseAttack * (1 + bonusEffect.pourcentagebonus / 100)
       );
 
       // Retirer la carte bonus de la main du joueur
@@ -408,8 +410,8 @@ io.on("connection", (socket) => {
         targetId,
         bonusName: bonusCard.nomcartebonus,
         targetName: targetCard.nomcarteperso,
-        percentage: bonusEffect.percentage,
-        newAttack: characterState.currentAttack,
+        pourcentagebonus: bonusEffect.pourcentagebonus,
+        newAttack: characterState.forceattaque,
         game: JSON.parse(JSON.stringify(game)),
       });
     });
@@ -447,16 +449,16 @@ io.on("connection", (socket) => {
       // S'assurer que l'attaquant existe dans charactersState
       if (!player.charactersState[attackerId]) {
         player.charactersState[attackerId] = {
-          currentHealth: parseInt(attackerCard.pointsdevie),
-          currentAttack: parseInt(attackerCard.forceattaque),
-          currentTurns: parseInt(attackerCard.tourattaque),
+          pointsdevie: parseInt(attackerCard.pointsdevie),
+          forceattaque: parseInt(attackerCard.forceattaque),
+          tourattaque: parseInt(attackerCard.tourattaque),
           activeBonus: [],
         };
       }
 
       const attackerState = player.charactersState[attackerId];
 
-      if (!attackerState || attackerState.currentTurns <= 0) {
+      if (!attackerState || attackerState.tourattaque <= 0) {
         socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
         return;
       }
@@ -484,9 +486,9 @@ io.on("connection", (socket) => {
       // S'assurer que la cible existe dans charactersState
       if (!opponent.charactersState[targetId]) {
         opponent.charactersState[targetId] = {
-          currentHealth: parseInt(targetCard.pointsdevie),
-          currentAttack: parseInt(targetCard.forceattaque),
-          currentTurns: parseInt(targetCard.tourattaque),
+          pointsdevie: parseInt(targetCard.pointsdevie),
+          forceattaque: parseInt(targetCard.forceattaque),
+          tourattaque: parseInt(targetCard.tourattaque),
           activeBonus: [],
         };
       }
@@ -494,17 +496,17 @@ io.on("connection", (socket) => {
       const targetState = opponent.charactersState[targetId];
 
       // Appliquer les dégâts
-      targetState.currentHealth = Math.max(
+      targetState.pointsdevie = Math.max(
         0,
-        targetState.currentHealth - attackerState.currentAttack
+        targetState.pointsdevie - attackerState.forceattaque
       );
 
       // Décrémenter le nombre de tours d'attaque
-      attackerState.currentTurns--;
+      attackerState.tourattaque--;
 
       // Vérifier si la partie est terminée
       const isGameOver = Object.values(opponent.charactersState).every(
-        (char) => char.currentHealth <= 0
+        (char) => char.pointsdevie <= 0
       );
 
       if (isGameOver) {
@@ -523,8 +525,8 @@ io.on("connection", (socket) => {
         gameId,
         attackerId,
         targetId,
-        damage: attackerState.currentAttack,
-        newHealth: targetState.currentHealth,
+        damage: attackerState.forceattaque,
+        newHealth: targetState.pointsdevie,
         attackerName: attackerCard.nomcarteperso,
         targetName: targetCard.nomcarteperso,
         isGameOver,
