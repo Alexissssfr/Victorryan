@@ -791,18 +791,14 @@
           document.getElementById("opponentCharacters");
 
         // Game State
-        let gameState = {
-          gameId: null,
-          playerId: null,
-          playerName: null,
-          isMyTurn: false,
-          gameData: null,
+        const gameState = {
+          game: null,
           selectedCharacter: null,
           selectedBonus: null,
           targetCharacter: null,
           bonusPlayedThisTurn: false,
           lastBonusTarget: null,
-          currentTurnNumber: 1, // Ajout du compteur de tour global
+          currentTurnNumber: 1,
         };
 
         // Socket.io
@@ -833,9 +829,9 @@
 
         // Ajouter cette fonction pour vérifier si le joueur courant peut jouer
         function currentPlayerCanPlay() {
-          if (!gameState.gameData || !gameState.isMyTurn) return false;
+          if (!gameState.game || !gameState.isMyTurn) return false;
 
-          const player = gameState.gameData.players[gameState.playerId];
+          const player = gameState.game.players[gameState.playerId];
           if (!player) return false;
 
           // Vérifier si au moins un personnage est vivant et a des tours d'attaque
@@ -846,9 +842,9 @@
 
         // Fonction pour afficher les cartes des joueurs
         function renderCards() {
-          if (!gameState.gameData) return;
+          if (!gameState.game) return;
 
-          const game = gameState.gameData;
+          const game = gameState.game;
           const player = game.players[gameState.playerId];
 
           if (!player || !player.cards) {
@@ -885,7 +881,7 @@
               );
 
               socket.emit("endTurn", {
-                gameId: gameState.gameId,
+                gameId: gameState.game.id,
                 playerId: gameState.playerId,
               });
 
@@ -1139,9 +1135,7 @@
 
           // Récupérer l'état du personnage
           const characterState =
-            gameState.gameData.players[gameState.playerId].charactersState[
-              cardId
-            ];
+            gameState.game.players[gameState.playerId].charactersState[cardId];
 
           // Vérifier si le personnage est KO ou n'a plus de tours
           if (characterState && characterState.currentHealth <= 0) {
@@ -1247,7 +1241,7 @@
         function updateGameStatus() {
           let statusText = "";
 
-          if (gameState.gameData && gameState.gameData.status === "playing") {
+          if (gameState.game && gameState.game.status === "playing") {
             // S'assurer que le numéro de tour est défini
             if (typeof gameState.currentTurnNumber === "undefined") {
               gameState.currentTurnNumber = 1;
@@ -1267,37 +1261,32 @@
             // Ajouter l'information sur l'attaque
             if (gameState.isMyTurn) {
               const attackStatus =
-                gameState.gameData && gameState.gameData.attackPerformed
+                gameState.game && gameState.game.attackPerformed
                   ? '<span class="attack-status">Attaque effectuée</span>'
                   : '<span class="attack-status">Attaque disponible</span>';
 
               statusText += attackStatus;
             }
-          } else if (
-            gameState.gameData &&
-            gameState.gameData.status === "finished"
-          ) {
+          } else if (gameState.game && gameState.game.status === "finished") {
             // Si la partie est terminée, afficher l'écran de fin de partie automatiquement
-            if (gameState.gameData.winner === gameState.playerId) {
+            if (gameState.game.winner === gameState.playerId) {
               statusText = "Victoire! La partie est terminée.";
               // Afficher l'écran de fin de partie avec un court délai pour que l'utilisateur voie le message
               setTimeout(() => {
                 showGameOverScreen({
                   winner: gameState.playerId,
-                  playersTotalHealth:
-                    gameState.gameData.playersTotalHealth || null,
-                  newGameState: gameState.gameData,
+                  playersTotalHealth: gameState.game.playersTotalHealth || null,
+                  newGameState: gameState.game,
                 });
               }, 1500);
-            } else if (gameState.gameData.winner === "tie") {
+            } else if (gameState.game.winner === "tie") {
               statusText = "Match nul! La partie est terminée.";
               // Afficher l'écran de fin de partie
               setTimeout(() => {
                 showGameOverScreen({
                   winner: "tie",
-                  playersTotalHealth:
-                    gameState.gameData.playersTotalHealth || null,
-                  newGameState: gameState.gameData,
+                  playersTotalHealth: gameState.game.playersTotalHealth || null,
+                  newGameState: gameState.game,
                 });
               }, 1500);
             } else {
@@ -1305,12 +1294,11 @@
               // Afficher l'écran de fin de partie
               setTimeout(() => {
                 showGameOverScreen({
-                  winner: Object.keys(gameState.gameData.players).find(
+                  winner: Object.keys(gameState.game.players).find(
                     (id) => id !== gameState.playerId
                   ),
-                  playersTotalHealth:
-                    gameState.gameData.playersTotalHealth || null,
-                  newGameState: gameState.gameData,
+                  playersTotalHealth: gameState.game.playersTotalHealth || null,
+                  newGameState: gameState.game,
                 });
               }, 1500);
             }
@@ -1329,7 +1317,7 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                gameState.gameId = data.gameId;
+                gameState.game = data.game;
                 gameIdDisplay.textContent = data.gameId;
                 showScreen("created");
               } else {
@@ -1362,12 +1350,12 @@
             return;
           }
 
-          joinGame(gameState.gameId, name);
+          joinGame(gameState.game.id, name);
         });
 
         copyGameIdBtn.addEventListener("click", () => {
           navigator.clipboard
-            .writeText(gameState.gameId)
+            .writeText(gameState.game.id)
             .then(() => showMessage("ID copié!"))
             .catch(() => showMessage("Erreur de copie", true));
         });
@@ -1382,7 +1370,7 @@
 
           // La vérification d'attaque est maintenant inutile car le tour changera automatiquement
           // après une attaque, mais nous la gardons pour la sécurité (en cas de problème réseau)
-          if (gameState.gameData.attackPerformed) {
+          if (gameState.game.attackPerformed) {
             showMessage(
               "Vous avez déjà attaqué ce tour. C'est au tour de l'adversaire.",
               true
@@ -1393,7 +1381,7 @@
           }
 
           // Vérification que le personnage a des tours d'attaque et est en vie
-          const game = gameState.gameData;
+          const game = gameState.game;
           const player = game.players[gameState.playerId];
           const attacker = player.charactersState[gameState.selectedCharacter];
 
@@ -1441,7 +1429,7 @@
           }
 
           socket.emit("attackCharacter", {
-            gameId: gameState.gameId,
+            gameId: gameState.game.id,
             playerId: gameState.playerId,
             attackerId: gameState.selectedCharacter,
             targetId: gameState.targetCharacter,
@@ -1466,7 +1454,7 @@
             return;
 
           socket.emit("playBonus", {
-            gameId: gameState.gameId,
+            gameId: gameState.game.id,
             playerId: gameState.playerId,
             bonusId: gameState.selectedBonus,
             targetCharacterId: gameState.selectedCharacter,
@@ -1477,16 +1465,16 @@
           gameState.lastBonusTarget = gameState.selectedCharacter;
 
           // Mettre à jour l'état du jeu avec les flags de bonus
-          if (gameState.gameData) {
-            gameState.gameData.bonusPlayedThisTurn = true;
-            gameState.gameData.lastBonusTarget = gameState.selectedCharacter;
+          if (gameState.game) {
+            gameState.game.bonusPlayedThisTurn = true;
+            gameState.game.lastBonusTarget = gameState.selectedCharacter;
           }
 
           // Afficher un message explicite
-          const bonusCard = gameState.gameData.players[
+          const bonusCard = gameState.game.players[
             gameState.playerId
           ].cards.bonus.find((b) => b.id === gameState.selectedBonus);
-          const characterCard = gameState.gameData.players[
+          const characterCard = gameState.game.players[
             gameState.playerId
           ].cards.personnages.find((c) => c.id === gameState.selectedCharacter);
 
@@ -1520,7 +1508,7 @@
             .then((response) => response.json())
             .then((data) => {
               if (data.success) {
-                gameState.gameId = data.gameId;
+                gameState.game = data.game;
                 gameState.playerId = data.playerId;
                 gameState.playerName = playerName;
 
@@ -1575,7 +1563,7 @@
             }
 
             if (data.newGameState) {
-              gameState.gameData = data.newGameState;
+              gameState.game = data.newGameState;
               updateGameStatus();
               renderCards();
             }
@@ -1590,7 +1578,7 @@
             enableGameInteractions();
 
             if (data.newGameState) {
-              gameState.gameData = data.newGameState;
+              gameState.game = data.newGameState;
               updateGameStatus();
               renderCards();
             }
@@ -1609,9 +1597,9 @@
           // Gérer la reconnexion du socket
           socket.on("connect", () => {
             console.log("Reconnecté au serveur");
-            if (gameState.gameId && gameState.playerId) {
+            if (gameState.game && gameState.playerId) {
               socket.emit("reconnectToGame", {
-                gameId: gameState.gameId,
+                gameId: gameState.game.id,
                 playerId: gameState.playerId,
               });
             }
@@ -1622,7 +1610,7 @@
             if (data.reason === "player_abandoned") {
               showMessage(
                 `La partie est terminée car ${
-                  gameState.gameData.players[data.abandonedBy].name
+                  gameState.game.players[data.abandonedBy].name
                 } a abandonné.`,
                 true
               );
@@ -1660,9 +1648,8 @@
         socket.on("gameState", (data) => {
           console.log("État du jeu reçu:", data);
 
-          gameState.gameData = data.game;
-          gameState.isMyTurn =
-            gameState.gameData.currentTurn === gameState.playerId;
+          gameState.game = data.game;
+          gameState.isMyTurn = data.game.currentTurn === gameState.playerId;
 
           // S'assurer que le compteur de tour est initialisé
           if (typeof gameState.currentTurnNumber === "undefined") {
@@ -1670,7 +1657,7 @@
             console.log("Tour initialisé à:", gameState.currentTurnNumber);
           }
 
-          if (gameState.gameData.status === "playing") {
+          if (data.game.status === "playing") {
             showScreen("game");
             updateGameStatus();
             renderCards();
@@ -1678,16 +1665,18 @@
           }
         });
 
-        socket.on("playerJoined", (data) => {
+        socket.on("playerJoined", function (data) {
           if (data && data.playerId && data.playerName) {
             displayMessage(`${data.playerName} a rejoint la partie !`);
-            updateGameState();
+            if (typeof updateGameState === "function") {
+              updateGameState();
+            }
           }
         });
 
         socket.on("gameReady", (data) => {
           console.log("Partie prête:", data);
-          gameState.gameData = data.game;
+          gameState.game = data.game;
           gameState.isMyTurn = data.startingPlayer === gameState.playerId;
 
           // Initialiser le compteur de tour global
@@ -1731,13 +1720,13 @@
 
           // Mettre à jour l'état du jeu
           if (data.newGameState) {
-            gameState.gameData = data.newGameState;
-            if (gameState.gameData) {
-              gameState.gameData.attackPerformed = false;
+            gameState.game = data.newGameState;
+            if (gameState.game) {
+              gameState.game.attackPerformed = false;
               // Stocker les flags de bonus dans l'état du jeu
-              gameState.gameData.bonusPlayedThisTurn =
+              gameState.game.bonusPlayedThisTurn =
                 gameState.bonusPlayedThisTurn;
-              gameState.gameData.lastBonusTarget = gameState.lastBonusTarget;
+              gameState.game.lastBonusTarget = gameState.lastBonusTarget;
             }
           }
 
@@ -1758,17 +1747,17 @@
         });
 
         socket.on("bonusPlayed", (data) => {
-          if (!gameState.gameData) return;
+          if (!gameState.game) return;
 
           // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
           if (data.newGameState) {
-            gameState.gameData = data.newGameState;
+            gameState.game = data.newGameState;
           } else {
             // Sinon, simuler l'application du bonus côté client
             const { playerId, bonusId, targetCharacterId } = data;
 
             // Récupérer le jeu et le joueur
-            const game = gameState.gameData;
+            const game = gameState.game;
             const player = game.players[playerId];
 
             if (
@@ -1821,14 +1810,14 @@
           // Afficher un message avec le nom de la carte si disponible
           const bonusName =
             data.bonusName ||
-            gameState.gameData.players[data.playerId]?.cards.bonus.find(
+            gameState.game.players[data.playerId]?.cards.bonus.find(
               (c) => c.id === data.bonusId
             )?.nomcartebonus ||
             "Un bonus";
 
           const targetName =
             data.targetName ||
-            gameState.gameData.players[data.playerId]?.cards.personnages.find(
+            gameState.game.players[data.playerId]?.cards.personnages.find(
               (c) => c.id === data.targetCharacterId
             )?.nomcarteperso ||
             "un personnage";
@@ -1841,8 +1830,8 @@
 
         socket.on("characterAttacked", (data) => {
           // Mettre à jour l'état du jeu avec les nouvelles valeurs
-          if (gameState.gameData && data.newGameState) {
-            gameState.gameData = data.newGameState;
+          if (gameState.game && data.newGameState) {
+            gameState.game = data.newGameState;
 
             // Si le serveur indique que le tour a changé
             if (data.turnChanged) {
@@ -1915,7 +1904,7 @@
 
           // Arrêter toutes les activités de la partie en cours
           socket.emit("leaveRoom", {
-            gameId: gameState.gameId,
+            gameId: gameState.game.id,
             playerId: gameState.playerId,
           });
 
@@ -1956,11 +1945,11 @@
             playerIds.forEach((pid) => {
               let playerName = "Joueur inconnu";
               if (
-                gameState.gameData &&
-                gameState.gameData.players &&
-                gameState.gameData.players[pid]
+                gameState.game &&
+                gameState.game.players &&
+                gameState.game.players[pid]
               ) {
-                playerName = gameState.gameData.players[pid].name;
+                playerName = gameState.game.players[pid].name;
               }
               const totalHealth = data.playersTotalHealth[pid];
               const isWinner = pid === data.winner;
@@ -1974,10 +1963,10 @@
 
               playerStats.appendChild(statDiv);
             });
-          } else if (gameState.gameData && gameState.gameData.players) {
+          } else if (gameState.game && gameState.game.players) {
             // Si nous n'avons pas les données détaillées
-            for (const pid in gameState.gameData.players) {
-              const playerName = gameState.gameData.players[pid].name;
+            for (const pid in gameState.game.players) {
+              const playerName = gameState.game.players[pid].name;
               const isWinner = pid === data.winner;
 
               const statDiv = document.createElement("div");
@@ -2018,9 +2007,9 @@
 
         // Ajouter cette fonction pour déboguer le contenu des cartes
         function debugCardProperties() {
-          if (!gameState.gameData) return;
+          if (!gameState.game) return;
 
-          const game = gameState.gameData;
+          const game = gameState.game;
           const player = game.players[gameState.playerId];
 
           if (player && player.cards) {
@@ -2078,9 +2067,9 @@
 
         // Ajouter une fonction pour vérifier si la partie est gagnée/perdue
         function checkGameOver() {
-          if (!gameState.gameData) return false;
+          if (!gameState.game) return false;
 
-          const game = gameState.gameData;
+          const game = gameState.game;
           const player = game.players[gameState.playerId];
 
           // Trouver l'adversaire
@@ -2164,7 +2153,7 @@
 
             // Informer le serveur de la fin de partie
             socket.emit("gameEnded", {
-              gameId: gameState.gameId,
+              gameId: gameState.game.id,
               winner: winner,
               playersTotalHealth: playersTotalHealth,
             });
@@ -2174,7 +2163,7 @@
               showGameOverScreen({
                 winner: winner,
                 playersTotalHealth: playersTotalHealth,
-                newGameState: game,
+                newGameState: gameState.game,
               });
             }, 1000);
 
@@ -2290,13 +2279,11 @@
 
         // Modifier la fonction showGameOverScreen
         function showGameOverScreen(data) {
-          if (!data || !data.newGameState || !data.winner) return;
+          if (!data || !data.newGameState || !data.winner || !currentPlayerId)
+            return;
 
           const game = data.newGameState;
-          const winner = game.players[data.winner];
-          const currentPlayer = game.players[currentPlayerId];
-
-          if (!winner || !currentPlayer) return;
+          const isWinner = currentPlayerId === data.winner;
 
           // Cacher tous les autres écrans
           hideAllScreens();
@@ -2306,7 +2293,6 @@
           gameOverScreen.classList.remove("hidden");
 
           // Mettre à jour le titre et le message
-          const isWinner = currentPlayerId === data.winner;
           const title = document.querySelector("#gameOverScreen h1");
           const message = document.querySelector("#gameOverScreen .message");
 
@@ -2323,6 +2309,98 @@
           // Mettre à jour les statistiques
           updateGameStats(data.playersTotalHealth, game);
         }
+
+        function updateGameStats(playersTotalHealth, game) {
+          const stats = document.querySelector(".stats-container");
+          if (!stats || !game || !game.players) return;
+
+          stats.innerHTML = "";
+
+          Object.entries(game.players).forEach(([playerId, player]) => {
+            const totalHealth = playersTotalHealth[playerId] || 0;
+            const statElement = document.createElement("div");
+            statElement.className = "player-stat";
+            statElement.innerHTML = `
+              <span>${player.name}</span>
+              <span>${totalHealth} PV restants</span>
+            `;
+            if (playerId === game.winner) {
+              statElement.innerHTML += " 🏆";
+            }
+            stats.appendChild(statElement);
+          });
+        }
+
+        let currentPlayerId = null;
+        let currentGameId = null;
+
+        function updateGameState(newState) {
+          if (!newState) return;
+
+          if (newState.playerId) {
+            currentPlayerId = newState.playerId;
+          }
+          if (newState.game) {
+            gameState.game = newState.game;
+            currentGameId = newState.game.id;
+            renderGameState();
+          }
+        }
+
+        function renderGameState() {
+          if (!gameState.game) return;
+          renderCards();
+          updateTurnInfo();
+          updatePlayerNames();
+        }
+
+        function updateTurnInfo() {
+          const turnInfo = document.getElementById("turnInfo");
+          const turnNumber = document.getElementById("turnNumber");
+          if (turnInfo && gameState.game) {
+            turnInfo.textContent =
+              gameState.game.currentTurn === currentPlayerId
+                ? "C'est votre tour!"
+                : "Au tour de l'adversaire";
+          }
+          if (turnNumber) {
+            turnNumber.textContent = `Tour ${gameState.currentTurnNumber || 1}`;
+          }
+        }
+
+        function updatePlayerNames() {
+          const player1Name = document.getElementById("player1Name");
+          const player2Name = document.getElementById("player2Name");
+
+          if (gameState.game && gameState.game.players) {
+            const currentPlayer = gameState.game.players[currentPlayerId];
+            const opponent = Object.values(gameState.game.players).find(
+              (p) => p.id !== currentPlayerId
+            );
+
+            if (currentPlayer && player1Name) {
+              player1Name.textContent = `Joueur 1: ${currentPlayer.name}`;
+            }
+            if (opponent && player2Name) {
+              player2Name.textContent = `Joueur 2: ${opponent.name}`;
+            }
+          }
+        }
+
+        // Ajouter la gestion de l'événement gameReady
+        socket.on("gameReady", function (data) {
+          if (!data || !data.game) return;
+
+          gameState.game = data.game;
+          currentGameId = data.game.id;
+
+          // Cacher l'écran d'attente et afficher l'écran de jeu
+          hideAllScreens();
+          showScreen("gameScreen");
+
+          // Mettre à jour l'interface
+          updateGameState(data);
+        });
       });
     </script>
   </body>
