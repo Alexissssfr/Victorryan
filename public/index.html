@@ -1250,6 +1250,11 @@
           let statusText = "";
 
           if (gameState.gameData && gameState.gameData.status === "playing") {
+            // S'assurer que le numéro de tour est défini
+            if (typeof gameState.currentTurnNumber === "undefined") {
+              gameState.currentTurnNumber = 1;
+            }
+
             statusText = `<div class="turn-info">
               <span>${
                 gameState.isMyTurn
@@ -1257,7 +1262,7 @@
                   : "Au tour de l'adversaire"
               }</span>
               <span class="turn-number">Tour ${
-                gameState.currentTurnNumber || 1
+                gameState.currentTurnNumber
               }</span>
             </div>`;
 
@@ -1553,6 +1558,12 @@
           gameState.isMyTurn =
             gameState.gameData.currentTurn === gameState.playerId;
 
+          // S'assurer que le compteur de tour est initialisé
+          if (typeof gameState.currentTurnNumber === "undefined") {
+            gameState.currentTurnNumber = 1;
+            console.log("Tour initialisé à:", gameState.currentTurnNumber);
+          }
+
           if (gameState.gameData.status === "playing") {
             showScreen("game");
             updateGameStatus();
@@ -1586,16 +1597,20 @@
         socket.on("turnChanged", (data) => {
           console.log("Changement de tour:", data);
           const previousTurn = gameState.isMyTurn;
-          gameState.isMyTurn = data.currentTurn === gameState.playerId;
+          const newTurn = data.currentTurn === gameState.playerId;
 
           // Si le tour passe de l'adversaire à nous
-          if (gameState.isMyTurn && !previousTurn) {
-            // Incrémenter le compteur de tour global
+          if (newTurn && !previousTurn) {
+            // Incrémenter le compteur de tour
             gameState.currentTurnNumber =
               (gameState.currentTurnNumber || 1) + 1;
-            console.log("Nouveau tour:", gameState.currentTurnNumber);
+            console.log("Tour incrémenté à:", gameState.currentTurnNumber);
+          }
 
-            // Réinitialiser tous les flags au début de notre tour
+          gameState.isMyTurn = newTurn;
+
+          // Réinitialiser tous les flags au début de notre tour
+          if (gameState.isMyTurn) {
             gameState.bonusPlayedThisTurn = false;
             gameState.lastBonusTarget = null;
             gameState.selectedCharacter = null;
