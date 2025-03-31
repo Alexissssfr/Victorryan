@@ -754,7 +754,6 @@
         </div>
 
         <div class="game-over-actions">
-          <button id="newGameBtn" class="btn">Nouvelle partie</button>
           <button id="quitGameBtn" class="btn btn-secondary">
             Retour au menu
           </button>
@@ -814,7 +813,6 @@
         const gameOverTitle = document.getElementById("gameOverTitle");
         const gameOverMessage = document.getElementById("gameOverMessage");
         const playerStats = document.getElementById("playerStats");
-        const newGameBtn = document.getElementById("newGameBtn");
         const quitGameBtn = document.getElementById("quitGameBtn");
 
         // Functions
@@ -2070,47 +2068,7 @@
         }
 
         // Ajoutez les gestionnaires d'événements pour les boutons de fin de partie
-        newGameBtn.addEventListener("click", startNewGame);
         quitGameBtn.addEventListener("click", returnToMenu);
-
-        // Fonction pour démarrer une nouvelle partie
-        function startNewGame() {
-          // Réinitialiser les sélections et l'état du jeu
-          gameState.selectedCharacter = null;
-          gameState.selectedBonus = null;
-          gameState.targetCharacter = null;
-
-          // Créer une nouvelle partie
-          fetch("/api/games", {
-            method: "POST",
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.success) {
-                gameState.gameId = data.gameId;
-                gameIdDisplay.textContent = data.gameId;
-
-                // Sauvegarder le nouvel ID de partie
-                localStorage.setItem("gameId", data.gameId);
-
-                // Rejoindre automatiquement la nouvelle partie
-                joinGame(data.gameId, gameState.playerName);
-
-                // Cacher l'écran de fin de partie
-                gameOverScreen.classList.add("hidden");
-              } else {
-                showMessage(
-                  "Erreur lors de la création d'une nouvelle partie: " +
-                    data.error,
-                  true
-                );
-              }
-            })
-            .catch((error) => {
-              showMessage("Erreur de connexion", true);
-              console.error("Error:", error);
-            });
-        }
 
         // Fonction pour retourner au menu principal
         function returnToMenu() {
@@ -2259,30 +2217,24 @@
           // S'assurer que l'écran de fin est visible
           gameOverScreen.classList.remove("hidden");
 
-          // Définir explicitement les fonctions des boutons et s'assurer qu'ils sont visibles
-          newGameBtn.style.display = "block";
+          // S'assurer que seul le bouton de retour au menu est visible
           quitGameBtn.style.display = "block";
 
           // Supprimer tous les gestionnaires d'événements existants
-          newGameBtn.replaceWith(newGameBtn.cloneNode(true));
           quitGameBtn.replaceWith(quitGameBtn.cloneNode(true));
 
-          // Récupérer les références des nouveaux boutons
-          const newNewGameBtn = document.getElementById("newGameBtn");
+          // Récupérer la référence du nouveau bouton
           const newQuitGameBtn = document.getElementById("quitGameBtn");
 
-          // Ajouter les nouveaux gestionnaires d'événements
-          newNewGameBtn.addEventListener("click", function () {
-            gameOverScreen.classList.add("hidden");
-            startNewGame();
-          });
-
+          // Ajouter le gestionnaire d'événements
           newQuitGameBtn.addEventListener("click", function () {
             gameOverScreen.classList.add("hidden");
             returnToMenu();
           });
 
-          console.log("Écran de fin de partie affiché avec boutons");
+          console.log(
+            "Écran de fin de partie affiché avec le bouton de retour au menu"
+          );
         }
       });
     </script>
