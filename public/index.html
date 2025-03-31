@@ -1548,7 +1548,107 @@
             });
         }
 
-        // Socket.io Events
+        // Gestionnaires d'événements pour la déconnexion/reconnexion
+        function setupConnectionHandlers() {
+          // Gérer la déconnexion d'un joueur
+          socket.on("playerLeft", (data) => {
+            console.log("Joueur déconnecté:", data);
+            if (data.temporary) {
+              showMessage(
+                `${data.playerName} s'est déconnecté temporairement. La partie est en pause.`,
+                true
+              );
+            } else {
+              showMessage(`${data.playerName} a quitté la partie.`, true);
+            }
+          });
+
+          // Gérer la mise en pause de la partie
+          socket.on("gamePaused", (data) => {
+            console.log("Partie en pause:", data);
+            if (data.reason === "player_disconnected") {
+              showMessage(
+                `La partie est en pause car ${data.playerName} s'est déconnecté. Attente de reconnexion...`,
+                true
+              );
+              disableGameInteractions();
+            }
+
+            if (data.newGameState) {
+              gameState.gameData = data.newGameState;
+              updateGameStatus();
+              renderCards();
+            }
+          });
+
+          // Gérer la reprise de la partie
+          socket.on("gameResumed", (data) => {
+            console.log("Partie reprise:", data);
+            showMessage(
+              `${data.playerName} s'est reconnecté. La partie reprend !`
+            );
+            enableGameInteractions();
+
+            if (data.newGameState) {
+              gameState.gameData = data.newGameState;
+              updateGameStatus();
+              renderCards();
+            }
+          });
+
+          // Gérer la déconnexion du socket
+          socket.on("disconnect", () => {
+            console.log("Déconnecté du serveur");
+            showMessage(
+              "Déconnecté du serveur. Tentative de reconnexion...",
+              true
+            );
+            disableGameInteractions();
+          });
+
+          // Gérer la reconnexion du socket
+          socket.on("connect", () => {
+            console.log("Reconnecté au serveur");
+            if (gameState.gameId && gameState.playerId) {
+              socket.emit("reconnectToGame", {
+                gameId: gameState.gameId,
+                playerId: gameState.playerId,
+              });
+            }
+          });
+
+          // Gérer la fin de partie par abandon
+          socket.on("gameOver", (data) => {
+            if (data.reason === "player_abandoned") {
+              showMessage(
+                `La partie est terminée car ${
+                  gameState.gameData.players[data.abandonedBy].name
+                } a abandonné.`,
+                true
+              );
+            }
+            showGameOverScreen(data);
+          });
+        }
+
+        // Fonctions utilitaires
+        function disableGameInteractions() {
+          document.querySelectorAll(".btn, .card").forEach((el) => {
+            el.style.pointerEvents = "none";
+            el.style.opacity = "0.7";
+          });
+        }
+
+        function enableGameInteractions() {
+          document.querySelectorAll(".btn, .card").forEach((el) => {
+            el.style.pointerEvents = "auto";
+            el.style.opacity = "1";
+          });
+        }
+
+        // Initialisation
+        setupConnectionHandlers();
+
         socket.on("connect", () => {
           console.log("Connecté au serveur");
         });
@@ -1791,400 +1891,6 @@
           );
         });
 
-        socket.on("playerLeft", (data) => {
-          console.log("Joueur déconnecté:", data);
-          if (data.temporary) {
-            showMessage(
-              `${data.playerName} s'est déconnecté temporairement. La partie est en pause.`,
-              true
-            );
-          } else {
-            showMessage(`${data.playerName} a quitté la partie.`, true);
-          }
-        });
-
-        socket.on("gamePaused", (data) => {
-          console.log("Partie en pause:", data);
-          if (data.reason === "player_disconnected") {
-            showMessage(
-              `La partie est en pause car ${data.playerName} s'est déconnecté. Attente de reconnexion...`,
-              true
-            );
-            disableGameInteractions();
-          }
-
-          if (data.newGameState) {
-            gameState.gameData = data.newGameState;
-            updateGameStatus();
-            renderCards();
-          }
-        });
-
-        socket.on("gameResumed", (data) => {
-          console.log("Partie reprise:", data);
-          showMessage(
-            `${data.playerName} s'est reconnecté. La partie reprend !`
-          );
-          enableGameInteractions();
-
-          if (data.newGameState) {
-            gameState.gameData = data.newGameState;
-            updateGameStatus();
-            renderCards();
-          }
-        });
-
-        socket.on("playerReconnected", (data) => {
-          showMessage(`${data.playerName} s'est reconnecté à la partie.`);
-        });
-
-        // Gérer la déconnexion d'un joueur
-        socket.on("playerLeft", (data) => {
-          console.log("Joueur déconnecté:", data);
-          if (data.temporary) {
-            showMessage(
-              `${data.playerName} s'est déconnecté temporairement. La partie est en pause.`,
-              true
-            );
-          } else {
-            showMessage(`${data.playerName} a quitté la partie.`, true);
-          }
-        });
-
-        // Gérer la mise en pause de la partie
-        socket.on("gamePaused", (data) => {
-          console.log("Partie en pause:", data);
-          if (data.reason === "player_disconnected") {
-            showMessage(
-              `La partie est en pause car ${data.playerName} s'est déconnecté. Attente de reconnexion...`,
-              true
-            );
-            disableGameInteractions();
-          }
-
-          if (data.newGameState) {
-            gameState.gameData = data.newGameState;
-            updateGameStatus();
-            renderCards();
-          }
-        });
-
-        // Gérer la reprise de la partie
-        socket.on("gameResumed", (data) => {
-          console.log("Partie reprise:", data);
-          showMessage(
-            `${data.playerName} s'est reconnecté. La partie reprend !`
-          );
-          enableGameInteractions();
-
-          if (data.newGameState) {
-            gameState.gameData = data.newGameState;
-            updateGameStatus();
-            renderCards();
-          }
-        });
-
-        // Gérer la déconnexion du socket
-        socket.on("disconnect", () => {
-          console.log("Déconnecté du serveur");
-          showMessage("Déconnecté du serveur. Tentative de reconnexion...", true);
-          disableGameInteractions();
-        });
-
-        // Gérer la reconnexion du socket
-        socket.on("connect", () => {
-          console.log("Reconnecté au serveur");
-          if (gameState.gameId && gameState.playerId) {
-            socket.emit("reconnectToGame", {
-              gameId: gameState.gameId,
-              playerId: gameState.playerId
-            });
-          }
-        });
-
-        // Gérer la fin de partie par abandon
-        socket.on("gameOver", (data) => {
-          if (data.reason === "player_abandoned") {
-            showMessage(
-              `La partie est terminée car ${
-                gameState.gameData.players[data.abandonedBy].name
-              } a abandonné.`,
-              true
-            );
-          }
-          showGameOverScreen(data);
-        });
-
-        // Fonctions utilitaires pour la gestion des interactions
-        function disableGameInteractions() {
-          document.querySelectorAll(".btn, .card").forEach((el) => {
-            el.style.pointerEvents = "none";
-            el.style.opacity = "0.7";
-          });
-        }
-
-        function enableGameInteractions() {
-          document.querySelectorAll(".btn, .card").forEach((el) => {
-            el.style.pointerEvents = "auto";
-            el.style.opacity = "1";
-          });
-        }
-
-        // Check for existing game in localStorage
-        const savedGameId = localStorage.getItem("gameId");
-          }
-          showGameOverScreen(data);
-        });
-
-        // Check for existing game in localStorage
-        const savedGameId = localStorage.getItem("gameId");
-        const savedPlayerId = localStorage.getItem("playerId");
-        const savedPlayerName = localStorage.getItem("playerName");
-
-        if (savedGameId && savedPlayerId) {
-          const rejoin = confirm(
-            "Partie en cours trouvée. Voulez-vous la rejoindre?"
-          );
-          if (rejoin) {
-            gameState.gameId = savedGameId;
-            gameState.playerId = savedPlayerId;
-            gameState.playerName = savedPlayerName;
-
-            showScreen("waiting");
-            document.getElementById("waitingMessage").textContent =
-              "Reconnexion en cours...";
-            socket.emit("joinRoom", {
-              gameId: savedGameId,
-              playerId: savedPlayerId,
-            });
-          } else {
-            localStorage.removeItem("gameId");
-            localStorage.removeItem("playerId");
-            localStorage.removeItem("playerName");
-          }
-        }
-
-        // Ajouter une fonction pour vérifier si la partie est gagnée/perdue
-        function checkGameOver() {
-          if (!gameState.gameData) return false;
-
-          const game = gameState.gameData;
-          const player = game.players[gameState.playerId];
-
-          // Trouver l'adversaire
-          let opponent = null;
-          for (const id in game.players) {
-            if (id !== gameState.playerId) {
-              opponent = game.players[id];
-              break;
-            }
-          }
-
-          if (!player || !opponent) return false;
-
-          let gameEnded = false;
-          let winner = null;
-          let reason = "";
-          let playersTotalHealth = {};
-
-          // Calculer les points de vie totaux
-          const playerTotalHealth = Object.values(
-            player.charactersState
-          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
-
-          const opponentTotalHealth = Object.values(
-            opponent.charactersState
-          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
-
-          playersTotalHealth[gameState.playerId] = playerTotalHealth;
-          playersTotalHealth[opponent.id] = opponentTotalHealth;
-
-          // RÈGLE 1: Vérifier si tous les personnages d'un joueur sont à 0 PV
-          const playerHasAliveChars = Object.values(
-            player.charactersState
-          ).some((char) => char.currentHealth > 0);
-          const opponentHasAliveChars = Object.values(
-            opponent.charactersState
-          ).some((char) => char.currentHealth > 0);
-
-          // Si un joueur n'a plus de personnages en vie, il a perdu
-          if (!playerHasAliveChars) {
-            winner = opponent.id;
-            reason = "Tous vos personnages sont vaincus";
-            gameEnded = true;
-          } else if (!opponentHasAliveChars) {
-            winner = gameState.playerId;
-            reason = "Tous les personnages adverses sont vaincus";
-            gameEnded = true;
-          } else {
-            // RÈGLE 2 & 3: Vérifier si les joueurs peuvent encore attaquer
-            const playerCanAttack = Object.values(player.charactersState).some(
-              (char) => char.currentHealth > 0 && char.currentTurns > 0
-            );
-
-            const opponentCanAttack = Object.values(
-              opponent.charactersState
-            ).some((char) => char.currentHealth > 0 && char.currentTurns > 0);
-
-            // Si aucun des deux joueurs ne peut attaquer, la partie se termine
-            if (!playerCanAttack && !opponentCanAttack) {
-              if (playerTotalHealth > opponentTotalHealth) {
-                winner = gameState.playerId;
-              } else if (opponentTotalHealth > playerTotalHealth) {
-                winner = opponent.id;
-              } else {
-                winner = "tie";
-              }
-              reason = "Plus aucun joueur ne peut attaquer";
-              gameEnded = true;
-            }
-          }
-
-          if (gameEnded) {
-            // Afficher un message selon le résultat
-            if (winner === gameState.playerId) {
-              showMessage("Partie terminée ! Vous gagnez " + reason);
-            } else if (winner === "tie") {
-              showMessage("Partie terminée ! Match nul " + reason);
-            } else {
-              showMessage("Partie terminée ! Vous perdez " + reason, true);
-            }
-
-            // Informer le serveur de la fin de partie
-            socket.emit("gameEnded", {
-              gameId: gameState.gameId,
-              winner: winner,
-              playersTotalHealth: playersTotalHealth,
-            });
-
-            // Afficher directement l'écran de fin de partie
-            setTimeout(() => {
-              showGameOverScreen({
-                winner: winner,
-                playersTotalHealth: playersTotalHealth,
-                newGameState: game,
-              });
-            }, 1000);
-
-            return true;
-          }
-
-          return false;
-        }
-
-        // Fonction pour ajouter la possibilité de zoomer sur les cartes
-        function setupCardZoom() {
-          // Fonction pour zoomer une carte
-          function zoomCard(card) {
-            // Créer un overlay de fond
-            const overlay = document.createElement("div");
-            overlay.className = "overlay-background";
-            document.body.appendChild(overlay);
-
-            // Cloner la carte pour l'afficher en grand
-            const zoomedCard = card.cloneNode(true);
-            zoomedCard.classList.add("card-zoom");
-            document.body.appendChild(zoomedCard);
-
-            // Cliquer n'importe où pour fermer
-            function closeZoom() {
-              document.body.removeChild(overlay);
-              document.body.removeChild(zoomedCard);
-              document.removeEventListener("click", closeZoom);
-            }
-
-            document.addEventListener("click", closeZoom);
-          }
-
-          // Écouter les clics longs sur les cartes
-          document.addEventListener("mousedown", function (e) {
-            // Vérifier si c'est une carte
-            let card = null;
-            if (e.target.classList.contains("card")) {
-              card = e.target;
-            } else if (e.target.closest(".card")) {
-              card = e.target.closest(".card");
-            }
-
-            if (card) {
-              const timer = setTimeout(() => {
-                zoomCard(card);
-              }, 500); // Zoom après 500ms
-
-              // Annuler le zoom si le clic est relâché avant
-              const clearTimer = () => {
-                clearTimeout(timer);
-                document.removeEventListener("mouseup", clearTimer);
-              };
-
-              document.addEventListener("mouseup", clearTimer);
-            }
-          });
-        }
-
-        // Appeler cette fonction après le chargement du DOM
-        setupCardZoom();
-
-        // Ajouter cette fonction pour déboguer le contenu des cartes
-        function debugCardProperties() {
-          if (!gameState.gameData) return;
-
-          const game = gameState.gameData;
-          const player = game.players[gameState.playerId];
-
-          if (player && player.cards) {
-            console.log("Propriétés des cartes personnages:");
-            if (
-              player.cards.personnages &&
-              player.cards.personnages.length > 0
-            ) {
-              console.table(player.cards.personnages[0]);
-            }
-
-            console.log("Propriétés des cartes bonus:");
-            if (player.cards.bonus && player.cards.bonus.length > 0) {
-              console.table(player.cards.bonus[0]);
-            }
-          }
-        }
-
-        // Ajouter cette fonction pour mieux visualiser les changements de tour
-        function showTurnChange(isMyTurn) {
-          // Créer un élément de notification de changement de tour
-          const notification = document.createElement("div");
-          notification.className = "turn-change-notification";
-          notification.textContent = isMyTurn
-            ? "À VOTRE TOUR"
-            : "AU TOUR DE L'ADVERSAIRE";
-          notification.style.position = "fixed";
-          notification.style.top = "40%";
-          notification.style.left = "50%";
-          notification.style.transform = "translate(-50%, -50%)";
-          notification.style.zIndex = "1000";
-          notification.style.padding = "30px 50px";
-          notification.style.backgroundColor = isMyTurn
-            ? "rgba(76, 175, 80, 0.9)"
-            : "rgba(255, 152, 0, 0.9)";
-          notification.style.color = "white";
-          notification.style.borderRadius = "8px";
-          notification.style.fontWeight = "bold";
-          notification.style.fontSize = "24px";
-          notification.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.4)";
-          notification.style.transition = "opacity 0.5s";
-
-          document.body.appendChild(notification);
-
-          // Faire disparaître progressivement la notification
-          setTimeout(() => {
-            notification.style.opacity = "0";
-          }, 1500);
-
-          // Supprimer l'élément après l'animation
-          setTimeout(() => {
-            document.body.removeChild(notification);
-          }, 2000);
-        }
-
         // Ajoutez les gestionnaires d'événements pour les boutons de fin de partie
         quitGameBtn.addEventListener("click", returnToMenu);
 
@@ -2354,6 +2060,227 @@
             "Écran de fin de partie affiché avec le bouton de retour au menu"
           );
         }
+
+        // Ajouter cette fonction pour déboguer le contenu des cartes
+        function debugCardProperties() {
+          if (!gameState.gameData) return;
+
+          const game = gameState.gameData;
+          const player = game.players[gameState.playerId];
+
+          if (player && player.cards) {
+            console.log("Propriétés des cartes personnages:");
+            if (
+              player.cards.personnages &&
+              player.cards.personnages.length > 0
+            ) {
+              console.table(player.cards.personnages[0]);
+            }
+
+            console.log("Propriétés des cartes bonus:");
+            if (player.cards.bonus && player.cards.bonus.length > 0) {
+              console.table(player.cards.bonus[0]);
+            }
+          }
+        }
+
+        // Ajouter cette fonction pour mieux visualiser les changements de tour
+        function showTurnChange(isMyTurn) {
+          // Créer un élément de notification de changement de tour
+          const notification = document.createElement("div");
+          notification.className = "turn-change-notification";
+          notification.textContent = isMyTurn
+            ? "À VOTRE TOUR"
+            : "AU TOUR DE L'ADVERSAIRE";
+          notification.style.position = "fixed";
+          notification.style.top = "40%";
+          notification.style.left = "50%";
+          notification.style.transform = "translate(-50%, -50%)";
+          notification.style.zIndex = "1000";
+          notification.style.padding = "30px 50px";
+          notification.style.backgroundColor = isMyTurn
+            ? "rgba(76, 175, 80, 0.9)"
+            : "rgba(255, 152, 0, 0.9)";
+          notification.style.color = "white";
+          notification.style.borderRadius = "8px";
+          notification.style.fontWeight = "bold";
+          notification.style.fontSize = "24px";
+          notification.style.boxShadow = "0 4px 20px rgba(0, 0, 0, 0.4)";
+          notification.style.transition = "opacity 0.5s";
+
+          document.body.appendChild(notification);
+
+          // Faire disparaître progressivement la notification
+          setTimeout(() => {
+            notification.style.opacity = "0";
+          }, 1500);
+
+          // Supprimer l'élément après l'animation
+          setTimeout(() => {
+            document.body.removeChild(notification);
+          }, 2000);
+        }
+
+        // Ajouter une fonction pour vérifier si la partie est gagnée/perdue
+        function checkGameOver() {
+          if (!gameState.gameData) return false;
+
+          const game = gameState.gameData;
+          const player = game.players[gameState.playerId];
+
+          // Trouver l'adversaire
+          let opponent = null;
+          for (const id in game.players) {
+            if (id !== gameState.playerId) {
+              opponent = game.players[id];
+              break;
+            }
+          }
+
+          if (!player || !opponent) return false;
+
+          let gameEnded = false;
+          let winner = null;
+          let reason = "";
+          let playersTotalHealth = {};
+
+          // Calculer les points de vie totaux
+          const playerTotalHealth = Object.values(
+            player.charactersState
+          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
+
+          const opponentTotalHealth = Object.values(
+            opponent.charactersState
+          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
+
+          playersTotalHealth[gameState.playerId] = playerTotalHealth;
+          playersTotalHealth[opponent.id] = opponentTotalHealth;
+
+          // RÈGLE 1: Vérifier si tous les personnages d'un joueur sont à 0 PV
+          const playerHasAliveChars = Object.values(
+            player.charactersState
+          ).some((char) => char.currentHealth > 0);
+          const opponentHasAliveChars = Object.values(
+            opponent.charactersState
+          ).some((char) => char.currentHealth > 0);
+
+          // Si un joueur n'a plus de personnages en vie, il a perdu
+          if (!playerHasAliveChars) {
+            winner = opponent.id;
+            reason = "Tous vos personnages sont vaincus";
+            gameEnded = true;
+          } else if (!opponentHasAliveChars) {
+            winner = gameState.playerId;
+            reason = "Tous les personnages adverses sont vaincus";
+            gameEnded = true;
+          } else {
+            // RÈGLE 2 & 3: Vérifier si les joueurs peuvent encore attaquer
+            const playerCanAttack = Object.values(player.charactersState).some(
+              (char) => char.currentHealth > 0 && char.currentTurns > 0
+            );
+
+            const opponentCanAttack = Object.values(
+              opponent.charactersState
+            ).some((char) => char.currentHealth > 0 && char.currentTurns > 0);
+
+            // Si aucun des deux joueurs ne peut attaquer, la partie se termine
+            if (!playerCanAttack && !opponentCanAttack) {
+              if (playerTotalHealth > opponentTotalHealth) {
+                winner = gameState.playerId;
+              } else if (opponentTotalHealth > playerTotalHealth) {
+                winner = opponent.id;
+              } else {
+                winner = "tie";
+              }
+              reason = "Plus aucun joueur ne peut attaquer";
+              gameEnded = true;
+            }
+          }
+
+          if (gameEnded) {
+            // Afficher un message selon le résultat
+            if (winner === gameState.playerId) {
+              showMessage("Partie terminée ! Vous gagnez " + reason);
+            } else if (winner === "tie") {
+              showMessage("Partie terminée ! Match nul " + reason);
+            } else {
+              showMessage("Partie terminée ! Vous perdez " + reason, true);
+            }
+
+            // Informer le serveur de la fin de partie
+            socket.emit("gameEnded", {
+              gameId: gameState.gameId,
+              winner: winner,
+              playersTotalHealth: playersTotalHealth,
+            });
+
+            // Afficher directement l'écran de fin de partie
+            setTimeout(() => {
+              showGameOverScreen({
+                winner: winner,
+                playersTotalHealth: playersTotalHealth,
+                newGameState: game,
+              });
+            }, 1000);
+
+            return true;
+          }
+
+          return false;
+        }
+
+        // Fonction pour ajouter la possibilité de zoomer sur les cartes
+        function setupCardZoom() {
+          // Fonction pour zoomer une carte
+          function zoomCard(card) {
+            // Créer un overlay de fond
+            const overlay = document.createElement("div");
+            overlay.className = "overlay-background";
+            document.body.appendChild(overlay);
+
+            // Cloner la carte pour l'afficher en grand
+            const zoomedCard = card.cloneNode(true);
+            zoomedCard.classList.add("card-zoom");
+            document.body.appendChild(zoomedCard);
+
+            // Cliquer n'importe où pour fermer
+            function closeZoom() {
+              document.body.removeChild(overlay);
+              document.body.removeChild(zoomedCard);
+              document.removeEventListener("click", closeZoom);
+            }
+
+            document.addEventListener("click", closeZoom);
+          }
+
+          // Écouter les clics longs sur les cartes
+          document.addEventListener("mousedown", function (e) {
+            // Vérifier si c'est une carte
+            let card = null;
+            if (e.target.classList.contains("card")) {
+              card = e.target;
+            } else if (e.target.closest(".card")) {
+              card = e.target.closest(".card");
+            }
+
+            if (card) {
+              const timer = setTimeout(() => {
+                zoomCard(card);
+              }, 500); // Zoom après 500ms
+
+              // Annuler le zoom si le clic est relâché avant
+              const clearTimer = () => {
+                clearTimeout(timer);
+                document.removeEventListener("mouseup", clearTimer);
+              };
+
+              document.addEventListener("mouseup", clearTimer);
+            }
+          });
+        }
+
+        // Appeler cette fonction après le chargement du DOM
+        setupCardZoom();
       });
     </script>
   </body>
