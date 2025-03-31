@@ -1150,29 +1150,23 @@
             return;
           }
 
-          // Si on a déjà joué un bonus ce tour-ci
+          // Logique de sélection selon si un bonus a été joué ou non
           if (gameState.bonusPlayedThisTurn) {
-            // On ne peut sélectionner que le personnage qui a reçu le bonus
-            if (gameState.lastBonusTarget === cardId) {
-              if (gameState.selectedCharacter === cardId) {
-                gameState.selectedCharacter = null;
-              } else {
-                gameState.selectedCharacter = cardId;
-              }
+            // Si un bonus a été joué, on ne peut sélectionner que le personnage qui a reçu le bonus
+            if (cardId === gameState.lastBonusTarget) {
+              gameState.selectedCharacter =
+                gameState.selectedCharacter === cardId ? null : cardId;
             } else {
               showMessage(
-                "Vous ne pouvez attaquer qu'avec le personnage auquel vous avez appliqué un bonus ce tour-ci",
+                "Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci",
                 true
               );
               return;
             }
           } else {
             // Si aucun bonus n'a été joué, on peut sélectionner n'importe quel personnage valide
-            if (gameState.selectedCharacter === cardId) {
-              gameState.selectedCharacter = null;
-            } else {
-              gameState.selectedCharacter = cardId;
-            }
+            gameState.selectedCharacter =
+              gameState.selectedCharacter === cardId ? null : cardId;
           }
 
           // Réinitialiser la cible si on change de personnage attaquant
@@ -1456,15 +1450,28 @@
             targetCharacterId: gameState.selectedCharacter,
           });
 
-          showMessage(
-            `Bonus ${gameState.selectedBonus} joué sur ${gameState.selectedCharacter}`
-          );
-
           // Marquer qu'un bonus a été joué ce tour-ci et sauvegarder la cible
           gameState.bonusPlayedThisTurn = true;
           gameState.lastBonusTarget = gameState.selectedCharacter;
 
-          // Réinitialiser seulement la sélection de bonus, pas le personnage
+          // Afficher un message explicite
+          const bonusCard = gameState.gameData.players[
+            gameState.playerId
+          ].cards.bonus.find((b) => b.id === gameState.selectedBonus);
+          const characterCard = gameState.gameData.players[
+            gameState.playerId
+          ].cards.personnages.find((c) => c.id === gameState.selectedCharacter);
+
+          showMessage(
+            `${bonusCard?.nomcartebonus || "Bonus"} joué sur ${
+              characterCard?.nomcarteperso || gameState.selectedCharacter
+            }`
+          );
+          showMessage(
+            "Vous ne pourrez plus sélectionner d'autres personnages ce tour-ci"
+          );
+
+          // Réinitialiser seulement la sélection de bonus, garder le personnage sélectionné
           gameState.selectedBonus = null;
           renderCards();
         });
@@ -1555,11 +1562,11 @@
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
           showTurnChange(gameState.isMyTurn);
 
-          // Si c'est notre tour, réinitialiser tous les flags et sélections
+          // Si c'est notre tour, réinitialiser TOUS les flags et sélections
           if (gameState.isMyTurn) {
-            // Réinitialiser tous les flags
-            gameState.bonusPlayedThisTurn = false;
-            gameState.lastBonusTarget = null;
+            // Réinitialiser tous les flags au début de notre tour
+            gameState.bonusPlayedThisTurn = false; // Important: réinitialiser le flag de bonus
+            gameState.lastBonusTarget = null; // Important: réinitialiser la dernière cible
             gameState.selectedCharacter = null;
             gameState.selectedBonus = null;
             gameState.targetCharacter = null;
@@ -1571,18 +1578,16 @@
                 gameState.gameData.attackPerformed = false;
               }
             }
-          }
 
-          updateGameStatus();
-          updateActionButtons();
-
-          if (gameState.isMyTurn) {
-            showMessage("C'est votre tour!");
+            showMessage(
+              "C'est votre tour! Vous pouvez sélectionner n'importe quel personnage."
+            );
           } else {
             showMessage("Au tour de l'adversaire");
           }
 
-          // Mettre à jour l'affichage des cartes
+          updateGameStatus();
+          updateActionButtons();
           renderCards();
         });
 
