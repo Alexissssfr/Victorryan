@@ -256,10 +256,21 @@
       .turn-info {
         background-color: #333;
         color: white;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .turn-number {
+        font-weight: bold;
+        color: #4caf50;
+        background-color: rgba(255, 255, 255, 0.1);
         padding: 5px 10px;
         border-radius: 4px;
-        font-size: 14px;
-        margin-bottom: 5px;
+        margin-left: 10px;
       }
 
       .attack-status {
@@ -1150,21 +1161,21 @@
             return;
           }
 
-          // Logique de sélection selon si un bonus a été joué ou non
+          // Si un bonus a été joué ce tour-ci
           if (gameState.bonusPlayedThisTurn) {
-            // Si un bonus a été joué, on ne peut sélectionner que le personnage qui a reçu le bonus
+            // On ne peut sélectionner que le personnage qui a reçu le bonus
             if (cardId === gameState.lastBonusTarget) {
               gameState.selectedCharacter =
                 gameState.selectedCharacter === cardId ? null : cardId;
             } else {
               showMessage(
-                "Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci",
+                `Tour ${gameState.gameData.turnNumber}: Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci`,
                 true
               );
               return;
             }
           } else {
-            // Si aucun bonus n'a été joué, on peut sélectionner n'importe quel personnage valide
+            // Si aucun bonus n'a été joué ce tour-ci, on peut sélectionner n'importe quel personnage valide
             gameState.selectedCharacter =
               gameState.selectedCharacter === cardId ? null : cardId;
           }
@@ -1238,9 +1249,16 @@
           let statusText = "";
 
           if (gameState.gameData && gameState.gameData.status === "playing") {
-            statusText = gameState.isMyTurn
-              ? "C'est votre tour!"
-              : "Au tour de l'adversaire";
+            statusText = `<div class="turn-info">
+              <span>${
+                gameState.isMyTurn
+                  ? "C'est votre tour!"
+                  : "Au tour de l'adversaire"
+              }</span>
+              <span class="turn-number">Tour ${
+                gameState.gameData.turnNumber || 1
+              }</span>
+            </div>`;
 
             // Ajouter l'information sur l'attaque
             if (gameState.isMyTurn) {
@@ -1249,7 +1267,7 @@
                   ? '<span class="attack-status">Attaque effectuée</span>'
                   : '<span class="attack-status">Attaque disponible</span>';
 
-              statusText += " " + attackStatus;
+              statusText += attackStatus;
             }
           } else if (
             gameState.gameData &&
@@ -1551,6 +1569,11 @@
           gameState.gameData = data.game;
           gameState.isMyTurn = data.startingPlayer === gameState.playerId;
 
+          // Initialiser le compteur de tour
+          if (!gameState.gameData.turnNumber) {
+            gameState.gameData.turnNumber = 1;
+          }
+
           showScreen("game");
           updateGameStatus();
           renderCards();
@@ -1562,16 +1585,25 @@
           gameState.isMyTurn = data.currentTurn === gameState.playerId;
           showTurnChange(gameState.isMyTurn);
 
-          // Si c'est notre tour, réinitialiser TOUS les flags et sélections
+          // Si c'est notre tour
           if (gameState.isMyTurn) {
-            // Réinitialiser tous les flags au début de notre tour
-            gameState.bonusPlayedThisTurn = false; // Important: réinitialiser le flag de bonus
-            gameState.lastBonusTarget = null; // Important: réinitialiser la dernière cible
+            // Incrémenter le compteur de tour si c'est le même joueur qui joue à nouveau
+            if (
+              data.newGameState &&
+              data.newGameState.currentTurn === data.previousTurn
+            ) {
+              gameState.gameData.turnNumber =
+                (gameState.gameData.turnNumber || 0) + 1;
+            }
+
+            // IMPORTANT: Réinitialiser TOUS les flags au début de notre tour
+            gameState.bonusPlayedThisTurn = false;
+            gameState.lastBonusTarget = null;
             gameState.selectedCharacter = null;
             gameState.selectedBonus = null;
             gameState.targetCharacter = null;
 
-            // Mettre à jour l'état du jeu avec les nouvelles données
+            // Mettre à jour l'état du jeu
             if (data.newGameState) {
               gameState.gameData = data.newGameState;
               if (gameState.gameData) {
@@ -1580,10 +1612,12 @@
             }
 
             showMessage(
-              "C'est votre tour! Vous pouvez sélectionner n'importe quel personnage."
+              `Tour ${gameState.gameData.turnNumber}: C'est votre tour! Vous pouvez sélectionner n'importe quel personnage.`
             );
           } else {
-            showMessage("Au tour de l'adversaire");
+            showMessage(
+              `Tour ${gameState.gameData.turnNumber}: Au tour de l'adversaire`
+            );
           }
 
           updateGameStatus();
