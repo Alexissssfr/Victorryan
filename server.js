@@ -621,6 +621,76 @@ io.on("connection", (socket) => {
     checkGameEnd(gameId);
   });
 
+  // Fonction pour vérifier si la partie est terminée
+  function checkGameEnd(gameId) {
+    if (!games.has(gameId)) return;
+
+    const game = games.get(gameId);
+
+    // Vérifier si tous les personnages d'un joueur sont KO
+    const checkAllCharactersKO = (playerKey) => {
+      const player = game.players[playerKey];
+      if (!player || !player.charactersState) return false;
+
+      // Vérifier si tous les personnages ont 0 points de vie
+      return Object.values(player.charactersState).every(
+        (char) => char.pointsdevie <= 0
+      );
+    };
+
+    // Trouver les clés des joueurs
+    const playerKeys = Object.keys(game.players);
+    if (playerKeys.length !== 2) return; // La partie doit avoir exactement 2 joueurs
+
+    const player1Key = playerKeys[0];
+    const player2Key = playerKeys[1];
+
+    const player1AllKO = checkAllCharactersKO(player1Key);
+    const player2AllKO = checkAllCharactersKO(player2Key);
+
+    // Si tous les personnages d'un joueur sont KO, la partie est terminée
+    if (player1AllKO || player2AllKO) {
+      // Déterminer le gagnant
+      const winnerKey = player1AllKO ? player2Key : player1Key;
+      const winner = game.players[winnerKey].id;
+
+      // Mettre à jour l'état de la partie
+      game.status = "finished";
+      game.winner = winner;
+      game.endReason = "all_characters_ko";
+
+      // Calculer les points de vie restants pour les statistiques
+      const calculateTotalHealth = (playerState) => {
+        return Object.values(playerState.charactersState).reduce(
+          (total, char) => total + Math.max(0, parseInt(char.pointsdevie) || 0),
+          0
+        );
+      };
+
+      game.finalStats = {
+        [player1Key]: calculateTotalHealth(game.players[player1Key]),
+        [player2Key]: calculateTotalHealth(game.players[player2Key]),
+      };
+
+      // Informer les joueurs de la fin de la partie
+      io.to(gameId).emit("gameOver", {
+        reason: "all_characters_ko",
+        winner: winner,
+        finalStats: game.finalStats,
+        newGameState: JSON.parse(JSON.stringify(game)),
+      });
+
+      // Nettoyer la partie après un certain temps
+      setTimeout(() => {
+        if (games.has(gameId)) {
+          games.delete(gameId);
+          gameBonus.delete(gameId);
+          console.log(`Partie ${gameId} nettoyée après fin`);
+        }
+      }, 300000); // 5 minutes
+    }
+  }
+
   // Gérer la déconnexion
   socket.on("disconnect", () => {
     // Gérer la déconnexion pour toutes les parties auxquelles ce socket participait
