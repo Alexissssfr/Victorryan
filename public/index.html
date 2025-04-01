@@ -1463,9 +1463,31 @@
             return;
 
           if (gameState.bonusPlayedThisTurn) {
-            socket.emit("error", {
-              message: "Vous avez déjà joué un bonus ce tour",
-            });
+            showMessage("Vous avez déjà joué un bonus ce tour", true);
+            return;
+          }
+
+          // Vérifier que le personnage cible existe et est valide
+          const player = gameState.game.players[gameState.playerId];
+          if (
+            !player ||
+            !player.charactersState ||
+            !player.charactersState[gameState.selectedCharacter]
+          ) {
+            showMessage(
+              "Erreur: Personnage cible non trouvé dans vos cartes",
+              true
+            );
+            return;
+          }
+
+          const characterState =
+            player.charactersState[gameState.selectedCharacter];
+          if (characterState.currentHealth <= 0) {
+            showMessage(
+              "Ce personnage est KO et ne peut pas recevoir de bonus",
+              true
+            );
             return;
           }
 
@@ -1814,13 +1836,19 @@
                   ? parseInt(bonusCard.pourcentagebonus)
                   : 0;
 
+                // Calculer le bonus total
                 let totalBonus = 1; // Commencer à 1 (100%)
                 // Calculer l'effet cumulé de tous les bonus actifs
-                player.cards.bonus.forEach((bonus) => {
-                  totalBonus += bonus.pourcentagebonus / 100;
-                });
+                if (characterState.activeBonus) {
+                  characterState.activeBonus.forEach((bonus) => {
+                    totalBonus += bonus.percentage / 100;
+                  });
+                }
+                // Ajouter le nouveau bonus
+                totalBonus += bonusPercentage / 100;
+
                 // Appliquer le bonus total
-                characterState.forceattaque = Math.floor(
+                characterState.currentAttack = Math.floor(
                   baseAttack * totalBonus
                 );
 
@@ -1843,6 +1871,9 @@
                   percentage: bonusPercentage,
                   name: bonusCard.nomcartebonus || bonusId,
                 });
+
+                // Mettre à jour le nombre de tours restants du bonus
+                bonusCard.tourbonus = (parseInt(bonusCard.tourbonus) || 1) - 1;
               }
             }
           }
