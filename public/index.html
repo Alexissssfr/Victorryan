@@ -842,7 +842,46 @@
 
         // Fonction pour afficher les cartes des joueurs
         function renderCards() {
-          if (!gameState.game) return;
+          if (!gameState.game || !gameState.game.players) return;
+
+          // Synchroniser les valeurs du serveur et du client
+          for (const playerId in gameState.game.players) {
+            const player = gameState.game.players[playerId];
+
+            // Parcourir tous les personnages du joueur
+            if (player.charactersState) {
+              for (const charId in player.charactersState) {
+                const serverState = player.charactersState[charId];
+
+                // S'assurer que les valeurs client existent
+                if (
+                  serverState.pointsdevie !== undefined &&
+                  serverState.currentHealth === undefined
+                ) {
+                  serverState.currentHealth = serverState.pointsdevie;
+                }
+
+                if (
+                  serverState.forceattaque !== undefined &&
+                  serverState.currentAttack === undefined
+                ) {
+                  serverState.currentAttack = serverState.forceattaque;
+                }
+
+                if (
+                  serverState.tourattaque !== undefined &&
+                  serverState.currentTurns === undefined
+                ) {
+                  serverState.currentTurns = serverState.tourattaque;
+                }
+
+                // Garder les deux jeux de valeurs synchronisés
+                serverState.currentHealth = serverState.pointsdevie;
+                serverState.currentAttack = serverState.forceattaque;
+                serverState.currentTurns = serverState.tourattaque;
+              }
+            }
+          }
 
           const game = gameState.game;
           const player = game.players[gameState.playerId];
@@ -1033,26 +1072,31 @@
           cardEl.dataset.id = card.id;
 
           // Récupérer les valeurs correctes
-          const health =
-            state && state.currentHealth !== undefined
+          // Si state existe, prendre currentHealth ou pointsdevie
+          // Sinon, prendre pointsdevie de la carte ou 100 par défaut
+          const health = state
+            ? state.currentHealth !== undefined
               ? state.currentHealth
-              : card.pointsdevie
-              ? parseInt(card.pointsdevie)
-              : 100;
+              : state.pointsdevie || 100
+            : card.pointsdevie
+            ? parseInt(card.pointsdevie)
+            : 100;
 
-          const attack =
-            state && state.currentAttack !== undefined
+          const attack = state
+            ? state.currentAttack !== undefined
               ? state.currentAttack
-              : card.forceattaque
-              ? parseInt(card.forceattaque)
-              : 30;
+              : state.forceattaque || 30
+            : card.forceattaque
+            ? parseInt(card.forceattaque)
+            : 30;
 
-          const turns =
-            state && state.currentTurns !== undefined
+          const turns = state
+            ? state.currentTurns !== undefined
               ? state.currentTurns
-              : card.tourattaque
-              ? parseInt(card.tourattaque)
-              : 2;
+              : state.tourattaque || 2
+            : card.tourattaque
+            ? parseInt(card.tourattaque)
+            : 2;
 
           // Vérifier si des bonus sont actifs
           const activeBonus =
@@ -1704,21 +1748,55 @@
         socket.on("gameState", (data) => {
           console.log("État du jeu reçu:", data);
 
+          if (!data.game) {
+            showMessage("Erreur: État du jeu invalide", true);
+            return;
+          }
+
           gameState.game = data.game;
-          gameState.isMyTurn = data.game.currentTurn === gameState.playerId;
+          gameState.playerId = data.playerId;
+          gameState.isMyTurn = data.game.currentTurn === data.playerId;
+          gameState.currentTurnNumber = gameState.game.turnNumber || 1;
 
-          // S'assurer que le compteur de tour est initialisé
-          if (typeof gameState.currentTurnNumber === "undefined") {
-            gameState.currentTurnNumber = 1;
-            console.log("Tour initialisé à:", gameState.currentTurnNumber);
+          // Initialiser les variables de sélection
+          gameState.selectedCharacter = null;
+          gameState.selectedBonus = null;
+          gameState.targetCharacter = null;
+
+          // Synchroniser les valeurs du serveur et du client
+          if (gameState.game && gameState.game.players) {
+            for (const playerId in gameState.game.players) {
+              const player = gameState.game.players[playerId];
+
+              // Parcourir tous les personnages du joueur
+              if (player.charactersState) {
+                for (const charId in player.charactersState) {
+                  const serverState = player.charactersState[charId];
+
+                  // Initialiser les valeurs client à partir des valeurs serveur
+                  serverState.currentHealth = serverState.pointsdevie;
+                  serverState.currentAttack = serverState.forceattaque;
+                  serverState.currentTurns = serverState.tourattaque;
+
+                  // Initialiser activeBonus s'il n'existe pas
+                  if (!serverState.activeBonus) {
+                    serverState.activeBonus = [];
+                  }
+                }
+              }
+            }
           }
 
-          if (data.game.status === "playing") {
-            showScreen("game");
-            updateGameStatus();
-            renderCards();
-            debugCardProperties();
+          // Si on est reconnecté, afficher un message
+          if (data.reconnected) {
+            showMessage("Vous êtes reconnecté à la partie");
           }
+
+          // Afficher l'écran de jeu et mettre à jour l'interface
+          showScreen("gameScreen");
+          updateGameStatus();
+          updateActionButtons();
+          renderCards();
         });
 
         socket.on("playerJoined", function (data) {
@@ -1824,7 +1902,47 @@
           // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
           if (data.newGameState) {
             gameState.game = data.newGameState;
+
+            // Synchroniser les valeurs client et serveur
+            if (gameState.game && gameState.game.players) {
+              // Pour chaque joueur
+              for (const playerId in gameState.game.players) {
+                const player = gameState.game.players[playerId];
+
+                // Parcourir tous les personnages du joueur
+                if (player.charactersState) {
+                  for (const charId in player.charactersState) {
+                    const serverState = player.charactersState[charId];
+
+                    // Mettre à jour currentHealth, currentAttack et currentTurns
+                    if (!serverState.currentHealth)
+                      serverState.currentHealth = serverState.pointsdevie;
+                    if (!serverState.currentAttack)
+                      serverState.currentAttack = serverState.forceattaque;
+                    if (!serverState.currentTurns)
+                      serverState.currentTurns = serverState.tourattaque;
+
+                    // Garder les deux jeux de valeurs synchronisés
+                    serverState.currentHealth = serverState.pointsdevie;
+                    serverState.currentAttack = serverState.forceattaque;
+                    serverState.currentTurns = serverState.tourattaque;
+                  }
+                }
+              }
+            }
+
+            // Marquer le bonus comme joué ce tour
+            gameState.bonusPlayedThisTurn = true;
+            gameState.lastBonusTarget = data.targetId;
           }
+
+          // Afficher un message plus informatif
+          const bonusName = data.bonusName || "Bonus";
+          const targetName = data.targetName || data.targetId;
+          const newAttack = data.newAttack || "?";
+          showMessage(
+            `${bonusName} appliqué sur ${targetName}. Nouvelle attaque: ${newAttack}`
+          );
 
           // Mettre à jour l'affichage
           renderCards();
@@ -1836,7 +1954,47 @@
           // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
           if (data.newGameState) {
             gameState.game = data.newGameState;
+
+            // Synchroniser les valeurs client et serveur
+            if (gameState.game && gameState.game.players) {
+              // Pour chaque joueur
+              for (const playerId in gameState.game.players) {
+                const player = gameState.game.players[playerId];
+
+                // Parcourir tous les personnages du joueur
+                if (player.charactersState) {
+                  for (const charId in player.charactersState) {
+                    const serverState = player.charactersState[charId];
+
+                    // Mettre à jour currentHealth, currentAttack et currentTurns
+                    if (!serverState.currentHealth)
+                      serverState.currentHealth = serverState.pointsdevie;
+                    if (!serverState.currentAttack)
+                      serverState.currentAttack = serverState.forceattaque;
+                    if (!serverState.currentTurns)
+                      serverState.currentTurns = serverState.tourattaque;
+
+                    // Garder les deux jeux de valeurs synchronisés
+                    serverState.currentHealth = serverState.pointsdevie;
+                    serverState.currentAttack = serverState.forceattaque;
+                    serverState.currentTurns = serverState.tourattaque;
+                  }
+                }
+              }
+            }
+
+            // Marquer l'attaque comme effectuée ce tour
+            gameState.game.attackPerformed = true;
           }
+
+          // Afficher un message plus informatif
+          const attackerName = data.attackerName || data.attackerId;
+          const targetName = data.targetName || data.targetId;
+          const damage = data.damage || "?";
+          const newHealth = data.newHealth || "?";
+          showMessage(
+            `${attackerName} a attaqué ${targetName} pour ${damage} points de dégâts! Points de vie restants: ${newHealth}`
+          );
 
           // Mettre à jour l'affichage
           renderCards();
