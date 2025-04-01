@@ -799,6 +799,7 @@
           bonusPlayedThisTurn: false,
           lastBonusTarget: null,
           currentTurnNumber: 1,
+          bonusActionsRemaining: 2, // Ajout du compteur de bonus restants
         };
 
         // Socket.io
@@ -1317,6 +1318,15 @@
         function selectBonus(cardId) {
           if (!gameState.isMyTurn) return;
 
+          // Vérifier si on a encore des actions bonus disponibles
+          if (gameState.bonusActionsRemaining <= 0) {
+            showMessage(
+              "Vous avez déjà utilisé vos 2 actions bonus ce tour-ci",
+              true
+            );
+            return;
+          }
+
           // Vérifier si le bonus est déjà sélectionné
           if (gameState.selectedBonus === cardId) {
             gameState.selectedBonus = null;
@@ -1563,6 +1573,15 @@
           )
             return;
 
+          // Vérifier si on a encore des actions bonus disponibles
+          if (gameState.bonusActionsRemaining <= 0) {
+            showMessage(
+              "Vous avez déjà utilisé vos 2 actions bonus ce tour-ci",
+              true
+            );
+            return;
+          }
+
           // Vérifier que le personnage cible existe et est valide
           const player = gameState.game.players[gameState.playerId];
           if (
@@ -1619,13 +1638,18 @@
             targetId: gameState.selectedCharacter,
           });
 
-          // Afficher un message explicite
+          // Décrémenter le compteur d'actions bonus
+          gameState.bonusActionsRemaining--;
+
+          // Afficher un message explicite avec le nombre d'actions bonus restantes
           showMessage(
             `Tour ${gameState.currentTurnNumber}: ${
               bonusCard.nomcartebonus || "Bonus"
             } joué sur ${
               characterCard.nomcarteperso || gameState.selectedCharacter
-            }`
+            } (${gameState.bonusActionsRemaining} action${
+              gameState.bonusActionsRemaining > 1 ? "s" : ""
+            } bonus restante${gameState.bonusActionsRemaining > 1 ? "s" : ""})`
           );
 
           // Réinitialiser seulement la sélection de bonus, garder le personnage sélectionné
@@ -1913,6 +1937,8 @@
               // Stocker les flags de bonus dans l'état du jeu
               gameState.bonusPlayedThisTurn = false;
               gameState.lastBonusTarget = null;
+              // Réinitialiser le compteur d'actions bonus
+              gameState.bonusActionsRemaining = 2;
             }
           }
 
@@ -1923,7 +1949,7 @@
             gameState.targetCharacter = null;
 
             showMessage(
-              `Tour ${gameState.currentTurnNumber}: C'est votre tour! Vous pouvez sélectionner n'importe quel personnage.`
+              `Tour ${gameState.currentTurnNumber}: C'est votre tour! Vous pouvez sélectionner n'importe quel personnage et utiliser jusqu'à 2 actions bonus.`
             );
           } else {
             showMessage(
