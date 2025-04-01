@@ -1313,7 +1313,12 @@
           if (gameState.game && gameState.game.status === "playing") {
             // S'assurer que le numéro de tour est défini
             if (typeof gameState.currentTurnNumber === "undefined") {
-              gameState.currentTurnNumber = 1;
+              // Si le serveur fournit un numéro de tour, l'utiliser
+              if (gameState.game.turnNumber) {
+                gameState.currentTurnNumber = gameState.game.turnNumber;
+              } else {
+                gameState.currentTurnNumber = 1;
+              }
             }
 
             statusText = `<div class="turn-info">
@@ -1348,31 +1353,23 @@
                   newGameState: gameState.game,
                 });
               }, 1500);
-            } else if (gameState.game.winner === "tie") {
-              statusText = "Match nul! La partie est terminée.";
-              // Afficher l'écran de fin de partie
+            } else if (gameState.game.winner) {
+              statusText = "Défaite... La partie est terminée.";
+              // Afficher l'écran de fin de partie avec un court délai
               setTimeout(() => {
                 showGameOverScreen({
-                  winner: "tie",
+                  winner: gameState.game.winner,
                   playersTotalHealth: gameState.game.playersTotalHealth || null,
                   newGameState: gameState.game,
                 });
               }, 1500);
             } else {
-              statusText = "Défaite! La partie est terminée.";
-              // Afficher l'écran de fin de partie
-              setTimeout(() => {
-                showGameOverScreen({
-                  winner: Object.keys(gameState.game.players).find(
-                    (id) => id !== gameState.playerId
-                  ),
-                  playersTotalHealth: gameState.game.playersTotalHealth || null,
-                  newGameState: gameState.game,
-                });
-              }, 1500);
+              statusText = "Partie terminée.";
             }
+          } else if (gameState.game && gameState.game.status === "paused") {
+            statusText = "Partie en pause - un joueur s'est déconnecté.";
           } else {
-            statusText = "En attente d'un adversaire...";
+            statusText = "En attente de joueurs...";
           }
 
           gameStatus.innerHTML = statusText;
@@ -1443,18 +1440,6 @@
           )
             return;
 
-          // La vérification d'attaque est maintenant inutile car le tour changera automatiquement
-          // après une attaque, mais nous la gardons pour la sécurité (en cas de problème réseau)
-          if (gameState.game.attackPerformed) {
-            showMessage(
-              "Vous avez déjà attaqué ce tour. C'est au tour de l'adversaire.",
-              true
-            );
-
-            // NOUVEAU CODE : Ne pas permettre d'attaquer à nouveau
-            return;
-          }
-
           // Vérification que le personnage a des tours d'attaque et est en vie
           const game = gameState.game;
           const player = game.players[gameState.playerId];
@@ -1503,7 +1488,7 @@
             }
           }
 
-          // Modifier ici : utiliser "attack" au lieu de "attackCharacter"
+          // Émettre l'événement d'attaque
           socket.emit("attack", {
             gameId: gameState.game.id,
             playerId: gameState.playerId,
@@ -1511,12 +1496,13 @@
             targetId: gameState.targetCharacter,
           });
 
-          // Modification ici aussi: informer que le tour passe automatiquement
+          // Informer le joueur que le tour passe automatiquement à l'adversaire
           showMessage(
             `${attackerName} attaque ${targetName}. Le tour passe à l'adversaire.`
           );
 
-          // Mettre à jour l'affichage
+          // Mettre à jour l'interface pour le joueur
+          gameState.isMyTurn = false; // Désactiver son tour en attendant la confirmation du serveur
           updateActionButtons();
           renderCards();
         });
@@ -1852,43 +1838,42 @@
 
         socket.on("turnChanged", (data) => {
           console.log("Changement de tour:", data);
+
+          // Récupérer l'état précédent
           const previousTurn = gameState.isMyTurn;
-          const newTurn = data.currentTurn === gameState.playerId;
 
-          // Si le tour passe de l'adversaire à nous
-          if (newTurn && !previousTurn) {
-            // Incrémenter le compteur de tour global
-            gameState.currentTurnNumber =
-              (gameState.currentTurnNumber || 1) + 1;
-            console.log("Tour incrémenté à:", gameState.currentTurnNumber);
+          // Mettre à jour l'état de tour actuel
+          gameState.isMyTurn = data.currentTurn === gameState.playerId;
 
-            // Réinitialiser les flags de bonus au début d'un nouveau tour
-            gameState.bonusPlayedThisTurn = false;
-            gameState.lastBonusTarget = null;
+          // Mettre à jour l'état du jeu avec les données du serveur
+          if (data.newGameState) {
+            gameState.game = data.newGameState;
+
+            // Mettre à jour le numéro de tour depuis le serveur si disponible
+            if (gameState.game.turnNumber) {
+              gameState.currentTurnNumber = gameState.game.turnNumber;
+            }
+            // Sinon, incrémenter localement si le tour passe de l'adversaire à nous
+            else if (gameState.isMyTurn && !previousTurn) {
+              gameState.currentTurnNumber =
+                (gameState.currentTurnNumber || 1) + 1;
+            }
+
+            // Réinitialiser les flags d'action
+            if (gameState.game) {
+              gameState.game.attackPerformed = false;
+              // Stocker les flags de bonus dans l'état du jeu
+              gameState.bonusPlayedThisTurn = false;
+              gameState.lastBonusTarget = null;
+            }
           }
-
-          gameState.isMyTurn = newTurn;
 
           // Réinitialiser les sélections au début de notre tour
           if (gameState.isMyTurn) {
             gameState.selectedCharacter = null;
             gameState.selectedBonus = null;
             gameState.targetCharacter = null;
-          }
 
-          // Mettre à jour l'état du jeu
-          if (data.newGameState) {
-            gameState.game = data.newGameState;
-            if (gameState.game) {
-              gameState.game.attackPerformed = false;
-              // Stocker les flags de bonus dans l'état du jeu
-              gameState.game.bonusPlayedThisTurn =
-                gameState.bonusPlayedThisTurn;
-              gameState.game.lastBonusTarget = gameState.lastBonusTarget;
-            }
-          }
-
-          if (gameState.isMyTurn) {
             showMessage(
               `Tour ${gameState.currentTurnNumber}: C'est votre tour! Vous pouvez sélectionner n'importe quel personnage.`
             );

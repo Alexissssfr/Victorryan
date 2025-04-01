@@ -568,6 +568,15 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Vérifier si une attaque a déjà été effectuée
+    if (game.attackPerformed) {
+      console.log("Une attaque a déjà été effectuée ce tour");
+      socket.emit("error", {
+        message: "Vous avez déjà attaqué ce tour. Attendez le tour suivant.",
+      });
+      return;
+    }
+
     const player = game.players[playerKey];
     const attackerCard = player.cards.personnages.find(
       (card) => card.id === attackerId
@@ -719,6 +728,45 @@ io.on("connection", (socket) => {
 
     // Vérifier si la partie est terminée
     checkGameEnd(gameId);
+
+    // NOUVEAU CODE : Passer automatiquement le tour à l'adversaire après une attaque
+    // Trouver le prochain joueur (l'adversaire)
+    const nextPlayerId = opponent.id;
+
+    // Réinitialiser les tours d'attaque pour le prochain joueur
+    Object.keys(opponent.charactersState).forEach((characterId) => {
+      const baseCard = opponent.cards.personnages.find(
+        (c) => c.id === characterId
+      );
+      if (baseCard) {
+        opponent.charactersState[characterId].tourattaque = parseInt(
+          baseCard.tourattaque
+        );
+      }
+    });
+
+    // Mettre à jour l'état du jeu pour le prochain tour
+    game.currentTurn = nextPlayerId;
+    game.bonusPlayedThisTurn = false;
+    game.lastBonusTarget = null;
+    game.attackPerformed = false; // Réinitialiser pour le prochain joueur
+
+    // Gestion du numéro de tour
+    if (!game.turnNumber) {
+      game.turnNumber = 1;
+    } else if (playerKey === Object.keys(game.players)[1]) {
+      // Si c'est le joueur 2 qui a joué, on incrémente le tour pour le nouveau cycle
+      game.turnNumber += 1;
+      console.log(`Tour incrémenté à: ${game.turnNumber}`);
+    }
+
+    // Émettre l'événement de changement de tour
+    io.to(gameId).emit("turnChanged", {
+      currentTurn: game.currentTurn,
+      newGameState: JSON.parse(JSON.stringify(game)),
+    });
+
+    console.log(`Tour passé automatiquement à ${nextPlayerId} après attaque`);
   });
 
   // Fonction pour vérifier si la partie est terminée
