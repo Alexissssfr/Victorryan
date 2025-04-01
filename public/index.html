@@ -889,7 +889,10 @@
               game.attackPerformed = true;
             } else {
               // Si personne ne peut jouer, fin de partie
-              checkGameOver();
+              // Ne vérifier la fin de partie que si le jeu est en cours depuis au moins un tour
+              if (gameState.currentTurnNumber > 1) {
+                checkGameOver();
+              }
             }
           }
 
@@ -1701,6 +1704,22 @@
           }
           console.log("Tour initial:", gameState.currentTurnNumber);
 
+          // S'assurer que l'état initial des personnages est correctement initialisé
+          const player = gameState.game.players[gameState.playerId];
+          if (player && player.charactersState) {
+            Object.values(player.charactersState).forEach((char) => {
+              if (char.currentHealth === undefined) {
+                char.currentHealth = char.pointsdevie || 100;
+              }
+              if (char.currentTurns === undefined) {
+                char.currentTurns = char.tourattaque || 2;
+              }
+              if (char.currentAttack === undefined) {
+                char.currentAttack = char.forceattaque || 30;
+              }
+            });
+          }
+
           showScreen("game");
           updateGameStatus();
           renderCards();
@@ -2408,20 +2427,17 @@
           }
         }
 
-        // Ajouter la gestion de l'événement gameReady
-        socket.on("gameReady", function (data) {
-          if (!data || !data.game) return;
-
-          gameState.game = data.game;
-          currentGameId = data.game.id;
-
-          // Cacher l'écran d'attente et afficher l'écran de jeu
-          hideAllScreens();
-          showScreen("gameScreen");
-
-          // Mettre à jour l'interface
-          updateGameState(data);
-        });
+        function hideAllScreens() {
+          // Cacher tous les écrans du jeu
+          Object.keys(screens).forEach((key) => {
+            screens[key].classList.add("hidden");
+          });
+          // Cacher aussi l'écran de fin de partie
+          const gameOverScreen = document.getElementById("gameOverScreen");
+          if (gameOverScreen) {
+            gameOverScreen.classList.add("hidden");
+          }
+        }
       });
     </script>
   </body>
