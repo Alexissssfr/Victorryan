@@ -2266,16 +2266,29 @@
               }
 
               // Réinitialiser l'état du jeu
-              gameState = {
-                playerId: null,
-                game: null,
-                selectedCharacter: null,
-                selectedBonus: null,
-                bonusActionsRemaining: 2,
-              };
+              gameState.playerId = null;
+              gameState.game = null;
+              gameState.selectedCharacter = null;
+              gameState.selectedBonus = null;
+              gameState.bonusActionsRemaining = 2;
+              gameState.currentTurnNumber = 1;
+              gameState.isMyTurn = false;
 
-              // Retourner à l'écran d'accueil
-              showScreen("home");
+              // Masquer tous les écrans
+              hideAllScreens();
+
+              // Afficher l'écran d'accueil
+              const homeScreen = document.getElementById("homeScreen");
+              if (homeScreen) {
+                homeScreen.classList.remove("hidden");
+              }
+
+              // Réinitialiser les champs de saisie
+              const playerNameInput =
+                document.getElementById("playerNameInput");
+              const gameIdInput = document.getElementById("gameIdInput");
+              if (playerNameInput) playerNameInput.value = "";
+              if (gameIdInput) gameIdInput.value = "";
             };
           }
         }
