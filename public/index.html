@@ -1824,149 +1824,22 @@
           // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
           if (data.newGameState) {
             gameState.game = data.newGameState;
-          } else {
-            // Sinon, simuler l'application du bonus côté client
-            const { playerId, bonusId, targetCharacterId } = data;
-
-            // Récupérer le jeu et le joueur
-            const game = gameState.game;
-            const player = game.players[playerId];
-
-            if (
-              player &&
-              player.charactersState &&
-              player.charactersState[targetCharacterId]
-            ) {
-              // Trouver la carte de bonus correspondante
-              const bonusCard = player.cards.bonus.find(
-                (card) => card.id === bonusId
-              );
-              if (bonusCard) {
-                // Appliquer l'effet du bonus (augmentation de l'attaque)
-                const characterState =
-                  player.charactersState[targetCharacterId];
-                const baseAttack =
-                  characterState.baseAttack || characterState.currentAttack;
-                const bonusPercentage = bonusCard.pourcentagebonus
-                  ? parseInt(bonusCard.pourcentagebonus)
-                  : 0;
-
-                // Calculer le bonus total
-                let totalBonus = 1; // Commencer à 1 (100%)
-                // Calculer l'effet cumulé de tous les bonus actifs
-                if (characterState.activeBonus) {
-                  characterState.activeBonus.forEach((bonus) => {
-                    totalBonus += bonus.percentage / 100;
-                  });
-                }
-                // Ajouter le nouveau bonus
-                totalBonus += bonusPercentage / 100;
-
-                // Appliquer le bonus total
-                characterState.currentAttack = Math.floor(
-                  baseAttack * totalBonus
-                );
-
-                // Sauvegarder la valeur d'attaque originale si ce n'est pas déjà fait
-                if (!characterState.baseAttack) {
-                  characterState.baseAttack = baseAttack;
-                }
-
-                // Ajouter le bonus à la liste des bonus actifs
-                if (!characterState.activeBonus) {
-                  characterState.activeBonus = [];
-                }
-
-                // Ajouter les détails du bonus
-                characterState.activeBonus.push({
-                  bonusId: bonusId,
-                  remainingTurns: bonusCard.tourbonus
-                    ? parseInt(bonusCard.tourbonus)
-                    : 1,
-                  percentage: bonusPercentage,
-                  name: bonusCard.nomcartebonus || bonusId,
-                });
-
-                // Mettre à jour le nombre de tours restants du bonus
-                bonusCard.tourbonus = (parseInt(bonusCard.tourbonus) || 1) - 1;
-              }
-            }
           }
-
-          // Afficher un message avec le nom de la carte si disponible
-          const bonusName =
-            data.bonusName ||
-            gameState.game.players[data.playerId]?.cards.bonus.find(
-              (c) => c.id === data.bonusId
-            )?.nomcartebonus ||
-            "Un bonus";
-
-          const targetName =
-            data.targetName ||
-            gameState.game.players[data.playerId]?.cards.personnages.find(
-              (c) => c.id === data.targetCharacterId
-            )?.nomcarteperso ||
-            "un personnage";
-
-          showMessage(`${bonusName} a été appliqué sur ${targetName}`);
 
           // Mettre à jour l'affichage
           renderCards();
         });
 
         socket.on("characterAttacked", (data) => {
-          // Mettre à jour l'état du jeu avec les nouvelles valeurs
-          if (gameState.game && data.newGameState) {
+          if (!gameState.game) return;
+
+          // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
+          if (data.newGameState) {
             gameState.game = data.newGameState;
-
-            // Si le serveur indique que le tour a changé
-            if (data.turnChanged) {
-              // Réinitialiser TOUTES les sélections lors du changement de tour
-              gameState.selectedCharacter = null;
-              gameState.targetCharacter = null;
-              gameState.selectedBonus = null;
-              gameState.bonusPlayedThisTurn = false;
-              gameState.lastBonusTarget = null;
-
-              gameState.isMyTurn = data.newCurrentTurn === gameState.playerId;
-
-              // Si le tour passe à nous, incrémenter le compteur
-              if (gameState.isMyTurn) {
-                gameState.currentTurnNumber =
-                  (gameState.currentTurnNumber || 1) + 1;
-                console.log(
-                  "Nouveau tour après attaque:",
-                  gameState.currentTurnNumber
-                );
-              }
-
-              // Message approprié pour le changement de tour
-              if (gameState.isMyTurn) {
-                showMessage(
-                  `Tour ${gameState.currentTurnNumber}: L'adversaire a attaqué. C'est maintenant votre tour!`
-                );
-              } else {
-                showMessage(
-                  `Tour ${gameState.currentTurnNumber}: Vous avez attaqué. Au tour de l'adversaire!`
-                );
-              }
-            }
-
-            // Mettre à jour l'interface
-            updateGameStatus();
-            updateActionButtons();
-            renderCards();
-
-            // Vérifier si la partie est terminée
-            checkGameOver();
           }
 
-          // Afficher le message d'attaque
-          showMessage(
-            `${data.attackerName || "Un personnage"} a attaqué ${
-              data.targetName || "un autre personnage"
-            } pour ${data.damage || "des"} dégâts!`
-          );
+          // Mettre à jour l'affichage
+          renderCards();
         });
 
         // Ajoutez les gestionnaires d'événements pour les boutons de fin de partie

@@ -481,7 +481,18 @@ io.on("connection", (socket) => {
       pourcentagebonus: bonusEffect.pourcentagebonus,
       newAttack: characterState.forceattaque,
       remainingTurns: bonusEffect.tourbonus,
-      game: JSON.parse(JSON.stringify(game)),
+      newGameState: JSON.parse(JSON.stringify(game)),
+    });
+
+    // Émettre l'événement d'attaque
+    io.to(gameId).emit("characterAttacked", {
+      gameId,
+      playerId,
+      attackerId,
+      targetId,
+      damage,
+      newHealth: targetState.pointsdevie,
+      newGameState: JSON.parse(JSON.stringify(game)),
     });
   });
 
