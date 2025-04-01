@@ -2012,16 +2012,14 @@
         function showGameOverScreen(data) {
           console.log("Affichage de l'écran de fin de partie", data);
 
-          // Arrêter toutes les activités de la partie en cours
-          socket.emit("leaveRoom", {
-            gameId: gameState.game.id,
-            playerId: gameState.playerId,
-          });
-
           // Cacher tous les écrans
-          Object.keys(screens).forEach((key) => {
-            screens[key].classList.add("hidden");
-          });
+          hideAllScreens();
+
+          // Récupérer les éléments du DOM
+          const gameOverTitle = document.getElementById("gameOverTitle");
+          const gameOverMessage = document.getElementById("gameOverMessage");
+          const playerStats = document.getElementById("playerStats");
+          const quitGameBtn = document.getElementById("quitGameBtn");
 
           // Réinitialiser les sélections
           gameState.selectedCharacter = null;
@@ -2034,11 +2032,6 @@
             gameOverMessage.textContent =
               "Félicitations, vous avez gagné la partie !";
             gameOverMessage.className = "message-victory";
-          } else if (data.winner === "tie") {
-            gameOverTitle.textContent = "🤝 Match nul !";
-            gameOverMessage.textContent =
-              "La partie s'est terminée par une égalité.";
-            gameOverMessage.className = "message-tie";
           } else {
             gameOverTitle.textContent = "💔 Défaite !";
             gameOverMessage.textContent =
@@ -2049,71 +2042,107 @@
           // Afficher les statistiques des joueurs
           playerStats.innerHTML = "";
 
-          // Si nous avons les données des PV restants
-          if (data.playersTotalHealth) {
-            const playerIds = Object.keys(data.playersTotalHealth);
-            playerIds.forEach((pid) => {
-              let playerName = "Joueur inconnu";
-              if (
-                gameState.game &&
-                gameState.game.players &&
-                gameState.game.players[pid]
-              ) {
-                playerName = gameState.game.players[pid].name;
-              }
-              const totalHealth = data.playersTotalHealth[pid];
-              const isWinner = pid === data.winner;
+          // Récupérer les données des joueurs
+          const game = data.newGameState;
 
+          if (game && game.players) {
+            // Calculer les points de vie restants pour chaque joueur
+            Object.keys(game.players).forEach((playerId) => {
+              const player = game.players[playerId];
+              if (!player) return;
+
+              const playerName = player.name || "Joueur inconnu";
+              const isWinner = player.id === data.winner;
+
+              // Calculer les points de vie restants
+              let totalHealth = 0;
+              if (player.charactersState) {
+                Object.values(player.charactersState).forEach((char) => {
+                  totalHealth += Math.max(0, char.pointsdevie || 0);
+                });
+              }
+
+              // Créer l'élément pour afficher les statistiques
               const statDiv = document.createElement("div");
               statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
               statDiv.innerHTML = `
-                <span>${playerName} ${isWinner ? "🏆" : ""}</span>
-                <span>${totalHealth} PV restants</span>
+                <div><span class="player-name">${playerName}</span> ${
+                isWinner ? '<span class="winner-badge">🏆</span>' : ""
+              }</div>
+                <div><span class="health-remaining">${totalHealth} PV restants</span></div>
               `;
 
               playerStats.appendChild(statDiv);
             });
-          } else if (gameState.game && gameState.game.players) {
-            // Si nous n'avons pas les données détaillées
-            for (const pid in gameState.game.players) {
-              const playerName = gameState.game.players[pid].name;
-              const isWinner = pid === data.winner;
 
-              const statDiv = document.createElement("div");
-              statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
-              statDiv.innerHTML = `
-                <span>${playerName} ${isWinner ? "🏆" : ""}</span>
-                <span>${
-                  isWinner ? "Tous les personnages adverses sont K.O." : ""
-                }</span>
-              `;
+            // Ajouter la raison de fin de partie
+            const reasonDiv = document.createElement("div");
+            reasonDiv.className = "game-end-reason";
 
-              playerStats.appendChild(statDiv);
+            let reasonText = "";
+            switch (game.endReason) {
+              case "all_characters_ko":
+                reasonText =
+                  "Tous les personnages d'un joueur ont été vaincus.";
+                break;
+              case "player_left":
+                reasonText = "Un joueur a quitté la partie.";
+                break;
+              case "player_abandoned":
+                reasonText = "Un joueur s'est déconnecté et n'est pas revenu.";
+                break;
+              default:
+                reasonText = "La partie s'est terminée.";
             }
+
+            reasonDiv.textContent = reasonText;
+            playerStats.appendChild(reasonDiv);
           }
 
           // S'assurer que l'écran de fin est visible
-          gameOverScreen.classList.remove("hidden");
+          document.getElementById("gameOverScreen").classList.remove("hidden");
 
-          // S'assurer que seul le bouton de retour au menu est visible
-          quitGameBtn.style.display = "block";
+          // Configurer le bouton de retour au menu
+          if (quitGameBtn) {
+            // Supprimer les anciens gestionnaires d'événements
+            const newQuitGameBtn = quitGameBtn.cloneNode(true);
+            quitGameBtn.parentNode.replaceChild(newQuitGameBtn, quitGameBtn);
 
-          // Supprimer tous les gestionnaires d'événements existants
-          quitGameBtn.replaceWith(quitGameBtn.cloneNode(true));
+            // Ajouter le nouveau gestionnaire
+            newQuitGameBtn.addEventListener("click", () => {
+              // Déconnecter le socket
+              if (socket) {
+                socket.emit("leaveGame", { gameId: gameState.game.id });
+              }
 
-          // Récupérer la référence du nouveau bouton
-          const newQuitGameBtn = document.getElementById("quitGameBtn");
+              // Réinitialiser l'état du jeu
+              gameState.game = null;
+              gameState.selectedCharacter = null;
+              gameState.selectedBonus = null;
+              gameState.targetCharacter = null;
 
-          // Ajouter le gestionnaire d'événements
-          newQuitGameBtn.addEventListener("click", function () {
-            gameOverScreen.classList.add("hidden");
-            returnToMenu();
-          });
-
-          console.log(
-            "Écran de fin de partie affiché avec le bouton de retour au menu"
-          );
+              // Revenir à l'écran d'accueil
+              hideAllScreens();
+              screens.home.classList.remove("hidden");
+            });
+          }
         }
+
+        // Événement de fin de partie
+        socket.on("gameOver", function (data) {
+          console.log("Événement gameOver reçu:", data);
+
+          if (!data || !data.newGameState) return;
+
+          // Mettre à jour l'état du jeu
+          gameState.game = data.newGameState;
+
+          // Afficher l'écran de fin de partie
+          showGameOverScreen({
+            winner: data.winner,
+            newGameState: data.newGameState,
+          });
+        });
 
         // Ajouter cette fonction pour déboguer le contenu des cartes
         function debugCardProperties() {
@@ -2386,39 +2415,6 @@
             newGameState: game,
           });
         });
-
-        // Modifier la fonction showGameOverScreen
-        function showGameOverScreen(data) {
-          if (!data || !data.newGameState || !data.winner || !currentPlayerId)
-            return;
-
-          const game = data.newGameState;
-          const isWinner = currentPlayerId === data.winner;
-
-          // Cacher tous les autres écrans
-          hideAllScreens();
-
-          // Afficher l'écran de fin de partie
-          const gameOverScreen = document.getElementById("gameOverScreen");
-          gameOverScreen.classList.remove("hidden");
-
-          // Mettre à jour le titre et le message
-          const title = document.querySelector("#gameOverScreen h1");
-          const message = document.querySelector("#gameOverScreen .message");
-
-          if (isWinner) {
-            title.innerHTML = "🏆 Victoire !";
-            message.innerHTML = "Félicitations ! Vous avez gagné la partie !";
-            message.className = "message message-victory";
-          } else {
-            title.innerHTML = "💔 Défaite !";
-            message.innerHTML = "Vous avez perdu la partie. Réessayez !";
-            message.className = "message message-defeat";
-          }
-
-          // Mettre à jour les statistiques
-          updateGameStats(data.playersTotalHealth, game);
-        }
 
         function updateGameStats(playersTotalHealth, game) {
           const stats = document.querySelector(".stats-container");

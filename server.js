@@ -309,24 +309,31 @@ io.on("connection", (socket) => {
         .filter((bonus) => bonus.tourbonus > 0);
 
       if (updatedBonusList.length > 0) {
-        // Recalculer l'attaque avec tous les bonus restants
+        // Récupérer la force d'attaque de base du personnage
+        const baseAttack = parseInt(baseCard.forceattaque);
+
+        // Calculer l'augmentation totale de l'attaque en fonction des bonus actifs
         let totalBonus = 1; // Commencer à 1 (100%)
         updatedBonusList.forEach((bonus) => {
           totalBonus += bonus.pourcentagebonus / 100;
         });
-        characterState.forceattaque = Math.floor(
-          parseInt(baseCard.forceattaque) * totalBonus
-        );
+
+        // Appliquer le bonus total et arrondir au nombre entier supérieur
+        characterState.forceattaque = Math.ceil(baseAttack * totalBonus);
+
+        // Mettre à jour la liste des bonus
         currentPlayerBonusMap.set(characterId, updatedBonusList);
       } else {
         // Réinitialiser l'attaque et supprimer les bonus
         characterState.forceattaque = parseInt(baseCard.forceattaque);
         currentPlayerBonusMap.delete(characterId);
       }
-    }
 
-    // NE PAS réinitialiser les tours d'attaque à chaque changement de joueur
-    // On supprime cette partie du code qui réinitialise les tours d'attaque
+      // Mettre à jour currentAttack pour le client
+      if (characterState.currentAttack !== undefined) {
+        characterState.currentAttack = characterState.forceattaque;
+      }
+    }
 
     // Mettre à jour l'état du jeu
     game.currentTurn = nextPlayer.id;
@@ -340,30 +347,6 @@ io.on("connection", (socket) => {
       // Si c'est le joueur 2 qui a terminé son tour, on incrémente le tour pour le nouveau cycle
       game.turnNumber += 1;
       console.log(`Tour incrémenté à: ${game.turnNumber}`);
-
-      // C'est ici qu'on réinitialise les tours d'attaque pour TOUS les joueurs
-      // car un cycle complet de tour vient de se terminer
-      Object.keys(game.players).forEach((playerKeyToReset) => {
-        const playerToReset = game.players[playerKeyToReset];
-        Object.keys(playerToReset.charactersState).forEach((characterId) => {
-          const baseCard = playerToReset.cards.personnages.find(
-            (c) => c.id === characterId
-          );
-          if (baseCard) {
-            playerToReset.charactersState[characterId].tourattaque = parseInt(
-              baseCard.tourattaque
-            );
-            // Mettre à jour currentTurns pour le client
-            if (
-              playerToReset.charactersState[characterId].currentTurns !==
-              undefined
-            ) {
-              playerToReset.charactersState[characterId].currentTurns =
-                playerToReset.charactersState[characterId].tourattaque;
-            }
-          }
-        });
-      });
     }
 
     // Émettre l'événement de changement de tour
@@ -492,19 +475,22 @@ io.on("connection", (socket) => {
 
     // Mettre à jour l'attaque du personnage avec tous les bonus actifs
     const characterState = player.charactersState[targetId];
-    const baseAttack = parseInt(targetCard.forceattaque);
-    let totalBonus = 1; // Commencer à 1 (100%)
 
-    // Calculer l'effet cumulé de tous les bonus actifs
-    playerBonusMap.get(targetId).forEach((bonus) => {
-      totalBonus += bonus.pourcentagebonus / 100;
-    });
+    // CORRECTION : Utiliser la force d'attaque actuelle comme base pour le nouveau calcul
+    // au lieu de toujours repartir de la force de base
+    const currentAttack = characterState.forceattaque;
+    // Calculer le pourcentage de bonus du bonus que nous venons d'ajouter
+    const newBonusPercentage = bonusEffect.pourcentagebonus / 100;
 
-    // Appliquer le bonus total
-    characterState.forceattaque = Math.floor(baseAttack * totalBonus);
+    // Appliquer le bonus sur l'attaque actuelle (pas sur la force de base)
+    // et arrondir au nombre entier supérieur
+    characterState.forceattaque = Math.ceil(
+      currentAttack * (1 + newBonusPercentage)
+    );
+
     console.log("Nouvelle attaque calculée:", {
-      baseAttack,
-      totalBonus,
+      currentAttack,
+      newBonusPercentage,
       newAttack: characterState.forceattaque,
     });
 
@@ -774,30 +760,6 @@ io.on("connection", (socket) => {
       // Si c'est le joueur 2 qui a joué, on incrémente le tour pour le nouveau cycle
       game.turnNumber += 1;
       console.log(`Tour incrémenté à: ${game.turnNumber}`);
-
-      // C'est ici qu'on réinitialise les tours d'attaque pour TOUS les joueurs
-      // car un cycle complet de tour vient de se terminer
-      Object.keys(game.players).forEach((playerKeyToReset) => {
-        const playerToReset = game.players[playerKeyToReset];
-        Object.keys(playerToReset.charactersState).forEach((characterId) => {
-          const baseCard = playerToReset.cards.personnages.find(
-            (c) => c.id === characterId
-          );
-          if (baseCard) {
-            playerToReset.charactersState[characterId].tourattaque = parseInt(
-              baseCard.tourattaque
-            );
-            // Mettre à jour currentTurns pour le client
-            if (
-              playerToReset.charactersState[characterId].currentTurns !==
-              undefined
-            ) {
-              playerToReset.charactersState[characterId].currentTurns =
-                playerToReset.charactersState[characterId].tourattaque;
-            }
-          }
-        });
-      });
     }
 
     // Émettre l'événement de changement de tour
