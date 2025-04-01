@@ -2344,8 +2344,8 @@
             gameState.currentTurnNumber = 1;
             gameState.isMyTurn = false;
 
-            // Masquer l'écran de fin de partie
-            gameOverScreen.style.display = "none";
+            // Masquer tous les écrans
+            hideAllScreens();
 
             // Afficher l'écran d'accueil
             const homeScreen = document.getElementById("homeScreen");
@@ -2354,8 +2354,18 @@
             // Réinitialiser les champs de saisie
             const playerNameInput = document.getElementById("playerNameInput");
             const gameIdInput = document.getElementById("gameIdInput");
+            const creatorNameInput =
+              document.getElementById("creatorNameInput");
             if (playerNameInput) playerNameInput.value = "";
             if (gameIdInput) gameIdInput.value = "";
+            if (creatorNameInput) creatorNameInput.value = "";
+
+            // Réinitialiser les variables globales
+            currentGameId = null;
+            currentPlayerId = null;
+
+            // Nettoyer les messages
+            cleanupMessages();
           };
         }
 
