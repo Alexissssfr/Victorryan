@@ -372,12 +372,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Vérifier si un bonus a déjà été joué ce tour
-    if (game.bonusPlayedThisTurn) {
-      socket.emit("error", { message: "Vous avez déjà joué un bonus ce tour" });
-      return;
-    }
-
     const player = game.players[playerKey];
     const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
 
@@ -440,10 +434,6 @@ io.on("connection", (socket) => {
     player.cards.bonus = player.cards.bonus.filter(
       (card) => card.id !== bonusId
     );
-
-    // Marquer qu'un bonus a été joué ce tour
-    game.bonusPlayedThisTurn = true;
-    game.lastBonusTarget = targetId;
 
     // Émettre l'événement de bonus joué
     io.to(gameId).emit("bonusPlayed", {
@@ -512,14 +502,6 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Si un bonus a été joué ce tour, vérifier que c'est le bon personnage
-    if (game.bonusPlayedThisTurn && attackerId !== game.lastBonusTarget) {
-      socket.emit("error", {
-        message: "Vous devez attaquer avec le personnage qui a reçu le bonus",
-      });
-      return;
-    }
-
     // Trouver la cible
     const opponentKey = playerKey === "player1" ? "player2" : "player1";
     const opponent = game.players[opponentKey];
@@ -544,56 +526,33 @@ io.on("connection", (socket) => {
 
     const targetState = opponent.charactersState[targetId];
 
-    // Appliquer les dégâts
-    targetState.pointsdevie = Math.max(
-      0,
-      parseInt(targetState.pointsdevie) - parseInt(attackerState.forceattaque)
-    );
+    // Calculer les dégâts
+    const damage = attackerState.forceattaque;
 
-    // Décrémenter le nombre de tours d'attaque
+    // Appliquer les dégâts
+    targetState.pointsdevie = Math.max(0, targetState.pointsdevie - damage);
+
+    // Décrémenter le nombre d'attaques restantes
     attackerState.tourattaque--;
 
-    // Marquer que l'attaque a été effectuée
-    game.attackPerformed = true;
-
-    // Vérifier si la partie est terminée
-    const opponentCharactersState = Object.values(opponent.charactersState);
-    const isGameOver =
-      opponentCharactersState.length > 0 &&
-      opponentCharactersState.every((char) => parseInt(char.pointsdevie) <= 0);
-
-    if (isGameOver) {
-      game.status = "finished";
-      game.winner = playerId;
-
-      // Calculer les points de vie restants pour chaque joueur
-      const calculateTotalHealth = (playerState) => {
-        return Object.values(playerState.charactersState).reduce(
-          (total, char) => total + Math.max(0, parseInt(char.pointsdevie) || 0),
-          0
-        );
-      };
-
-      game.finalStats = {
-        [playerKey]: calculateTotalHealth(player),
-        [opponentKey]: calculateTotalHealth(opponent),
-      };
+    // Vérifier si le personnage cible est KO
+    if (targetState.pointsdevie <= 0) {
+      targetState.pointsdevie = 0;
     }
 
     // Émettre l'événement d'attaque
     io.to(gameId).emit("characterAttacked", {
       gameId,
+      playerId,
       attackerId,
       targetId,
-      damage: parseInt(attackerState.forceattaque),
-      newHealth: parseInt(targetState.pointsdevie),
-      attackerName: attackerCard.nomcarteperso,
-      targetName: targetCard.nomcarteperso,
-      isGameOver,
-      winner: game.winner,
-      finalStats: game.finalStats,
-      game: JSON.parse(JSON.stringify(game)),
+      damage,
+      newHealth: targetState.pointsdevie,
+      newGameState: JSON.parse(JSON.stringify(game)),
     });
+
+    // Vérifier si la partie est terminée
+    checkGameEnd(gameId);
   });
 
   // Gérer la déconnexion

@@ -1477,11 +1477,6 @@
           )
             return;
 
-          if (gameState.bonusPlayedThisTurn) {
-            showMessage("Vous avez déjà joué un bonus ce tour", true);
-            return;
-          }
-
           // Vérifier que le personnage cible existe et est valide
           const player = gameState.game.players[gameState.playerId];
           if (
@@ -1513,16 +1508,6 @@
             targetCharacterId: gameState.selectedCharacter,
           });
 
-          // Marquer qu'un bonus a été joué ce tour-ci et sauvegarder la cible
-          gameState.bonusPlayedThisTurn = true;
-          gameState.lastBonusTarget = gameState.selectedCharacter;
-
-          // Mettre à jour l'état du jeu avec les flags de bonus
-          if (gameState.game) {
-            gameState.game.bonusPlayedThisTurn = true;
-            gameState.game.lastBonusTarget = gameState.selectedCharacter;
-          }
-
           // Afficher un message explicite
           const bonusCard = gameState.game.players[
             gameState.playerId
@@ -1537,9 +1522,6 @@
             } joué sur ${
               characterCard?.nomcarteperso || gameState.selectedCharacter
             }`
-          );
-          showMessage(
-            `Tour ${gameState.currentTurnNumber}: Vous ne pourrez plus sélectionner d'autres personnages ce tour-ci`
           );
 
           // Réinitialiser seulement la sélection de bonus, garder le personnage sélectionné
