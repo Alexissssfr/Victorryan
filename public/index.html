@@ -1773,31 +1773,65 @@
 
           // Gérer la fin de partie par abandon
           socket.on("gameOver", (data) => {
-            console.log("Game Over event received:", data);
-
-            if (!data || !data.winner || !data.playersTotalHealth) {
-              console.error("Invalid game over data received:", data);
-              return;
-            }
+            console.log("Événement gameOver reçu:", data);
 
             // Désactiver toutes les interactions de jeu
             disableGameInteractions();
 
-            // Afficher immédiatement l'écran de fin de partie
+            // S'assurer que nous avons toutes les données nécessaires
+            if (!data || !data.newGameState) {
+              console.error("Données de fin de partie invalides:", data);
+              return;
+            }
+
+            // Mettre à jour l'état du jeu avec les dernières données
+            gameState.game = data.newGameState;
+
+            // Calculer les statistiques pour chaque joueur
+            const playerStats = {};
+            const playersTotalHealth = {};
+
+            // Pour chaque joueur dans la partie
+            Object.entries(gameState.game.players).forEach(
+              ([playerId, player]) => {
+                const stats = {
+                  totalHealth: 0,
+                  koCharactersCount: 0,
+                  canAttack: false,
+                };
+
+                // Calculer les statistiques
+                if (player.charactersState) {
+                  Object.values(player.charactersState).forEach((char) => {
+                    stats.totalHealth += Math.max(
+                      0,
+                      char.currentHealth || char.pointsdevie || 0
+                    );
+                    if (char.currentHealth <= 0 || char.pointsdevie <= 0) {
+                      stats.koCharactersCount++;
+                    }
+                    if (
+                      (char.currentHealth > 0 || char.pointsdevie > 0) &&
+                      (char.currentTurns > 0 || char.tourattaque > 0)
+                    ) {
+                      stats.canAttack = true;
+                    }
+                  });
+                }
+
+                playerStats[playerId] = stats;
+                playersTotalHealth[playerId] = stats.totalHealth;
+              }
+            );
+
+            // Afficher immédiatement l'écran de fin de partie avec les statistiques
             showGameOverScreen({
               winner: data.winner,
-              playersTotalHealth: data.playersTotalHealth,
+              playersTotalHealth: playersTotalHealth,
               newGameState: gameState.game,
+              reason: data.reason,
+              playerStats: playerStats,
             });
-
-            // Afficher un message selon le résultat
-            if (data.winner === gameState.playerId) {
-              showMessage("Partie terminée ! Vous gagnez !");
-            } else if (data.winner === "tie") {
-              showMessage("Partie terminée ! Match nul !");
-            } else {
-              showMessage("Partie terminée ! Vous perdez !", true);
-            }
           });
         }
 
@@ -2102,68 +2136,60 @@
         socket.on("gameOver", function (data) {
           console.log("Événement gameOver reçu:", data);
 
+          // Désactiver toutes les interactions de jeu
+          disableGameInteractions();
+
+          // S'assurer que nous avons toutes les données nécessaires
           if (!data || !data.newGameState) {
             console.error("Données de fin de partie invalides:", data);
             return;
           }
 
-          // Désactiver toutes les interactions de jeu
-          disableGameInteractions();
-
-          // Calculer les points de vie totaux pour chaque joueur
-          const calculatePlayerHealth = (player) => {
-            if (!player || !player.charactersState) return 0;
-            return Object.values(player.charactersState).reduce(
-              (total, char) =>
-                total +
-                Math.max(0, char.currentHealth || char.pointsdevie || 0),
-              0
-            );
-          };
+          // Mettre à jour l'état du jeu avec les dernières données
+          gameState.game = data.newGameState;
 
           // Calculer les statistiques pour chaque joueur
-          const calculatePlayerStats = (player) => {
-            const stats = {
-              totalHealth: 0,
-              koCharactersCount: 0,
-              canAttack: false,
-            };
-
-            if (player && player.charactersState) {
-              Object.values(player.charactersState).forEach((char) => {
-                stats.totalHealth += Math.max(
-                  0,
-                  char.currentHealth || char.pointsdevie || 0
-                );
-                if (char.currentHealth <= 0 || char.pointsdevie <= 0) {
-                  stats.koCharactersCount++;
-                }
-                if (
-                  (char.currentHealth > 0 || char.pointsdevie > 0) &&
-                  (char.currentTurns > 0 || char.tourattaque > 0)
-                ) {
-                  stats.canAttack = true;
-                }
-              });
-            }
-            return stats;
-          };
-
-          const game = data.newGameState;
           const playerStats = {};
           const playersTotalHealth = {};
 
-          // Calculer les statistiques pour tous les joueurs
-          Object.entries(game.players).forEach(([playerId, player]) => {
-            playerStats[playerId] = calculatePlayerStats(player);
-            playersTotalHealth[playerId] = calculatePlayerHealth(player);
-          });
+          // Pour chaque joueur dans la partie
+          Object.entries(gameState.game.players).forEach(
+            ([playerId, player]) => {
+              const stats = {
+                totalHealth: 0,
+                koCharactersCount: 0,
+                canAttack: false,
+              };
+
+              // Calculer les statistiques
+              if (player.charactersState) {
+                Object.values(player.charactersState).forEach((char) => {
+                  stats.totalHealth += Math.max(
+                    0,
+                    char.currentHealth || char.pointsdevie || 0
+                  );
+                  if (char.currentHealth <= 0 || char.pointsdevie <= 0) {
+                    stats.koCharactersCount++;
+                  }
+                  if (
+                    (char.currentHealth > 0 || char.pointsdevie > 0) &&
+                    (char.currentTurns > 0 || char.tourattaque > 0)
+                  ) {
+                    stats.canAttack = true;
+                  }
+                });
+              }
+
+              playerStats[playerId] = stats;
+              playersTotalHealth[playerId] = stats.totalHealth;
+            }
+          );
 
           // Afficher immédiatement l'écran de fin de partie avec les statistiques
           showGameOverScreen({
             winner: data.winner,
             playersTotalHealth: playersTotalHealth,
-            newGameState: game,
+            newGameState: gameState.game,
             reason: data.reason,
             playerStats: playerStats,
           });
@@ -2300,8 +2326,12 @@
           // Configurer le bouton "Retour au menu"
           const quitGameBtn = document.getElementById("quitGameBtn");
           quitGameBtn.onclick = () => {
-            // Déconnecter le socket
+            // Déconnecter le socket proprement
             if (socket) {
+              socket.emit("leaveGame", {
+                gameId: gameState.game.id,
+                playerId: gameState.playerId,
+              });
               socket.disconnect();
             }
 
