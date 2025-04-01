@@ -2200,36 +2200,50 @@
             messageElement.className = "message-defeat";
           }
 
-          // Afficher les statistiques
+          // Afficher les statistiques détaillées
           statsElement.innerHTML = "";
 
           // Récupérer les données des joueurs
           const game = data.newGameState;
           if (game && game.players) {
-            // Calculer les points de vie restants pour chaque joueur
             Object.keys(game.players).forEach((playerId) => {
               const player = game.players[playerId];
-              if (!player) return;
+              const stats = data.playerStats[playerId];
+              if (!player || !stats) return;
 
               const playerName = player.name || "Joueur inconnu";
               const isWinner = playerId === data.winner;
-              const totalHealth = data.playersTotalHealth[playerId] || 0;
 
-              // Créer l'élément pour afficher les statistiques
+              // Créer l'élément pour afficher les statistiques détaillées
               const statDiv = document.createElement("div");
               statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
               statDiv.innerHTML = `
-                <div>
+                <div class="player-stat-header">
                   <span class="player-name">${playerName}</span>
                   ${isWinner ? '<span class="winner-badge">🏆</span>' : ""}
                 </div>
-                <div><span class="health-remaining">${totalHealth} PV restants</span></div>
+                <div class="player-stat-details">
+                  <div class="stat-row">
+                    <span class="stat-label">Points de vie restants:</span>
+                    <span class="stat-value">${stats.totalHealth}</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Personnages KO:</span>
+                    <span class="stat-value">${stats.koCharactersCount}</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Peut encore attaquer:</span>
+                    <span class="stat-value">${
+                      stats.canAttack ? "Oui" : "Non"
+                    }</span>
+                  </div>
+                </div>
               `;
 
               statsElement.appendChild(statDiv);
             });
 
-            // Ajouter la raison de fin de partie
+            // Ajouter la raison de fin de partie avec plus de détails
             const reasonDiv = document.createElement("div");
             reasonDiv.className = "game-end-reason";
 
@@ -2237,16 +2251,31 @@
             switch (data.reason) {
               case "all_characters_ko":
                 reasonText =
-                  "Tous les personnages d'un joueur ont été vaincus.";
+                  "La partie s'est terminée car tous les personnages d'un joueur ont été vaincus.";
                 break;
               case "no_more_attacks":
-                reasonText = "Plus aucun joueur ne peut attaquer.";
-                break;
-              case "player_left":
-                reasonText = "Un joueur a quitté la partie.";
-                break;
-              case "player_abandoned":
-                reasonText = "Un joueur a abandonné la partie.";
+                reasonText =
+                  "La partie s'est terminée car plus aucun joueur ne peut attaquer. ";
+                // Ajouter des détails sur la détermination du gagnant
+                if (data.winner === "tie") {
+                  reasonText +=
+                    "Les deux joueurs ont le même nombre de personnages KO et de points de vie.";
+                } else {
+                  const winnerStats = data.playerStats[data.winner];
+                  const loserId = Object.keys(data.playerStats).find(
+                    (id) => id !== data.winner
+                  );
+                  const loserStats = data.playerStats[loserId];
+
+                  if (
+                    winnerStats.koCharactersCount !==
+                    loserStats.koCharactersCount
+                  ) {
+                    reasonText += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
+                  } else {
+                    reasonText += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
+                  }
+                }
                 break;
               default:
                 reasonText = "La partie s'est terminée.";
@@ -2376,66 +2405,94 @@
           let reason = "";
           let playersTotalHealth = {};
 
-          // Calculer les points de vie totaux
-          const playerTotalHealth = Object.values(
-            player.charactersState
-          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
+          // Fonction pour calculer les statistiques d'un joueur
+          function calculatePlayerStats(playerState) {
+            const stats = {
+              totalHealth: 0,
+              koCharactersCount: 0,
+              canAttack: false,
+            };
 
-          const opponentTotalHealth = Object.values(
+            Object.values(playerState.charactersState).forEach((char) => {
+              stats.totalHealth += Math.max(
+                0,
+                char.currentHealth || char.pointsdevie || 0
+              );
+              if (char.currentHealth <= 0 || char.pointsdevie <= 0) {
+                stats.koCharactersCount++;
+              }
+              if (
+                (char.currentHealth > 0 || char.pointsdevie > 0) &&
+                (char.currentTurns > 0 || char.tourattaque > 0)
+              ) {
+                stats.canAttack = true;
+              }
+            });
+
+            return stats;
+          }
+
+          // Calculer les stats pour les deux joueurs
+          const playerStats = calculatePlayerStats(player);
+          const opponentStats = calculatePlayerStats(opponent);
+
+          // Mettre à jour les points de vie totaux
+          playersTotalHealth[gameState.playerId] = playerStats.totalHealth;
+          playersTotalHealth[opponent.id] = opponentStats.totalHealth;
+
+          // Vérifier les conditions de fin de partie
+          const playerCharCount = Object.keys(player.charactersState).length;
+          const opponentCharCount = Object.keys(
             opponent.charactersState
-          ).reduce((total, char) => total + Math.max(0, char.currentHealth), 0);
+          ).length;
 
-          playersTotalHealth[gameState.playerId] = playerTotalHealth;
-          playersTotalHealth[opponent.id] = opponentTotalHealth;
-
-          // RÈGLE 1: Vérifier si tous les personnages d'un joueur sont à 0 PV
-          const playerHasAliveChars = Object.values(
-            player.charactersState
-          ).some((char) => char.currentHealth > 0);
-          const opponentHasAliveChars = Object.values(
-            opponent.charactersState
-          ).some((char) => char.currentHealth > 0);
-
-          // Si un joueur n'a plus de personnages en vie, il a perdu
-          if (!playerHasAliveChars) {
+          // Condition 1: Un joueur a tous ses personnages à 0 PV
+          if (playerStats.koCharactersCount === playerCharCount) {
             winner = opponent.id;
             reason = "all_characters_ko";
             gameEnded = true;
-          } else if (!opponentHasAliveChars) {
+          } else if (opponentStats.koCharactersCount === opponentCharCount) {
             winner = gameState.playerId;
             reason = "all_characters_ko";
             gameEnded = true;
-          } else {
-            // RÈGLE 2 & 3: Vérifier si les joueurs peuvent encore attaquer
-            const playerCanAttack = Object.values(player.charactersState).some(
-              (char) => char.currentHealth > 0 && char.currentTurns > 0
-            );
+          }
+          // Condition 2: Aucun joueur ne peut attaquer
+          else if (!playerStats.canAttack && !opponentStats.canAttack) {
+            gameEnded = true;
+            reason = "no_more_attacks";
 
-            const opponentCanAttack = Object.values(
-              opponent.charactersState
-            ).some((char) => char.currentHealth > 0 && char.currentTurns > 0);
-
-            // Si aucun des deux joueurs ne peut attaquer, la partie se termine
-            if (!playerCanAttack && !opponentCanAttack) {
-              if (playerTotalHealth > opponentTotalHealth) {
+            // Comparer le nombre de personnages KO
+            if (
+              playerStats.koCharactersCount < opponentStats.koCharactersCount
+            ) {
+              winner = gameState.playerId;
+            } else if (
+              opponentStats.koCharactersCount < playerStats.koCharactersCount
+            ) {
+              winner = opponent.id;
+            } else {
+              // En cas d'égalité de personnages KO, comparer les points de vie totaux
+              if (playerStats.totalHealth > opponentStats.totalHealth) {
                 winner = gameState.playerId;
-              } else if (opponentTotalHealth > playerTotalHealth) {
+              } else if (opponentStats.totalHealth > playerStats.totalHealth) {
                 winner = opponent.id;
               } else {
-                winner = "tie";
+                winner = "tie"; // Match nul en cas d'égalité parfaite
               }
-              reason = "no_more_attacks";
-              gameEnded = true;
             }
           }
 
           if (gameEnded) {
-            // Informer le serveur de la fin de partie immédiatement
+            // Informer le serveur de la fin de partie
             socket.emit("gameEnded", {
               gameId: gameState.game.id,
               winner: winner,
               playersTotalHealth: playersTotalHealth,
               reason: reason,
+              playerStats: {
+                [gameState.playerId]: playerStats,
+                [opponent.id]: opponentStats,
+              },
             });
 
             // Afficher un message selon le résultat
@@ -2447,11 +2504,16 @@
               showMessage("Partie terminée ! Vous perdez !", true);
             }
 
-            // Afficher l'écran de fin de partie immédiatement
+            // Afficher l'écran de fin de partie
             showGameOverScreen({
               winner: winner,
               playersTotalHealth: playersTotalHealth,
               newGameState: gameState.game,
+              reason: reason,
+              playerStats: {
+                [gameState.playerId]: playerStats,
+                [opponent.id]: opponentStats,
+              },
             });
 
             return true;
