@@ -833,19 +833,46 @@
           messageContainer.style.transform = "translateX(-50%)";
           messageContainer.style.padding = "12px 24px";
           messageContainer.style.backgroundColor = isError
-            ? "#f44336"
-            : "#4CAF50";
+            ? "rgba(244, 67, 54, 0.85)"
+            : "rgba(76, 175, 80, 0.85)";
           messageContainer.style.color = "white";
           messageContainer.style.borderRadius = "4px";
+          messageContainer.style.fontSize = "14px";
+          messageContainer.style.zIndex = "100";
+          messageContainer.style.maxWidth = "80%";
+          messageContainer.style.textAlign = "center";
+          messageContainer.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+          messageContainer.style.opacity = "0";
+          messageContainer.style.transition = "opacity 0.3s ease-in-out";
           messageContainer.textContent = text;
 
+          // Supprimer les anciens messages
+          const oldMessages = document.querySelectorAll(
+            "[data-message-container]"
+          );
+          oldMessages.forEach((msg) => {
+            if (document.body.contains(msg)) {
+              document.body.removeChild(msg);
+            }
+          });
+
+          messageContainer.setAttribute("data-message-container", "true");
           document.body.appendChild(messageContainer);
 
+          // Animation d'apparition
+          requestAnimationFrame(() => {
+            messageContainer.style.opacity = "1";
+          });
+
+          // Disparition progressive
           setTimeout(() => {
-            if (document.body.contains(messageContainer)) {
-              document.body.removeChild(messageContainer);
-            }
-          }, 3000);
+            messageContainer.style.opacity = "0";
+            setTimeout(() => {
+              if (document.body.contains(messageContainer)) {
+                document.body.removeChild(messageContainer);
+              }
+            }, 300);
+          }, 2000);
         }
 
         // Ajouter cette fonction pour vérifier si le joueur courant peut jouer
