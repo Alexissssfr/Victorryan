@@ -2377,6 +2377,14 @@
           }
 
           if (gameEnded) {
+            // Informer le serveur de la fin de partie
+            socket.emit("gameEnded", {
+              gameId: gameState.game.id,
+              winner: winner,
+              playersTotalHealth: playersTotalHealth,
+              reason: reason,
+            });
+
             // Afficher un message selon le résultat
             if (winner === gameState.playerId) {
               showMessage("Partie terminée ! Vous gagnez " + reason);
@@ -2386,21 +2394,12 @@
               showMessage("Partie terminée ! Vous perdez " + reason, true);
             }
 
-            // Informer le serveur de la fin de partie
-            socket.emit("gameEnded", {
-              gameId: gameState.game.id,
+            // Afficher l'écran de fin de partie
+            showGameOverScreen({
               winner: winner,
               playersTotalHealth: playersTotalHealth,
+              newGameState: gameState.game,
             });
-
-            // Afficher directement l'écran de fin de partie
-            setTimeout(() => {
-              showGameOverScreen({
-                winner: winner,
-                playersTotalHealth: playersTotalHealth,
-                newGameState: gameState.game,
-              });
-            }, 1000);
 
             return true;
           }
