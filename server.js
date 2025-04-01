@@ -483,15 +483,29 @@ io.on("connection", (socket) => {
   // Attaquer un personnage
   socket.on("attack", (data) => {
     const { gameId, playerId, attackerId, targetId } = data;
-    if (!games.has(gameId)) return;
+    console.log("Tentative d'attaque:", {
+      gameId,
+      playerId,
+      attackerId,
+      targetId,
+    });
+
+    if (!games.has(gameId)) {
+      console.log("Partie non trouvée:", gameId);
+      return;
+    }
 
     // Vérifier que le socket est bien dans cette partie
-    if (!playerGames.has(gameId)) return;
+    if (!playerGames.has(gameId)) {
+      console.log("Socket non dans la partie:", gameId);
+      return;
+    }
 
     const game = games.get(gameId);
     const gameBonusState = gameBonus.get(gameId);
 
     if (!game || !gameBonusState) {
+      console.log("État de jeu ou bonus non trouvé");
       socket.emit("error", { message: "Partie non trouvée" });
       return;
     }
@@ -501,6 +515,11 @@ io.on("connection", (socket) => {
     );
 
     if (!playerKey || game.currentTurn !== playerId) {
+      console.log("Ce n'est pas le tour du joueur pour attaquer:", {
+        playerKey,
+        currentTurn: game.currentTurn,
+        playerId,
+      });
       socket.emit("error", { message: "Ce n'est pas votre tour" });
       return;
     }
@@ -511,12 +530,14 @@ io.on("connection", (socket) => {
     );
 
     if (!attackerCard) {
+      console.log("Carte attaquante non trouvée:", attackerId);
       socket.emit("error", { message: "Carte attaquante non trouvée" });
       return;
     }
 
     // S'assurer que l'attaquant existe dans charactersState
     if (!player.charactersState[attackerId]) {
+      console.log("Initialisation du state de l'attaquant:", attackerId);
       player.charactersState[attackerId] = {
         pointsdevie: parseInt(attackerCard.pointsdevie),
         forceattaque: parseInt(attackerCard.forceattaque),
@@ -528,24 +549,34 @@ io.on("connection", (socket) => {
     const attackerState = player.charactersState[attackerId];
 
     if (!attackerState || attackerState.tourattaque <= 0) {
+      console.log("Cette carte ne peut pas attaquer:", attackerId);
       socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
       return;
     }
 
-    // Trouver la cible
+    // Trouver la cible (personnage adverse)
     const opponentKey = playerKey === "player1" ? "player2" : "player1";
     const opponent = game.players[opponentKey];
+
+    if (!opponent) {
+      console.log("Adversaire non trouvé");
+      socket.emit("error", { message: "Adversaire non trouvé" });
+      return;
+    }
+
     const targetCard = opponent.cards.personnages.find(
       (card) => card.id === targetId
     );
 
     if (!targetCard) {
+      console.log("Carte cible non trouvée:", targetId);
       socket.emit("error", { message: "Carte cible non trouvée" });
       return;
     }
 
     // S'assurer que la cible existe dans charactersState
     if (!opponent.charactersState[targetId]) {
+      console.log("Initialisation du state de la cible:", targetId);
       opponent.charactersState[targetId] = {
         pointsdevie: parseInt(targetCard.pointsdevie),
         forceattaque: parseInt(targetCard.forceattaque),
@@ -556,11 +587,13 @@ io.on("connection", (socket) => {
 
     const targetState = opponent.charactersState[targetId];
 
-    // Calculer les dégâts
+    // Calculer les dégâts (avec les bonus)
     const damage = attackerState.forceattaque;
+    console.log("Dégâts calculés:", damage);
 
     // Appliquer les dégâts
     targetState.pointsdevie = Math.max(0, targetState.pointsdevie - damage);
+    console.log("Nouveau PV de la cible:", targetState.pointsdevie);
 
     // Décrémenter le nombre d'attaques restantes
     attackerState.tourattaque--;
@@ -568,6 +601,7 @@ io.on("connection", (socket) => {
     // Vérifier si le personnage cible est KO
     if (targetState.pointsdevie <= 0) {
       targetState.pointsdevie = 0;
+      console.log("La cible est KO:", targetId);
     }
 
     // Émettre l'événement d'attaque
@@ -578,6 +612,8 @@ io.on("connection", (socket) => {
       targetId,
       damage,
       newHealth: targetState.pointsdevie,
+      attackerName: attackerCard.nomcarteperso,
+      targetName: targetCard.nomcarteperso,
       newGameState: JSON.parse(JSON.stringify(game)),
     });
 
