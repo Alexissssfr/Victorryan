@@ -361,12 +361,14 @@ io.on("connection", (socket) => {
 
     if (!games.has(gameId)) {
       console.log("Partie non trouvée:", gameId);
+      socket.emit("error", { message: "Partie non trouvée" });
       return;
     }
 
     // Vérifier que le socket est bien dans cette partie
     if (!playerGames.has(gameId)) {
       console.log("Socket non dans la partie:", gameId);
+      socket.emit("error", { message: "Socket non dans la partie" });
       return;
     }
 
@@ -402,6 +404,14 @@ io.on("connection", (socket) => {
     if (!bonusCard) {
       console.log("Carte bonus non trouvée:", bonusId);
       socket.emit("error", { message: "Carte bonus non trouvée" });
+      return;
+    }
+
+    // Vérifier que le bonus a encore des tours disponibles
+    const tourbonus = parseInt(bonusCard.tourbonus);
+    if (tourbonus <= 0) {
+      console.log("Carte bonus épuisée:", bonusId);
+      socket.emit("error", { message: "Carte bonus épuisée" });
       return;
     }
 
@@ -465,6 +475,20 @@ io.on("connection", (socket) => {
       newAttack: characterState.forceattaque,
     });
 
+    // Mettre à jour les valeurs client si elles existent
+    if (characterState.currentAttack !== undefined) {
+      characterState.currentAttack = characterState.forceattaque;
+    }
+
+    // IMPORTANT: Ne pas retirer la carte bonus de la main du joueur
+    // Mais décrémenter son tourbonus pour suivre l'utilisation
+    bonusCard.tourbonus = Math.max(0, parseInt(bonusCard.tourbonus) - 1);
+    console.log("Nouveau tourbonus de la carte:", bonusCard.tourbonus);
+
+    // Marquer le bonus comme joué ce tour
+    game.bonusPlayedThisTurn = true;
+    game.lastBonusTarget = targetId;
+
     // Émettre l'événement de bonus joué
     io.to(gameId).emit("bonusPlayed", {
       gameId,
@@ -475,7 +499,7 @@ io.on("connection", (socket) => {
       targetName: targetCard.nomcarteperso,
       pourcentagebonus: bonusEffect.pourcentagebonus,
       newAttack: characterState.forceattaque,
-      remainingTurns: bonusEffect.tourbonus,
+      remainingTurns: bonusCard.tourbonus, // Tourbonus mis à jour
       newGameState: JSON.parse(JSON.stringify(game)),
     });
   });
@@ -492,12 +516,14 @@ io.on("connection", (socket) => {
 
     if (!games.has(gameId)) {
       console.log("Partie non trouvée:", gameId);
+      socket.emit("error", { message: "Partie non trouvée" });
       return;
     }
 
     // Vérifier que le socket est bien dans cette partie
     if (!playerGames.has(gameId)) {
       console.log("Socket non dans la partie:", gameId);
+      socket.emit("error", { message: "Socket non dans la partie" });
       return;
     }
 
@@ -548,9 +574,20 @@ io.on("connection", (socket) => {
 
     const attackerState = player.charactersState[attackerId];
 
+    // Vérifier si le personnage peut attaquer (PV > 0 et tours d'attaque > 0)
+    if (!attackerState || attackerState.pointsdevie <= 0) {
+      console.log("Ce personnage est KO et ne peut pas attaquer:", attackerId);
+      socket.emit("error", {
+        message: "Ce personnage est KO et ne peut pas attaquer",
+      });
+      return;
+    }
+
     if (!attackerState || attackerState.tourattaque <= 0) {
-      console.log("Cette carte ne peut pas attaquer:", attackerId);
-      socket.emit("error", { message: "Cette carte ne peut pas attaquer" });
+      console.log("Cette carte ne peut plus attaquer ce tour:", attackerId);
+      socket.emit("error", {
+        message: "Cette carte ne peut plus attaquer ce tour",
+      });
       return;
     }
 
@@ -587,6 +624,13 @@ io.on("connection", (socket) => {
 
     const targetState = opponent.charactersState[targetId];
 
+    // Vérifier si la cible n'est pas déjà KO
+    if (targetState.pointsdevie <= 0) {
+      console.log("La cible est déjà KO:", targetId);
+      socket.emit("error", { message: "Cette cible est déjà KO" });
+      return;
+    }
+
     // Calculer les dégâts (avec les bonus)
     const damage = attackerState.forceattaque;
     console.log("Dégâts calculés:", damage);
@@ -595,17 +639,46 @@ io.on("connection", (socket) => {
     targetState.pointsdevie = Math.max(0, targetState.pointsdevie - damage);
     console.log("Nouveau PV de la cible:", targetState.pointsdevie);
 
+    // Mettre à jour les valeurs currentHealth pour le client
+    if (targetState.currentHealth !== undefined) {
+      targetState.currentHealth = targetState.pointsdevie;
+    }
+
     // Décrémenter le nombre d'attaques restantes
     attackerState.tourattaque--;
+
+    // Mettre à jour currentTurns pour le client
+    if (attackerState.currentTurns !== undefined) {
+      attackerState.currentTurns = attackerState.tourattaque;
+    }
 
     // Vérifier si le personnage cible est KO
     if (targetState.pointsdevie <= 0) {
       targetState.pointsdevie = 0;
+      if (targetState.currentHealth !== undefined) {
+        targetState.currentHealth = 0;
+      }
       console.log("La cible est KO:", targetId);
     }
 
-    // Émettre l'événement d'attaque
+    // Mettre à jour l'état du jeu
+    game.attackPerformed = true;
+
+    // Émettre l'événement d'attaque avec différents formats pour compatibilité
     io.to(gameId).emit("characterAttacked", {
+      gameId,
+      playerId,
+      attackerId,
+      targetId,
+      damage,
+      newHealth: targetState.pointsdevie,
+      attackerName: attackerCard.nomcarteperso,
+      targetName: targetCard.nomcarteperso,
+      newGameState: JSON.parse(JSON.stringify(game)),
+    });
+
+    // Pour compatibilité avec l'ancien client
+    io.to(gameId).emit("attackPerformed", {
       gameId,
       playerId,
       attackerId,

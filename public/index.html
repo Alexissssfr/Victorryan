@@ -989,13 +989,20 @@
           player.cards.bonus.forEach((card) => {
             const cardEl = createBonusCard(card);
 
-            // N'ajouter l'événement de clic que si le bonus a encore des tours
+            // N'ajouter l'événement de clic que si le bonus a encore des tours et qu'on est notre tour
             const bonusTours = parseInt(card.tourbonus) || 0;
+
+            // Vérifier si la carte bonus est utilisable (tourbonus > 0 et c'est notre tour)
             if (gameState.isMyTurn && bonusTours > 0) {
               cardEl.addEventListener("click", () => selectBonus(card.id));
               cardEl.classList.add("can-play");
             } else if (bonusTours <= 0) {
               cardEl.classList.add("depleted");
+              // Ajouter un indicateur visuel que la carte est épuisée
+              const depletedOverlay = document.createElement("div");
+              depletedOverlay.className = "depleted-overlay";
+              depletedOverlay.textContent = "Épuisée";
+              cardEl.appendChild(depletedOverlay);
             }
 
             if (card.id === gameState.selectedBonus) {
@@ -1496,7 +1503,8 @@
             }
           }
 
-          socket.emit("attackCharacter", {
+          // Modifier ici : utiliser "attack" au lieu de "attackCharacter"
+          socket.emit("attack", {
             gameId: gameState.game.id,
             playerId: gameState.playerId,
             attackerId: gameState.selectedCharacter,
@@ -2586,7 +2594,7 @@
               ?.nomcarteperso ||
             "un personnage";
 
-          const targetName =
+          const targetName = // Correction ici : ajout de "const targetName ="
             data.targetName ||
             Object.values(gameState.game.players)
               .find((p) => p.charactersState[data.targetId])
