@@ -88,12 +88,14 @@ function distributeCards() {
   return {
     personnages: personnages.map((card) => ({
       ...card,
+      id: card.id,
       pointsdevie: parseInt(card.pointsdevie) || 100,
       forceattaque: parseInt(card.forceattaque) || 30,
       tourattaque: parseInt(card.tourattaque) || 2,
     })),
     bonus: bonus.map((card) => ({
       ...card,
+      id: card.id,
       pourcentagebonus: parseInt(card.pourcentagebonus) || 10,
       tourbonus: parseInt(card.tourbonus) || 2,
     })),
@@ -350,15 +352,29 @@ io.on("connection", (socket) => {
   // Jouer une carte bonus
   socket.on("playBonus", (data) => {
     const { gameId, playerId, bonusId, targetId } = data;
-    if (!games.has(gameId)) return;
+    console.log("Tentative de jouer un bonus:", {
+      gameId,
+      playerId,
+      bonusId,
+      targetId,
+    });
+
+    if (!games.has(gameId)) {
+      console.log("Partie non trouvée:", gameId);
+      return;
+    }
 
     // Vérifier que le socket est bien dans cette partie
-    if (!playerGames.has(gameId)) return;
+    if (!playerGames.has(gameId)) {
+      console.log("Socket non dans la partie:", gameId);
+      return;
+    }
 
     const game = games.get(gameId);
     const gameBonusState = gameBonus.get(gameId);
 
     if (!game || !gameBonusState) {
+      console.log("État de jeu ou bonus non trouvé");
       socket.emit("error", { message: "Partie non trouvée" });
       return;
     }
@@ -368,14 +384,23 @@ io.on("connection", (socket) => {
     );
 
     if (!playerKey || game.currentTurn !== playerId) {
+      console.log("Ce n'est pas le tour du joueur:", {
+        playerKey,
+        currentTurn: game.currentTurn,
+        playerId,
+      });
       socket.emit("error", { message: "Ce n'est pas votre tour" });
       return;
     }
 
     const player = game.players[playerKey];
+    console.log("Cartes du joueur:", player.cards);
+
     const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
+    console.log("Carte bonus trouvée:", bonusCard);
 
     if (!bonusCard) {
+      console.log("Carte bonus non trouvée:", bonusId);
       socket.emit("error", { message: "Carte bonus non trouvée" });
       return;
     }
@@ -384,7 +409,10 @@ io.on("connection", (socket) => {
     const targetCard = player.cards.personnages.find(
       (card) => card.id === targetId
     );
+    console.log("Carte cible trouvée:", targetCard);
+
     if (!targetCard) {
+      console.log("Personnage cible non trouvé:", targetId);
       socket.emit("error", {
         message: "Personnage cible non trouvé dans vos cartes",
       });
@@ -393,6 +421,7 @@ io.on("connection", (socket) => {
 
     // S'assurer que le personnage existe dans charactersState
     if (!player.charactersState[targetId]) {
+      console.log("Initialisation du state du personnage:", targetId);
       player.charactersState[targetId] = {
         pointsdevie: parseInt(targetCard.pointsdevie),
         forceattaque: parseInt(targetCard.forceattaque),
@@ -416,6 +445,7 @@ io.on("connection", (socket) => {
 
     // Ajouter le nouveau bonus
     playerBonusMap.get(targetId).push(bonusEffect);
+    console.log("Bonus ajouté:", bonusEffect);
 
     // Mettre à jour l'attaque du personnage avec tous les bonus actifs
     const characterState = player.charactersState[targetId];
@@ -429,6 +459,11 @@ io.on("connection", (socket) => {
 
     // Appliquer le bonus total
     characterState.forceattaque = Math.floor(baseAttack * totalBonus);
+    console.log("Nouvelle attaque calculée:", {
+      baseAttack,
+      totalBonus,
+      newAttack: characterState.forceattaque,
+    });
 
     // Retirer la carte bonus de la main du joueur
     player.cards.bonus = player.cards.bonus.filter(

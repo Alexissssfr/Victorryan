@@ -1501,26 +1501,44 @@
             return;
           }
 
+          // Vérifier que la carte bonus existe
+          const bonusCard = player.cards.bonus.find(
+            (b) => b.id === gameState.selectedBonus
+          );
+          if (!bonusCard) {
+            showMessage("Erreur: Carte bonus non trouvée", true);
+            return;
+          }
+
+          // Vérifier que la carte personnage existe
+          const characterCard = player.cards.personnages.find(
+            (c) => c.id === gameState.selectedCharacter
+          );
+          if (!characterCard) {
+            showMessage("Erreur: Carte personnage non trouvée", true);
+            return;
+          }
+
+          console.log("Envoi du bonus:", {
+            gameId: gameState.game.id,
+            playerId: gameState.playerId,
+            bonusId: gameState.selectedBonus,
+            targetId: gameState.selectedCharacter,
+          });
+
           socket.emit("playBonus", {
             gameId: gameState.game.id,
             playerId: gameState.playerId,
             bonusId: gameState.selectedBonus,
-            targetCharacterId: gameState.selectedCharacter,
+            targetId: gameState.selectedCharacter,
           });
 
           // Afficher un message explicite
-          const bonusCard = gameState.game.players[
-            gameState.playerId
-          ].cards.bonus.find((b) => b.id === gameState.selectedBonus);
-          const characterCard = gameState.game.players[
-            gameState.playerId
-          ].cards.personnages.find((c) => c.id === gameState.selectedCharacter);
-
           showMessage(
             `Tour ${gameState.currentTurnNumber}: ${
-              bonusCard?.nomcartebonus || "Bonus"
+              bonusCard.nomcartebonus || "Bonus"
             } joué sur ${
-              characterCard?.nomcarteperso || gameState.selectedCharacter
+              characterCard.nomcarteperso || gameState.selectedCharacter
             }`
           );
 
