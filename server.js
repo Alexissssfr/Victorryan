@@ -365,10 +365,12 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Vérifier que le socket est bien dans cette partie
-    if (!playerGames.has(gameId)) {
-      console.log("Socket non dans la partie:", gameId);
-      socket.emit("error", { message: "Socket non dans la partie" });
+    // Vérifier que le socket est bien connecté à cette partie
+    if (!socket.rooms.has(gameId)) {
+      console.log("Socket non dans la salle:", gameId);
+      socket.emit("error", {
+        message: "Vous n'êtes pas connecté à cette partie",
+      });
       return;
     }
 
@@ -381,13 +383,20 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Vérifier que le joueur est dans la partie
     const playerKey = Object.keys(game.players).find(
       (key) => game.players[key].id === playerId
     );
 
-    if (!playerKey || game.currentTurn !== playerId) {
+    if (!playerKey) {
+      console.log("Joueur non trouvé dans la partie:", playerId);
+      socket.emit("error", { message: "Joueur non trouvé dans la partie" });
+      return;
+    }
+
+    // Vérifier que c'est bien le tour du joueur
+    if (game.currentTurn !== playerId) {
       console.log("Ce n'est pas le tour du joueur:", {
-        playerKey,
         currentTurn: game.currentTurn,
         playerId,
       });
@@ -520,10 +529,12 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Vérifier que le socket est bien dans cette partie
-    if (!playerGames.has(gameId)) {
-      console.log("Socket non dans la partie:", gameId);
-      socket.emit("error", { message: "Socket non dans la partie" });
+    // Vérifier que le socket est bien connecté à cette partie
+    if (!socket.rooms.has(gameId)) {
+      console.log("Socket non dans la salle:", gameId);
+      socket.emit("error", {
+        message: "Vous n'êtes pas connecté à cette partie",
+      });
       return;
     }
 
@@ -536,13 +547,20 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Vérifier que le joueur est dans la partie
     const playerKey = Object.keys(game.players).find(
       (key) => game.players[key].id === playerId
     );
 
-    if (!playerKey || game.currentTurn !== playerId) {
+    if (!playerKey) {
+      console.log("Joueur non trouvé dans la partie:", playerId);
+      socket.emit("error", { message: "Joueur non trouvé dans la partie" });
+      return;
+    }
+
+    // Vérifier que c'est bien le tour du joueur
+    if (game.currentTurn !== playerId) {
       console.log("Ce n'est pas le tour du joueur pour attaquer:", {
-        playerKey,
         currentTurn: game.currentTurn,
         playerId,
       });
@@ -591,8 +609,17 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Trouver la cible (personnage adverse)
-    const opponentKey = playerKey === "player1" ? "player2" : "player1";
+    // Trouver l'adversaire (le joueur qui n'est pas l'attaquant)
+    const opponentKey = Object.keys(game.players).find(
+      (key) => key !== playerKey
+    );
+
+    if (!opponentKey) {
+      console.log("Adversaire non trouvé dans la partie");
+      socket.emit("error", { message: "Adversaire non trouvé dans la partie" });
+      return;
+    }
+
     const opponent = game.players[opponentKey];
 
     if (!opponent) {
