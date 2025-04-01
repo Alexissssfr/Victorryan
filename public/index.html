@@ -1165,7 +1165,7 @@
                 gameState.selectedCharacter === cardId ? null : cardId;
             } else {
               showMessage(
-                `Tour ${gameState.currentTurnNumber}: Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci`,
+                `Vous ne pouvez sélectionner que le personnage auquel vous avez appliqué un bonus ce tour-ci`,
                 true
               );
               return;
@@ -1186,15 +1186,30 @@
         function selectOpponentCharacter(cardId) {
           if (!gameState.isMyTurn || !gameState.selectedCharacter) return;
 
+          // Vérifier que le personnage cible est valide
+          let opponent = null;
+          for (const id in gameState.game.players) {
+            if (id !== gameState.playerId) {
+              opponent = gameState.game.players[id];
+              break;
+            }
+          }
+
+          if (!opponent || !opponent.charactersState[cardId]) {
+            showMessage("Personnage cible non trouvé", true);
+            return;
+          }
+
+          const targetState = opponent.charactersState[cardId];
+          if (targetState.currentHealth <= 0) {
+            showMessage("Ce personnage est déjà KO", true);
+            return;
+          }
+
           if (gameState.targetCharacter === cardId) {
             gameState.targetCharacter = null;
           } else {
             gameState.targetCharacter = cardId;
-
-            // Si on a sélectionné un personnage à attaquer, on peut proposer d'attaquer
-            if (gameState.selectedCharacter && gameState.targetCharacter) {
-              attackBtn.classList.remove("hidden");
-            }
           }
 
           renderCards();
@@ -1893,7 +1908,7 @@
             )?.nomcarteperso ||
             "un personnage";
 
-          showMessage(`${bonusName} a été joué sur ${targetName}`);
+          showMessage(`${bonusName} a été appliqué sur ${targetName}`);
 
           // Mettre à jour l'affichage
           renderCards();
@@ -2469,6 +2484,92 @@
             gameOverScreen.classList.add("hidden");
           }
         }
+
+        socket.on("attackPerformed", (data) => {
+          if (!gameState.game) return;
+
+          // Si le serveur nous a envoyé un nouvel état du jeu, l'utiliser
+          if (data.newGameState) {
+            gameState.game = data.newGameState;
+          } else {
+            // Sinon, simuler l'attaque côté client
+            const { attackerId, targetId, damage } = data;
+
+            // Trouver le joueur attaquant et le joueur cible
+            let attacker = null;
+            let target = null;
+            for (const playerId in gameState.game.players) {
+              const player = gameState.game.players[playerId];
+              if (player.charactersState[attackerId]) {
+                attacker = player;
+              }
+              if (player.charactersState[targetId]) {
+                target = player;
+              }
+            }
+
+            if (attacker && target) {
+              // Appliquer les dégâts
+              const targetState = target.charactersState[targetId];
+              targetState.currentHealth = Math.max(
+                0,
+                targetState.currentHealth - damage
+              );
+
+              // Décrémenter le nombre de tours d'attaque
+              const attackerState = attacker.charactersState[attackerId];
+              attackerState.currentTurns = Math.max(
+                0,
+                attackerState.currentTurns - 1
+              );
+
+              // Mettre à jour les bonus actifs
+              if (attackerState.activeBonus) {
+                attackerState.activeBonus = attackerState.activeBonus.filter(
+                  (bonus) => {
+                    bonus.remainingTurns--;
+                    return bonus.remainingTurns > 0;
+                  }
+                );
+
+                // Recalculer l'attaque en tenant compte des bonus restants
+                const baseAttack =
+                  attackerState.baseAttack || attackerState.currentAttack;
+                let totalBonus = 1;
+                attackerState.activeBonus.forEach((bonus) => {
+                  totalBonus += bonus.percentage / 100;
+                });
+                attackerState.currentAttack = Math.floor(
+                  baseAttack * totalBonus
+                );
+              }
+            }
+          }
+
+          // Afficher un message avec les noms des personnages
+          const attackerName =
+            data.attackerName ||
+            Object.values(gameState.game.players)
+              .find((p) => p.charactersState[data.attackerId])
+              ?.cards.personnages.find((c) => c.id === data.attackerId)
+              ?.nomcarteperso ||
+            "un personnage";
+
+          const targetName =
+            data.targetName ||
+            Object.values(gameState.game.players)
+              .find((p) => p.charactersState[data.targetId])
+              ?.cards.personnages.find((c) => c.id === data.targetId)
+              ?.nomcarteperso ||
+            "un personnage";
+
+          showMessage(
+            `${attackerName} attaque ${targetName} et inflige ${data.damage} points de dégâts`
+          );
+
+          // Mettre à jour l'affichage
+          renderCards();
+        });
       });
     </script>
   </body>
