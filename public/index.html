@@ -2151,7 +2151,12 @@
         function showGameOverScreen(data) {
           console.log("Affichage de l'écran de fin de partie:", data);
 
-          if (!data || !data.winner || !data.playersTotalHealth) {
+          if (
+            !data ||
+            !data.winner ||
+            !data.playersTotalHealth ||
+            !data.playerStats
+          ) {
             console.error(
               "Données invalides pour l'écran de fin de partie:",
               data
@@ -2200,88 +2205,125 @@
             messageElement.className = "message-defeat";
           }
 
-          // Afficher les statistiques détaillées
+          // Afficher les statistiques
           statsElement.innerHTML = "";
 
           // Récupérer les données des joueurs
           const game = data.newGameState;
           if (game && game.players) {
-            Object.keys(game.players).forEach((playerId) => {
-              const player = game.players[playerId];
-              const stats = data.playerStats[playerId];
-              if (!player || !stats) return;
-
-              const playerName = player.name || "Joueur inconnu";
-              const isWinner = playerId === data.winner;
-
-              // Créer l'élément pour afficher les statistiques détaillées
+            // Afficher d'abord les stats du joueur actuel
+            const currentPlayerStats = data.playerStats[gameState.playerId];
+            const currentPlayer = game.players[gameState.playerId];
+            if (currentPlayer && currentPlayerStats) {
               const statDiv = document.createElement("div");
-              statDiv.className = `player-stat ${isWinner ? "winner" : ""}`;
+              statDiv.className = `player-stat ${
+                data.winner === gameState.playerId ? "winner" : ""
+              }`;
               statDiv.innerHTML = `
                 <div class="player-stat-header">
-                  <span class="player-name">${playerName}</span>
-                  ${isWinner ? '<span class="winner-badge">🏆</span>' : ""}
+                  <span class="player-name">${
+                    currentPlayer.name || "Vous"
+                  }</span>
+                  ${
+                    data.winner === gameState.playerId
+                      ? '<span class="winner-badge">🏆</span>'
+                      : ""
+                  }
                 </div>
                 <div class="player-stat-details">
                   <div class="stat-row">
                     <span class="stat-label">Points de vie restants:</span>
-                    <span class="stat-value">${stats.totalHealth}</span>
+                    <span class="stat-value">${
+                      currentPlayerStats.totalHealth
+                    }</span>
                   </div>
                   <div class="stat-row">
                     <span class="stat-label">Personnages KO:</span>
-                    <span class="stat-value">${stats.koCharactersCount}</span>
+                    <span class="stat-value">${
+                      currentPlayerStats.koCharactersCount
+                    }</span>
                   </div>
                   <div class="stat-row">
                     <span class="stat-label">Peut encore attaquer:</span>
                     <span class="stat-value">${
-                      stats.canAttack ? "Oui" : "Non"
+                      currentPlayerStats.canAttack ? "Oui" : "Non"
                     }</span>
                   </div>
                 </div>
               `;
-
               statsElement.appendChild(statDiv);
-            });
-
-            // Ajouter la raison de fin de partie avec plus de détails
-            const reasonDiv = document.createElement("div");
-            reasonDiv.className = "game-end-reason";
-
-            let reasonText = "";
-            switch (data.reason) {
-              case "all_characters_ko":
-                reasonText =
-                  "La partie s'est terminée car tous les personnages d'un joueur ont été vaincus.";
-                break;
-              case "no_more_attacks":
-                reasonText =
-                  "La partie s'est terminée car plus aucun joueur ne peut attaquer. ";
-                // Ajouter des détails sur la détermination du gagnant
-                if (data.winner === "tie") {
-                  reasonText +=
-                    "Les deux joueurs ont le même nombre de personnages KO et de points de vie.";
-                } else {
-                  const winnerStats = data.playerStats[data.winner];
-                  const loserId = Object.keys(data.playerStats).find(
-                    (id) => id !== data.winner
-                  );
-                  const loserStats = data.playerStats[loserId];
-
-                  if (
-                    winnerStats.koCharactersCount !==
-                    loserStats.koCharactersCount
-                  ) {
-                    reasonText += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
-                  } else {
-                    reasonText += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
-                  }
-                }
-                break;
-              default:
-                reasonText = "La partie s'est terminée.";
             }
 
-            reasonDiv.textContent = reasonText;
+            // Puis les stats de l'adversaire
+            const opponentId = Object.keys(game.players).find(
+              (id) => id !== gameState.playerId
+            );
+            const opponentStats = data.playerStats[opponentId];
+            const opponent = game.players[opponentId];
+            if (opponent && opponentStats) {
+              const statDiv = document.createElement("div");
+              statDiv.className = `player-stat ${
+                data.winner === opponentId ? "winner" : ""
+              }`;
+              statDiv.innerHTML = `
+                <div class="player-stat-header">
+                  <span class="player-name">${
+                    opponent.name || "Adversaire"
+                  }</span>
+                  ${
+                    data.winner === opponentId
+                      ? '<span class="winner-badge">🏆</span>'
+                      : ""
+                  }
+                </div>
+                <div class="player-stat-details">
+                  <div class="stat-row">
+                    <span class="stat-label">Points de vie restants:</span>
+                    <span class="stat-value">${opponentStats.totalHealth}</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Personnages KO:</span>
+                    <span class="stat-value">${
+                      opponentStats.koCharactersCount
+                    }</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-label">Peut encore attaquer:</span>
+                    <span class="stat-value">${
+                      opponentStats.canAttack ? "Oui" : "Non"
+                    }</span>
+                  </div>
+                </div>
+              `;
+              statsElement.appendChild(statDiv);
+            }
+
+            // Ajouter la raison de fin de partie
+            const reasonDiv = document.createElement("div");
+            reasonDiv.className = "game-end-reason";
+            reasonDiv.textContent =
+              "La partie s'est terminée car plus aucun joueur ne peut attaquer. ";
+
+            // Ajouter l'explication du gagnant
+            if (data.winner === "tie") {
+              reasonDiv.textContent +=
+                "Les deux joueurs ont le même nombre de personnages KO et de points de vie.";
+            } else {
+              const winnerStats = data.playerStats[data.winner];
+              const loserId = Object.keys(data.playerStats).find(
+                (id) => id !== data.winner
+              );
+              const loserStats = data.playerStats[loserId];
+
+              if (
+                winnerStats.koCharactersCount !== loserStats.koCharactersCount
+              ) {
+                reasonDiv.textContent += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
+              } else {
+                reasonDiv.textContent += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
+              }
+            }
+
             statsElement.appendChild(reasonDiv);
           }
 
@@ -2440,24 +2482,8 @@
           playersTotalHealth[gameState.playerId] = playerStats.totalHealth;
           playersTotalHealth[opponent.id] = opponentStats.totalHealth;
 
-          // Vérifier les conditions de fin de partie
-          const playerCharCount = Object.keys(player.charactersState).length;
-          const opponentCharCount = Object.keys(
-            opponent.charactersState
-          ).length;
-
-          // Condition 1: Un joueur a tous ses personnages à 0 PV
-          if (playerStats.koCharactersCount === playerCharCount) {
-            winner = opponent.id;
-            reason = "all_characters_ko";
-            gameEnded = true;
-          } else if (opponentStats.koCharactersCount === opponentCharCount) {
-            winner = gameState.playerId;
-            reason = "all_characters_ko";
-            gameEnded = true;
-          }
-          // Condition 2: Aucun joueur ne peut attaquer
-          else if (!playerStats.canAttack && !opponentStats.canAttack) {
+          // Vérifier si les deux joueurs ne peuvent plus attaquer
+          if (!playerStats.canAttack && !opponentStats.canAttack) {
             gameEnded = true;
             reason = "no_more_attacks";
 
@@ -2494,15 +2520,6 @@
                 [opponent.id]: opponentStats,
               },
             });
-
-            // Afficher un message selon le résultat
-            if (winner === gameState.playerId) {
-              showMessage("Partie terminée ! Vous gagnez !");
-            } else if (winner === "tie") {
-              showMessage("Partie terminée ! Match nul !");
-            } else {
-              showMessage("Partie terminée ! Vous perdez !", true);
-            }
 
             // Afficher l'écran de fin de partie
             showGameOverScreen({
