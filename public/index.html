@@ -2121,58 +2121,61 @@
             );
           };
 
-          // Calculer les points de vie pour chaque joueur
-          const playersTotalHealth = {};
-          Object.entries(data.newGameState.players).forEach(
-            ([playerId, player]) => {
-              playersTotalHealth[playerId] = calculatePlayerHealth(player);
-            }
-          );
+          // Calculer les statistiques pour chaque joueur
+          const calculatePlayerStats = (player) => {
+            const stats = {
+              totalHealth: 0,
+              koCharactersCount: 0,
+              canAttack: false,
+            };
 
-          // Afficher l'écran de fin de partie
+            if (player && player.charactersState) {
+              Object.values(player.charactersState).forEach((char) => {
+                stats.totalHealth += Math.max(
+                  0,
+                  char.currentHealth || char.pointsdevie || 0
+                );
+                if (char.currentHealth <= 0 || char.pointsdevie <= 0) {
+                  stats.koCharactersCount++;
+                }
+                if (
+                  (char.currentHealth > 0 || char.pointsdevie > 0) &&
+                  (char.currentTurns > 0 || char.tourattaque > 0)
+                ) {
+                  stats.canAttack = true;
+                }
+              });
+            }
+            return stats;
+          };
+
+          const game = data.newGameState;
+          const playerStats = {};
+          const playersTotalHealth = {};
+
+          // Calculer les statistiques pour tous les joueurs
+          Object.entries(game.players).forEach(([playerId, player]) => {
+            playerStats[playerId] = calculatePlayerStats(player);
+            playersTotalHealth[playerId] = calculatePlayerHealth(player);
+          });
+
+          // Afficher immédiatement l'écran de fin de partie avec les statistiques
           showGameOverScreen({
             winner: data.winner,
             playersTotalHealth: playersTotalHealth,
-            newGameState: data.newGameState,
+            newGameState: game,
             reason: data.reason,
+            playerStats: playerStats,
           });
-
-          // Afficher un message selon le résultat
-          if (data.winner === gameState.playerId) {
-            showMessage("Partie terminée ! Vous gagnez !");
-          } else if (data.winner === "tie") {
-            showMessage("Partie terminée ! Match nul !");
-          } else {
-            showMessage("Partie terminée ! Vous perdez !", true);
-          }
         });
 
         // Fonction pour afficher l'écran de fin de partie
         function showGameOverScreen(data) {
           console.log("Affichage de l'écran de fin de partie:", data);
 
-          if (
-            !data ||
-            !data.winner ||
-            !data.playersTotalHealth ||
-            !data.playerStats
-          ) {
-            console.error(
-              "Données invalides pour l'écran de fin de partie:",
-              data
-            );
-            return;
-          }
-
-          // Masquer tous les écrans
+          // Masquer tous les écrans sauf l'écran de fin de partie
           hideAllScreens();
-
-          // Afficher l'écran de fin de partie
           const gameOverScreen = document.getElementById("gameOverScreen");
-          if (!gameOverScreen) {
-            console.error("Élément gameOverScreen non trouvé");
-            return;
-          }
           gameOverScreen.style.display = "flex";
 
           // Mettre à jour le titre et le message
@@ -2180,188 +2183,150 @@
           const messageElement = document.getElementById("gameOverMessage");
           const statsElement = document.getElementById("playerStats");
 
-          if (!titleElement || !messageElement || !statsElement) {
-            console.error("Éléments de l'écran de fin de partie non trouvés");
-            return;
-          }
-
           // Déterminer le message selon le résultat
           if (data.winner === gameState.playerId) {
             titleElement.textContent = "🏆 Victoire !";
             titleElement.className = "game-over-title victory";
-            messageElement.textContent =
-              "Félicitations ! Vous avez gagné la partie !";
+            messageElement.textContent = "La partie est terminée.";
             messageElement.className = "message-victory";
           } else if (data.winner === "tie") {
             titleElement.textContent = "🤝 Match Nul !";
             titleElement.className = "game-over-title tie";
-            messageElement.textContent =
-              "La partie se termine sur une égalité !";
+            messageElement.textContent = "La partie est terminée.";
             messageElement.className = "message-tie";
           } else {
             titleElement.textContent = "💔 Défaite";
             titleElement.className = "game-over-title defeat";
-            messageElement.textContent = "Vous avez perdu la partie.";
+            messageElement.textContent = "La partie est terminée.";
             messageElement.className = "message-defeat";
           }
 
           // Afficher les statistiques
-          statsElement.innerHTML = "";
+          statsElement.innerHTML = "<h3>Statistiques de la partie</h3>";
 
-          // Récupérer les données des joueurs
-          const game = data.newGameState;
-          if (game && game.players) {
-            // Afficher d'abord les stats du joueur actuel
-            const currentPlayerStats = data.playerStats[gameState.playerId];
-            const currentPlayer = game.players[gameState.playerId];
-            if (currentPlayer && currentPlayerStats) {
-              const statDiv = document.createElement("div");
-              statDiv.className = `player-stat ${
-                data.winner === gameState.playerId ? "winner" : ""
-              }`;
-              statDiv.innerHTML = `
-                <div class="player-stat-header">
-                  <span class="player-name">${
-                    currentPlayer.name || "Vous"
-                  }</span>
-                  ${
-                    data.winner === gameState.playerId
-                      ? '<span class="winner-badge">🏆</span>'
-                      : ""
-                  }
-                </div>
-                <div class="player-stat-details">
-                  <div class="stat-row">
-                    <span class="stat-label">Points de vie restants:</span>
-                    <span class="stat-value">${
-                      currentPlayerStats.totalHealth
-                    }</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-label">Personnages KO:</span>
-                    <span class="stat-value">${
-                      currentPlayerStats.koCharactersCount
-                    }</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-label">Peut encore attaquer:</span>
-                    <span class="stat-value">${
-                      currentPlayerStats.canAttack ? "Oui" : "Non"
-                    }</span>
-                  </div>
-                </div>
-              `;
-              statsElement.appendChild(statDiv);
-            }
+          // Afficher les stats du joueur actuel
+          const currentPlayerStats = data.playerStats[gameState.playerId];
+          const currentPlayer = data.newGameState.players[gameState.playerId];
 
-            // Puis les stats de l'adversaire
-            const opponentId = Object.keys(game.players).find(
-              (id) => id !== gameState.playerId
+          if (currentPlayer && currentPlayerStats) {
+            const playerStatDiv = document.createElement("div");
+            playerStatDiv.className = "player-stat";
+            playerStatDiv.innerHTML = `
+              <div class="player-stat-header">
+                <span class="player-name">${currentPlayer.name || "Vous"}</span>
+                ${
+                  data.winner === gameState.playerId
+                    ? '<span class="winner-badge">🏆</span>'
+                    : ""
+                }
+              </div>
+              <div class="player-stat-details">
+                <div class="stat-row">Points de vie restants: ${
+                  currentPlayerStats.totalHealth
+                }</div>
+                <div class="stat-row">Personnages KO: ${
+                  currentPlayerStats.koCharactersCount
+                }</div>
+                <div class="stat-row">Peut encore attaquer: ${
+                  currentPlayerStats.canAttack ? "Oui" : "Non"
+                }</div>
+              </div>
+            `;
+            statsElement.appendChild(playerStatDiv);
+          }
+
+          // Afficher les stats de l'adversaire
+          const opponentId = Object.keys(data.newGameState.players).find(
+            (id) => id !== gameState.playerId
+          );
+          const opponentStats = data.playerStats[opponentId];
+          const opponent = data.newGameState.players[opponentId];
+
+          if (opponent && opponentStats) {
+            const opponentStatDiv = document.createElement("div");
+            opponentStatDiv.className = "player-stat";
+            opponentStatDiv.innerHTML = `
+              <div class="player-stat-header">
+                <span class="player-name">${
+                  opponent.name || "Adversaire"
+                }</span>
+                ${
+                  data.winner === opponentId
+                    ? '<span class="winner-badge">🏆</span>'
+                    : ""
+                }
+              </div>
+              <div class="player-stat-details">
+                <div class="stat-row">Points de vie restants: ${
+                  opponentStats.totalHealth
+                }</div>
+                <div class="stat-row">Personnages KO: ${
+                  opponentStats.koCharactersCount
+                }</div>
+                <div class="stat-row">Peut encore attaquer: ${
+                  opponentStats.canAttack ? "Oui" : "Non"
+                }</div>
+              </div>
+            `;
+            statsElement.appendChild(opponentStatDiv);
+          }
+
+          // Ajouter la raison de fin de partie
+          const reasonDiv = document.createElement("div");
+          reasonDiv.className = "game-end-reason";
+          reasonDiv.textContent =
+            "La partie s'est terminée car plus aucun joueur ne peut attaquer. ";
+
+          if (data.winner === "tie") {
+            reasonDiv.textContent +=
+              "Les deux joueurs ont le même nombre de personnages KO et de points de vie.";
+          } else {
+            const winnerStats = data.playerStats[data.winner];
+            const loserId = Object.keys(data.playerStats).find(
+              (id) => id !== data.winner
             );
-            const opponentStats = data.playerStats[opponentId];
-            const opponent = game.players[opponentId];
-            if (opponent && opponentStats) {
-              const statDiv = document.createElement("div");
-              statDiv.className = `player-stat ${
-                data.winner === opponentId ? "winner" : ""
-              }`;
-              statDiv.innerHTML = `
-                <div class="player-stat-header">
-                  <span class="player-name">${
-                    opponent.name || "Adversaire"
-                  }</span>
-                  ${
-                    data.winner === opponentId
-                      ? '<span class="winner-badge">🏆</span>'
-                      : ""
-                  }
-                </div>
-                <div class="player-stat-details">
-                  <div class="stat-row">
-                    <span class="stat-label">Points de vie restants:</span>
-                    <span class="stat-value">${opponentStats.totalHealth}</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-label">Personnages KO:</span>
-                    <span class="stat-value">${
-                      opponentStats.koCharactersCount
-                    }</span>
-                  </div>
-                  <div class="stat-row">
-                    <span class="stat-label">Peut encore attaquer:</span>
-                    <span class="stat-value">${
-                      opponentStats.canAttack ? "Oui" : "Non"
-                    }</span>
-                  </div>
-                </div>
-              `;
-              statsElement.appendChild(statDiv);
-            }
+            const loserStats = data.playerStats[loserId];
 
-            // Ajouter la raison de fin de partie
-            const reasonDiv = document.createElement("div");
-            reasonDiv.className = "game-end-reason";
-            reasonDiv.textContent =
-              "La partie s'est terminée car plus aucun joueur ne peut attaquer. ";
-
-            // Ajouter l'explication du gagnant
-            if (data.winner === "tie") {
-              reasonDiv.textContent +=
-                "Les deux joueurs ont le même nombre de personnages KO et de points de vie.";
+            if (
+              winnerStats.koCharactersCount !== loserStats.koCharactersCount
+            ) {
+              reasonDiv.textContent += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
             } else {
-              const winnerStats = data.playerStats[data.winner];
-              const loserId = Object.keys(data.playerStats).find(
-                (id) => id !== data.winner
-              );
-              const loserStats = data.playerStats[loserId];
+              reasonDiv.textContent += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
+            }
+          }
+          statsElement.appendChild(reasonDiv);
 
-              if (
-                winnerStats.koCharactersCount !== loserStats.koCharactersCount
-              ) {
-                reasonDiv.textContent += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
-              } else {
-                reasonDiv.textContent += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
-              }
+          // Configurer le bouton "Retour au menu"
+          const quitGameBtn = document.getElementById("quitGameBtn");
+          quitGameBtn.onclick = () => {
+            // Déconnecter le socket
+            if (socket) {
+              socket.disconnect();
             }
 
-            statsElement.appendChild(reasonDiv);
-          }
+            // Réinitialiser l'état du jeu
+            gameState.playerId = null;
+            gameState.game = null;
+            gameState.selectedCharacter = null;
+            gameState.selectedBonus = null;
+            gameState.bonusActionsRemaining = 2;
+            gameState.currentTurnNumber = 1;
+            gameState.isMyTurn = false;
 
-          // Configurer le bouton retour au menu
-          const menuButton = document.getElementById("quitGameBtn");
-          if (menuButton) {
-            menuButton.onclick = () => {
-              // Déconnecter le socket
-              if (socket) {
-                socket.disconnect();
-              }
+            // Masquer l'écran de fin de partie
+            gameOverScreen.style.display = "none";
 
-              // Réinitialiser l'état du jeu
-              gameState.playerId = null;
-              gameState.game = null;
-              gameState.selectedCharacter = null;
-              gameState.selectedBonus = null;
-              gameState.bonusActionsRemaining = 2;
-              gameState.currentTurnNumber = 1;
-              gameState.isMyTurn = false;
+            // Afficher l'écran d'accueil
+            const homeScreen = document.getElementById("homeScreen");
+            homeScreen.classList.remove("hidden");
 
-              // Masquer tous les écrans
-              hideAllScreens();
-
-              // Afficher l'écran d'accueil
-              const homeScreen = document.getElementById("homeScreen");
-              if (homeScreen) {
-                homeScreen.classList.remove("hidden");
-              }
-
-              // Réinitialiser les champs de saisie
-              const playerNameInput =
-                document.getElementById("playerNameInput");
-              const gameIdInput = document.getElementById("gameIdInput");
-              if (playerNameInput) playerNameInput.value = "";
-              if (gameIdInput) gameIdInput.value = "";
-            };
-          }
+            // Réinitialiser les champs de saisie
+            const playerNameInput = document.getElementById("playerNameInput");
+            const gameIdInput = document.getElementById("gameIdInput");
+            if (playerNameInput) playerNameInput.value = "";
+            if (gameIdInput) gameIdInput.value = "";
+          };
         }
 
         // Ajouter cette fonction pour déboguer le contenu des cartes
