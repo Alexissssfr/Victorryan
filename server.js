@@ -325,22 +325,46 @@ io.on("connection", (socket) => {
       }
     }
 
-    // Réinitialiser les tours d'attaque pour le prochain joueur
-    Object.keys(nextPlayer.charactersState).forEach((characterId) => {
-      const baseCard = nextPlayer.cards.personnages.find(
-        (c) => c.id === characterId
-      );
-      if (baseCard) {
-        nextPlayer.charactersState[characterId].tourattaque = parseInt(
-          baseCard.tourattaque
-        );
-      }
-    });
+    // NE PAS réinitialiser les tours d'attaque à chaque changement de joueur
+    // On supprime cette partie du code qui réinitialise les tours d'attaque
 
     // Mettre à jour l'état du jeu
     game.currentTurn = nextPlayer.id;
     game.bonusPlayedThisTurn = false;
     game.lastBonusTarget = null;
+
+    // Gestion du numéro de tour
+    if (!game.turnNumber) {
+      game.turnNumber = 1;
+    } else if (currentPlayerKey === Object.keys(game.players)[1]) {
+      // Si c'est le joueur 2 qui a terminé son tour, on incrémente le tour pour le nouveau cycle
+      game.turnNumber += 1;
+      console.log(`Tour incrémenté à: ${game.turnNumber}`);
+
+      // C'est ici qu'on réinitialise les tours d'attaque pour TOUS les joueurs
+      // car un cycle complet de tour vient de se terminer
+      Object.keys(game.players).forEach((playerKeyToReset) => {
+        const playerToReset = game.players[playerKeyToReset];
+        Object.keys(playerToReset.charactersState).forEach((characterId) => {
+          const baseCard = playerToReset.cards.personnages.find(
+            (c) => c.id === characterId
+          );
+          if (baseCard) {
+            playerToReset.charactersState[characterId].tourattaque = parseInt(
+              baseCard.tourattaque
+            );
+            // Mettre à jour currentTurns pour le client
+            if (
+              playerToReset.charactersState[characterId].currentTurns !==
+              undefined
+            ) {
+              playerToReset.charactersState[characterId].currentTurns =
+                playerToReset.charactersState[characterId].tourattaque;
+            }
+          }
+        });
+      });
+    }
 
     // Émettre l'événement de changement de tour
     io.to(gameId).emit("turnChanged", {
@@ -733,17 +757,9 @@ io.on("connection", (socket) => {
     // Trouver le prochain joueur (l'adversaire)
     const nextPlayerId = opponent.id;
 
-    // Réinitialiser les tours d'attaque pour le prochain joueur
-    Object.keys(opponent.charactersState).forEach((characterId) => {
-      const baseCard = opponent.cards.personnages.find(
-        (c) => c.id === characterId
-      );
-      if (baseCard) {
-        opponent.charactersState[characterId].tourattaque = parseInt(
-          baseCard.tourattaque
-        );
-      }
-    });
+    // NE PAS réinitialiser les tours d'attaque à chaque changement de joueur
+    // On supprime cette partie du code qui réinitialise les tours d'attaque entre les joueurs
+    // Les tours d'attaque ne devraient être réinitialisés qu'au début d'un nouveau cycle de tour
 
     // Mettre à jour l'état du jeu pour le prochain tour
     game.currentTurn = nextPlayerId;
@@ -758,6 +774,30 @@ io.on("connection", (socket) => {
       // Si c'est le joueur 2 qui a joué, on incrémente le tour pour le nouveau cycle
       game.turnNumber += 1;
       console.log(`Tour incrémenté à: ${game.turnNumber}`);
+
+      // C'est ici qu'on réinitialise les tours d'attaque pour TOUS les joueurs
+      // car un cycle complet de tour vient de se terminer
+      Object.keys(game.players).forEach((playerKeyToReset) => {
+        const playerToReset = game.players[playerKeyToReset];
+        Object.keys(playerToReset.charactersState).forEach((characterId) => {
+          const baseCard = playerToReset.cards.personnages.find(
+            (c) => c.id === characterId
+          );
+          if (baseCard) {
+            playerToReset.charactersState[characterId].tourattaque = parseInt(
+              baseCard.tourattaque
+            );
+            // Mettre à jour currentTurns pour le client
+            if (
+              playerToReset.charactersState[characterId].currentTurns !==
+              undefined
+            ) {
+              playerToReset.charactersState[characterId].currentTurns =
+                playerToReset.charactersState[characterId].tourattaque;
+            }
+          }
+        });
+      });
     }
 
     // Émettre l'événement de changement de tour
