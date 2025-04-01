@@ -820,11 +820,32 @@
         }
 
         function showMessage(text, isError = false) {
-          const p = document.createElement("p");
-          p.textContent = text;
-          if (isError) p.style.color = "red";
-          messages.appendChild(p);
-          messages.scrollTop = messages.scrollHeight;
+          // Ne pas afficher de messages sur la page d'accueil
+          const currentScreen = document.querySelector("div:not(.hidden)").id;
+          if (currentScreen === "homeScreen") {
+            return;
+          }
+
+          const messageContainer = document.createElement("div");
+          messageContainer.style.position = "fixed";
+          messageContainer.style.bottom = "20px";
+          messageContainer.style.left = "50%";
+          messageContainer.style.transform = "translateX(-50%)";
+          messageContainer.style.padding = "12px 24px";
+          messageContainer.style.backgroundColor = isError
+            ? "#f44336"
+            : "#4CAF50";
+          messageContainer.style.color = "white";
+          messageContainer.style.borderRadius = "4px";
+          messageContainer.textContent = text;
+
+          document.body.appendChild(messageContainer);
+
+          setTimeout(() => {
+            if (document.body.contains(messageContainer)) {
+              document.body.removeChild(messageContainer);
+            }
+          }, 3000);
         }
 
         // Ajouter cette fonction pour vérifier si le joueur courant peut jouer
@@ -2589,6 +2610,43 @@
 
           // Mettre à jour l'affichage
           renderCards();
+        });
+
+        document
+          .getElementById("cancelGameBtn")
+          .addEventListener("click", () => {
+            if (currentGameId) {
+              socket.emit("cancelGame", { gameId: currentGameId });
+            }
+            cleanupMessages();
+            showScreen("homeScreen");
+          });
+
+        document
+          .getElementById("cancelWaitingBtn")
+          .addEventListener("click", () => {
+            if (currentGameId) {
+              socket.emit("leaveGame", { gameId: currentGameId });
+            }
+            cleanupMessages();
+            showScreen("homeScreen");
+          });
+
+        function cleanupMessages() {
+          const messages = document.querySelectorAll(
+            'div[style*="position: fixed"]'
+          );
+          messages.forEach((msg) => {
+            if (document.body.contains(msg)) {
+              document.body.removeChild(msg);
+            }
+          });
+        }
+
+        socket.on("gameError", (data) => {
+          showMessage(data.message, true);
+          cleanupMessages();
+          showScreen("homeScreen");
         });
       });
     </script>
