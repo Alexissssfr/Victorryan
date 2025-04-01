@@ -2064,6 +2064,7 @@
           hideAllScreens();
 
           // Récupérer les éléments du DOM
+          const gameOverScreen = document.getElementById("gameOverScreen");
           const gameOverTitle = document.getElementById("gameOverTitle");
           const gameOverMessage = document.getElementById("gameOverMessage");
           const playerStats = document.getElementById("playerStats");
@@ -2080,11 +2081,16 @@
             gameOverMessage.textContent =
               "Félicitations, vous avez gagné la partie !";
             gameOverMessage.className = "message-victory";
-          } else {
+          } else if (data.winner) {
             gameOverTitle.textContent = "💔 Défaite !";
             gameOverMessage.textContent =
               "Vous avez perdu la partie. Réessayez !";
             gameOverMessage.className = "message-defeat";
+          } else {
+            gameOverTitle.textContent = "🤝 Match nul !";
+            gameOverMessage.textContent =
+              "La partie s'est terminée sur une égalité !";
+            gameOverMessage.className = "message-tie";
           }
 
           // Afficher les statistiques des joueurs
@@ -2100,15 +2106,8 @@
               if (!player) return;
 
               const playerName = player.name || "Joueur inconnu";
-              const isWinner = player.id === data.winner;
-
-              // Calculer les points de vie restants
-              let totalHealth = 0;
-              if (player.charactersState) {
-                Object.values(player.charactersState).forEach((char) => {
-                  totalHealth += Math.max(0, char.pointsdevie || 0);
-                });
-              }
+              const isWinner = playerId === data.winner;
+              const totalHealth = data.playersTotalHealth[playerId] || 0;
 
               // Créer l'élément pour afficher les statistiques
               const statDiv = document.createElement("div");
@@ -2148,7 +2147,7 @@
           }
 
           // S'assurer que l'écran de fin est visible
-          document.getElementById("gameOverScreen").classList.remove("hidden");
+          gameOverScreen.classList.remove("hidden");
 
           // Configurer le bouton de retour au menu
           if (quitGameBtn) {
@@ -2185,11 +2184,34 @@
           // Mettre à jour l'état du jeu
           gameState.game = data.newGameState;
 
-          // Afficher l'écran de fin de partie
+          // Calculer les points de vie totaux pour chaque joueur
+          const calculatePlayerHealth = (player) => {
+            if (!player || !player.charactersState) return 0;
+            return Object.values(player.charactersState).reduce(
+              (total, char) => {
+                return total + (parseInt(char.pointsdevie) || 0);
+              },
+              0
+            );
+          };
+
+          // Calculer les points de vie pour chaque joueur
+          const playersTotalHealth = {};
+          Object.entries(data.newGameState.players).forEach(
+            ([playerId, player]) => {
+              playersTotalHealth[playerId] = calculatePlayerHealth(player);
+            }
+          );
+
+          // Afficher l'écran de fin de partie immédiatement pour tous les joueurs
           showGameOverScreen({
             winner: data.winner,
+            playersTotalHealth: playersTotalHealth,
             newGameState: data.newGameState,
           });
+
+          // Désactiver les interactions avec le jeu
+          disableGameInteractions();
         });
 
         // Ajouter cette fonction pour déboguer le contenu des cartes
