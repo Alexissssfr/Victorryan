@@ -465,11 +465,6 @@ io.on("connection", (socket) => {
       newAttack: characterState.forceattaque,
     });
 
-    // Retirer la carte bonus de la main du joueur
-    player.cards.bonus = player.cards.bonus.filter(
-      (card) => card.id !== bonusId
-    );
-
     // Émettre l'événement de bonus joué
     io.to(gameId).emit("bonusPlayed", {
       gameId,
