@@ -701,123 +701,75 @@ io.on("connection", (socket) => {
     if (!games.has(gameId)) return;
 
     const game = games.get(gameId);
+    const gameBonusState = gameBonus.get(gameId);
+
+    // Fonction pour vérifier si tous les personnages d'un joueur sont KO
+    function checkAllCharactersKO(playerKey) {
+      const player = game.players[playerKey];
+      if (!player || !player.charactersState) return false;
+
+      return Object.values(player.charactersState).every(
+        (char) => char.pointsdevie <= 0
+      );
+    }
 
     // Vérifier si un joueur a perdu tous ses personnages
-    const checkGameOver = (gameId) => {
-      const game = games.get(gameId);
-      if (!game) return;
+    for (const playerId in game.players) {
+      const player = game.players[playerId];
+      const allCharactersKO = Object.values(player.charactersState).every(
+        (char) => char.pointsdevie <= 0
+      );
 
-      for (const playerId in game.players) {
-        const player = game.players[playerId];
-        const allCharactersKO = Object.values(player.charactersState).every(
-          (char) => char.pointsdevie <= 0
-        );
+      if (allCharactersKO) {
+        // Trouver le gagnant (l'autre joueur)
+        const winner = Object.keys(game.players).find((id) => id !== playerId);
 
-        if (allCharactersKO) {
-          // Trouver le gagnant (l'autre joueur)
-          const winner = Object.keys(game.players).find(
-            (id) => id !== playerId
-          );
+        if (winner) {
+          game.winner = winner;
+          game.endReason = "all_characters_ko";
+          game.status = "finished";
 
-          if (winner) {
-            game.winner = winner;
-            game.endReason = "all_characters_ko";
-            game.status = "finished";
-
-            // Envoyer l'état final du jeu à tous les joueurs
-            const gameState = {
-              game: {
-                ...game,
-                players: Object.fromEntries(
-                  Object.entries(game.players).map(([id, player]) => [
-                    id,
-                    {
-                      ...player,
-                      cards: {
-                        personnages: player.cards.personnages.map((card) => ({
-                          ...card,
-                          tourattaque: parseInt(card.tourattaque),
-                        })),
-                        bonus: player.cards.bonus.map((card) => ({
-                          ...card,
-                          tourbonus: parseInt(card.tourbonus),
-                        })),
-                      },
+          // Envoyer l'état final du jeu à tous les joueurs
+          const gameState = {
+            game: {
+              ...game,
+              players: Object.fromEntries(
+                Object.entries(game.players).map(([id, player]) => [
+                  id,
+                  {
+                    ...player,
+                    cards: {
+                      personnages: player.cards.personnages.map((card) => ({
+                        ...card,
+                        tourattaque: parseInt(card.tourattaque),
+                      })),
+                      bonus: player.cards.bonus.map((card) => ({
+                        ...card,
+                        tourbonus: parseInt(card.tourbonus),
+                      })),
                     },
-                  ])
-                ),
-              },
-            };
+                  },
+                ])
+              ),
+            },
+          };
 
-            // Envoyer à tous les joueurs de la partie
-            game.players[playerId].socket.emit("gameStateUpdate", gameState);
-            game.players[winner].socket.emit("gameStateUpdate", gameState);
+          // Envoyer à tous les joueurs de la partie
+          game.players[playerId].socket.emit("gameStateUpdate", gameState);
+          game.players[winner].socket.emit("gameStateUpdate", gameState);
 
-            // Émettre l'événement gameOver à tous les joueurs
-            game.players[playerId].socket.emit("gameOver", {
-              winner: winner,
-              reason: "all_characters_ko",
-            });
-            game.players[winner].socket.emit("gameOver", {
-              winner: winner,
-              reason: "all_characters_ko",
-            });
-          }
-          break;
+          // Émettre l'événement gameOver à tous les joueurs
+          game.players[playerId].socket.emit("gameOver", {
+            winner: winner,
+            reason: "all_characters_ko",
+          });
+          game.players[winner].socket.emit("gameOver", {
+            winner: winner,
+            reason: "all_characters_ko",
+          });
         }
+        break;
       }
-    };
-
-    // Trouver les clés des joueurs
-    const playerKeys = Object.keys(game.players);
-    if (playerKeys.length !== 2) return; // La partie doit avoir exactement 2 joueurs
-
-    const player1Key = playerKeys[0];
-    const player2Key = playerKeys[1];
-
-    const player1AllKO = checkAllCharactersKO(player1Key);
-    const player2AllKO = checkAllCharactersKO(player2Key);
-
-    // Si tous les personnages d'un joueur sont KO, la partie est terminée
-    if (player1AllKO || player2AllKO) {
-      // Déterminer le gagnant
-      const winnerKey = player1AllKO ? player2Key : player1Key;
-      const winner = game.players[winnerKey].id;
-
-      // Mettre à jour l'état de la partie
-      game.status = "finished";
-      game.winner = winner;
-      game.endReason = "all_characters_ko";
-
-      // Calculer les points de vie restants pour les statistiques
-      const calculateTotalHealth = (playerState) => {
-        return Object.values(playerState.charactersState).reduce(
-          (total, char) => total + Math.max(0, parseInt(char.pointsdevie) || 0),
-          0
-        );
-      };
-
-      game.finalStats = {
-        [player1Key]: calculateTotalHealth(game.players[player1Key]),
-        [player2Key]: calculateTotalHealth(game.players[player2Key]),
-      };
-
-      // Informer les joueurs de la fin de la partie
-      io.to(gameId).emit("gameOver", {
-        reason: "all_characters_ko",
-        winner: winner,
-        finalStats: game.finalStats,
-        newGameState: JSON.parse(JSON.stringify(game)),
-      });
-
-      // Nettoyer la partie après un certain temps
-      setTimeout(() => {
-        if (games.has(gameId)) {
-          games.delete(gameId);
-          gameBonus.delete(gameId);
-          console.log(`Partie ${gameId} nettoyée après fin`);
-        }
-      }, 300000); // 5 minutes
     }
   }
 
