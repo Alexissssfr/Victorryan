@@ -449,11 +449,11 @@ io.on("connection", (socket) => {
     }
 
     // S'assurer que la Map des bonus existe pour ce joueur
-    if (!gameBonusState[playerId]) {
-      gameBonusState[playerId] = new Map();
+    if (!gameBonusState[playerKey]) {
+      gameBonusState[playerKey] = new Map();
     }
 
-    const playerBonusMap = gameBonusState[playerId];
+    const playerBonusMap = gameBonusState[playerKey];
 
     // Vérifier si le personnage a déjà un bonus actif
     if (!playerBonusMap.has(targetId)) {
