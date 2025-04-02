@@ -832,11 +832,34 @@
             // Rediriger vers le menu après 3 secondes
             setTimeout(function () {
               gameEndMessage.style.display = "none";
-              // Afficher le menu principal
-              const mainMenu = document.getElementById("mainMenu");
-              if (mainMenu) {
-                document.getElementById("gameScreen").style.display = "none";
-                mainMenu.style.display = "block";
+
+              // Émettre l'événement leaveGame
+              if (
+                window.socket &&
+                data &&
+                data.newGameState &&
+                data.newGameState.id
+              ) {
+                window.socket.emit("leaveGame", {
+                  gameId: data.newGameState.id,
+                });
+              }
+
+              // Réinitialiser l'état du jeu
+              if (window.gameState) {
+                window.gameState.game = null;
+                window.gameState.playerId = null;
+              }
+
+              // Cacher tous les écrans
+              document.getElementById("gameScreen").style.display = "none";
+              if (gameOverScreen) gameOverScreen.style.display = "none";
+
+              // Afficher l'écran d'accueil correctement
+              const homeScreen = document.getElementById("homeScreen");
+              if (homeScreen) {
+                homeScreen.style.display = "block";
+                homeScreen.classList.remove("hidden");
               }
             }, 3000);
           }
@@ -2478,16 +2501,20 @@
             gameEndMessage.style.display = "none";
 
             // Émettre l'événement leaveGame
-            socket.emit("leaveGame", { gameId: gameState.currentGameId });
+            socket.emit("leaveGame", { gameId: data.newGameState.id });
 
             // Réinitialiser l'état du jeu
             gameState.currentGameId = null;
             gameState.playerId = null;
             gameState.game = null;
 
-            // Afficher le menu principal
-            hideAllScreens();
-            document.getElementById("mainMenu").style.display = "block";
+            // Masquer tous les écrans
+            Object.keys(screens).forEach((key) => {
+              screens[key].classList.add("hidden");
+            });
+
+            // Afficher l'écran d'accueil
+            screens.home.classList.remove("hidden");
           }, 3000);
         });
 
