@@ -2960,10 +2960,15 @@
               : "Dommage, vous avez perdu la partie.",
           };
 
-          // Mettre à jour le titre et le message
-          document.getElementById("gameOverTitle").textContent = result.title;
-          document.getElementById("gameOverMessage").textContent =
-            result.message;
+          // Mettre à jour le titre et le message avec les classes appropriées
+          const titleElement = document.getElementById("gameOverTitle");
+          const messageElement = document.getElementById("gameOverMessage");
+
+          titleElement.textContent = result.title;
+          messageElement.textContent = result.message;
+          messageElement.className = isWinner
+            ? "message-victory"
+            : "message-defeat";
 
           // Créer une fonction pour afficher les statistiques d'un joueur
           function createPlayerStatBlock(player, isCurrentPlayer) {
@@ -3076,9 +3081,18 @@
         // Écouter l'événement gameOver
         socket.on("gameOver", (data) => {
           console.log("Fin de partie:", data);
+          if (data.gameState) {
+            gameState = data.gameState;
+            showGameOverScreen();
+          }
+        });
+
+        // Écouter l'événement playerLeft
+        socket.on("playerLeft", (data) => {
+          console.log("Un joueur a quitté la partie:", data);
           if (gameState.game) {
-            gameState.game.winner = data.winner;
-            gameState.game.endReason = data.reason;
+            gameState.game.status = "finished";
+            gameState.game.endReason = "player_left";
             showGameOverScreen();
           }
         });

@@ -755,17 +755,12 @@ io.on("connection", (socket) => {
           };
 
           // Envoyer à tous les joueurs de la partie
-          game.players[playerId].socket.emit("gameStateUpdate", gameState);
-          game.players[winner].socket.emit("gameStateUpdate", gameState);
-
-          // Émettre l'événement gameOver à tous les joueurs
-          game.players[playerId].socket.emit("gameOver", {
-            winner: winner,
-            reason: "all_characters_ko",
-          });
-          game.players[winner].socket.emit("gameOver", {
-            winner: winner,
-            reason: "all_characters_ko",
+          Object.values(game.players).forEach((player) => {
+            player.socket.emit("gameOver", {
+              winner: winner,
+              reason: "all_characters_ko",
+              gameState: gameState,
+            });
           });
         }
         break;
@@ -943,75 +938,40 @@ io.on("connection", (socket) => {
 
   // Gérer l'événement leaveGame
   socket.on("leaveGame", ({ gameId }) => {
-    if (!games.has(gameId)) return;
+    console.log("Un joueur quitte la partie:", gameId);
+    if (games.has(gameId)) {
+      const game = games.get(gameId);
+      const playerKey = Object.keys(game.players).find(
+        (key) => game.players[key].id === socket.id
+      );
 
-    // Vérifier que le socket est bien dans cette partie
-    if (!playerGames.has(gameId)) return;
-
-    const game = games.get(gameId);
-    const playerId = Object.keys(game.players).find(
-      (key) => game.players[key].socketId === socket.id
-    );
-
-    if (playerId && game.players[playerId]) {
-      // Informer les autres joueurs
-      socket.to(gameId).emit("playerLeft", {
-        playerId,
-        playerName: game.players[playerId].name,
-        temporary: false,
-      });
-
-      // Si la partie est en cours, la terminer
-      if (game.status === "playing") {
-        const remainingPlayerId = Object.keys(game.players).find(
-          (pid) => pid !== playerId
-        );
-
-        if (remainingPlayerId) {
-          game.status = "finished";
-          game.winner = remainingPlayerId;
-          game.endReason = "player_left";
-
-          // Calculer les points de vie restants
-          const calculateTotalHealth = (playerState) => {
-            return Object.values(playerState.charactersState).reduce(
-              (total, char) =>
-                total + Math.max(0, parseInt(char.pointsdevie) || 0),
-              0
-            );
-          };
-
-          game.finalStats = {
-            [playerId]: calculateTotalHealth(game.players[playerId]),
-            [remainingPlayerId]: calculateTotalHealth(
-              game.players[remainingPlayerId]
-            ),
-          };
-
-          // Informer les joueurs restants
-          io.to(gameId).emit("gameOver", {
-            reason: "player_left",
-            winner: remainingPlayerId,
-            leftBy: playerId,
-            finalStats: game.finalStats,
-            newGameState: JSON.parse(JSON.stringify(game)),
-          });
+      if (playerKey) {
+        // Si la partie est en cours, notifier l'autre joueur
+        if (game.status === "playing") {
+          const otherPlayerKey = Object.keys(game.players).find(
+            (key) => key !== playerKey
+          );
+          if (otherPlayerKey) {
+            game.players[otherPlayerKey].socket.emit("playerLeft", {
+              gameId,
+              message: "L'autre joueur a quitté la partie",
+            });
+          }
         }
-      }
 
-      // Nettoyer après un délai
-      setTimeout(() => {
-        if (games.has(gameId)) {
+        // Supprimer le joueur de la partie
+        delete game.players[playerKey];
+
+        // Si c'était le dernier joueur, supprimer la partie
+        if (Object.keys(game.players).length === 0) {
           games.delete(gameId);
           gameBonus.delete(gameId);
-          console.log(`Partie ${gameId} nettoyée après départ du joueur`);
+          console.log(
+            `Partie ${gameId} supprimée car tous les joueurs sont partis`
+          );
         }
-      }, 300000); // 5 minutes
+      }
     }
-
-    // Retirer la partie de la liste des parties du socket
-    playerGames.delete(gameId);
-    socket.leave(gameId);
   });
 });
 
