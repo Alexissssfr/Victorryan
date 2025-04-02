@@ -471,17 +471,20 @@
 
       /* S'assurer que l'écran de fin est bien visible */
       #gameOverScreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0, 0, 0, 0.7);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        padding: 20px;
         z-index: 1000;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
+        flex-direction: column;
+        min-width: 300px;
       }
 
       #gameOverScreen.hidden {
@@ -744,21 +747,16 @@
 
     <!-- Écran de fin de partie -->
     <div id="gameOverScreen" class="hidden">
-      <div class="game-over-container">
-        <h2 id="gameOverTitle">Partie terminée</h2>
-        <div id="gameOverMessage"></div>
-
-        <div class="stats-container">
-          <h3>Statistiques de la partie</h3>
-          <div id="playerStats"></div>
-        </div>
-
-        <div class="game-over-actions">
-          <button id="quitGameBtn" class="btn btn-secondary">
-            Retour au menu
-          </button>
-        </div>
+      <h2 id="gameOverTitle"></h2>
+      <p id="gameOverMessage"></p>
+      <div id="playerStats">
+        <h3>Statistiques de la partie</h3>
+        <div id="playerStatsContent"></div>
+        <div id="gameEndReason" class="game-end-reason"></div>
       </div>
+      <button id="quitGameBtn" class="btn btn-primary mt-3">
+        Retour au menu
+      </button>
     </div>
 
     <div id="messages"></div>
@@ -2200,111 +2198,101 @@
           console.log("Affichage de l'écran de fin de partie:", data);
 
           // Masquer tous les écrans sauf l'écran de fin de partie
-          hideAllScreens();
           const gameOverScreen = document.getElementById("gameOverScreen");
-          gameOverScreen.style.display = "flex";
+          gameOverScreen.classList.remove("hidden");
 
           // Mettre à jour le titre et le message
           const titleElement = document.getElementById("gameOverTitle");
           const messageElement = document.getElementById("gameOverMessage");
-          const statsElement = document.getElementById("playerStats");
+          const statsContent = document.getElementById("playerStatsContent");
+          const reasonElement = document.getElementById("gameEndReason");
 
-          // Déterminer le message selon le résultat
-          if (data.winner === gameState.playerId) {
-            titleElement.textContent = "🏆 Victoire !";
-            titleElement.className = "game-over-title victory";
-            messageElement.textContent = "La partie est terminée.";
-            messageElement.className = "message-victory";
-          } else if (data.winner === "tie") {
-            titleElement.textContent = "🤝 Match Nul !";
-            titleElement.className = "game-over-title tie";
-            messageElement.textContent = "La partie est terminée.";
-            messageElement.className = "message-tie";
+          // Déterminer le résultat
+          let result;
+          if (data.winner === "tie") {
+            result = {
+              title: "🤝 Match Nul !",
+              message: "La partie est terminée.",
+              titleClass: "game-over-title tie",
+              messageClass: "message-tie",
+            };
+          } else if (data.winner === gameState.playerId) {
+            result = {
+              title: "🏆 Victoire !",
+              message: "La partie est terminée.",
+              titleClass: "game-over-title victory",
+              messageClass: "message-victory",
+            };
           } else {
-            titleElement.textContent = "💔 Défaite";
-            titleElement.className = "game-over-title defeat";
-            messageElement.textContent = "La partie est terminée.";
-            messageElement.className = "message-defeat";
+            result = {
+              title: "💔 Défaite",
+              message: "La partie est terminée.",
+              titleClass: "game-over-title defeat",
+              messageClass: "message-defeat",
+            };
           }
+
+          // Appliquer le résultat
+          titleElement.textContent = result.title;
+          titleElement.className = result.titleClass;
+          messageElement.textContent = result.message;
+          messageElement.className = result.messageClass;
 
           // Afficher les statistiques
-          statsElement.innerHTML = "<h3>Statistiques de la partie</h3>";
+          statsContent.innerHTML = "";
 
-          // Afficher les stats du joueur actuel
-          const currentPlayerStats = data.playerStats[gameState.playerId];
-          const currentPlayer = data.newGameState.players[gameState.playerId];
-
-          if (currentPlayer && currentPlayerStats) {
-            const playerStatDiv = document.createElement("div");
-            playerStatDiv.className = "player-stat";
-            playerStatDiv.innerHTML = `
-              <div class="player-stat-header">
-                <span class="player-name">${currentPlayer.name || "Vous"}</span>
-                ${
-                  data.winner === gameState.playerId
-                    ? '<span class="winner-badge">🏆</span>'
-                    : ""
-                }
-              </div>
-              <div class="player-stat-details">
-                <div class="stat-row">Points de vie restants: ${
-                  currentPlayerStats.totalHealth
-                }</div>
-                <div class="stat-row">Personnages KO: ${
-                  currentPlayerStats.koCharactersCount
-                }</div>
-                <div class="stat-row">Peut encore attaquer: ${
-                  currentPlayerStats.canAttack ? "Oui" : "Non"
-                }</div>
+          // Fonction pour créer un bloc de stats joueur
+          const createPlayerStatBlock = (playerStats, playerName, isWinner) => {
+            return `
+              <div class="player-stat">
+                <div class="player-stat-header">
+                  <span class="player-name">${playerName}</span>
+                  ${isWinner ? '<span class="winner-badge">🏆</span>' : ""}
+                </div>
+                <div class="player-stat-details">
+                  <div class="stat-row">Points de vie restants: ${
+                    playerStats.totalHealth
+                  }</div>
+                  <div class="stat-row">Personnages KO: ${
+                    playerStats.koCharactersCount
+                  }</div>
+                  <div class="stat-row">Peut encore attaquer: ${
+                    playerStats.canAttack ? "Oui" : "Non"
+                  }</div>
+                </div>
               </div>
             `;
-            statsElement.appendChild(playerStatDiv);
+          };
+
+          // Afficher les stats des deux joueurs
+          const currentPlayerStats = data.playerStats[gameState.playerId];
+          const currentPlayer = data.newGameState.players[gameState.playerId];
+          if (currentPlayer && currentPlayerStats) {
+            statsContent.innerHTML += createPlayerStatBlock(
+              currentPlayerStats,
+              currentPlayer.name || "Vous",
+              data.winner === gameState.playerId
+            );
           }
 
-          // Afficher les stats de l'adversaire
           const opponentId = Object.keys(data.newGameState.players).find(
             (id) => id !== gameState.playerId
           );
           const opponentStats = data.playerStats[opponentId];
           const opponent = data.newGameState.players[opponentId];
-
           if (opponent && opponentStats) {
-            const opponentStatDiv = document.createElement("div");
-            opponentStatDiv.className = "player-stat";
-            opponentStatDiv.innerHTML = `
-              <div class="player-stat-header">
-                <span class="player-name">${
-                  opponent.name || "Adversaire"
-                }</span>
-                ${
-                  data.winner === opponentId
-                    ? '<span class="winner-badge">🏆</span>'
-                    : ""
-                }
-              </div>
-              <div class="player-stat-details">
-                <div class="stat-row">Points de vie restants: ${
-                  opponentStats.totalHealth
-                }</div>
-                <div class="stat-row">Personnages KO: ${
-                  opponentStats.koCharactersCount
-                }</div>
-                <div class="stat-row">Peut encore attaquer: ${
-                  opponentStats.canAttack ? "Oui" : "Non"
-                }</div>
-              </div>
-            `;
-            statsElement.appendChild(opponentStatDiv);
+            statsContent.innerHTML += createPlayerStatBlock(
+              opponentStats,
+              opponent.name || "Adversaire",
+              data.winner === opponentId
+            );
           }
 
-          // Ajouter la raison de fin de partie
-          const reasonDiv = document.createElement("div");
-          reasonDiv.className = "game-end-reason";
-          reasonDiv.textContent =
+          // Afficher la raison de fin de partie
+          reasonElement.textContent =
             "La partie s'est terminée car plus aucun joueur ne peut attaquer. ";
-
           if (data.winner === "tie") {
-            reasonDiv.textContent +=
+            reasonElement.textContent +=
               "Les deux joueurs ont le même nombre de personnages KO et de points de vie.";
           } else {
             const winnerStats = data.playerStats[data.winner];
@@ -2316,56 +2304,20 @@
             if (
               winnerStats.koCharactersCount !== loserStats.koCharactersCount
             ) {
-              reasonDiv.textContent += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
+              reasonElement.textContent += `Le gagnant a été déterminé par le nombre de personnages KO (${winnerStats.koCharactersCount} contre ${loserStats.koCharactersCount}).`;
             } else {
-              reasonDiv.textContent += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
+              reasonElement.textContent += `Le gagnant a été déterminé par le total des points de vie restants (${winnerStats.totalHealth} contre ${loserStats.totalHealth}).`;
             }
           }
-          statsElement.appendChild(reasonDiv);
 
-          // Configurer le bouton "Retour au menu"
+          // S'assurer que le bouton de retour au menu fonctionne correctement
           const quitGameBtn = document.getElementById("quitGameBtn");
           quitGameBtn.onclick = () => {
-            // Déconnecter le socket proprement
+            gameOverScreen.classList.add("hidden");
             if (socket) {
-              socket.emit("leaveGame", {
-                gameId: gameState.game.id,
-                playerId: gameState.playerId,
-              });
-              socket.disconnect();
+              socket.emit("leaveGame", { gameId: gameState.game.id });
             }
-
-            // Réinitialiser l'état du jeu
-            gameState.playerId = null;
-            gameState.game = null;
-            gameState.selectedCharacter = null;
-            gameState.selectedBonus = null;
-            gameState.bonusActionsRemaining = 2;
-            gameState.currentTurnNumber = 1;
-            gameState.isMyTurn = false;
-
-            // Masquer tous les écrans
-            hideAllScreens();
-
-            // Afficher l'écran d'accueil
-            const homeScreen = document.getElementById("homeScreen");
-            homeScreen.classList.remove("hidden");
-
-            // Réinitialiser les champs de saisie
-            const playerNameInput = document.getElementById("playerNameInput");
-            const gameIdInput = document.getElementById("gameIdInput");
-            const creatorNameInput =
-              document.getElementById("creatorNameInput");
-            if (playerNameInput) playerNameInput.value = "";
-            if (gameIdInput) gameIdInput.value = "";
-            if (creatorNameInput) creatorNameInput.value = "";
-
-            // Réinitialiser les variables globales
-            currentGameId = null;
-            currentPlayerId = null;
-
-            // Nettoyer les messages
-            cleanupMessages();
+            window.location.reload(); // Recharger la page pour réinitialiser complètement l'état
           };
         }
 
