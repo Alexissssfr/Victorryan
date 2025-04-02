@@ -348,12 +348,7 @@ io.on("connection", (socket) => {
   // Jouer une carte bonus
   socket.on("playBonus", (data) => {
     const { gameId, playerId, bonusId, targetId } = data;
-    console.log("Tentative de jouer un bonus:", {
-      gameId,
-      playerId,
-      bonusId,
-      targetId,
-    });
+    console.log("Tentative de jouer un bonus:", data);
 
     if (!games.has(gameId)) {
       console.log("Partie non trouvée:", gameId);
@@ -383,11 +378,21 @@ io.on("connection", (socket) => {
 
     // Vérifier que c'est bien le tour du joueur
     if (game.currentTurn !== playerId) {
-      console.log("Ce n'est pas le tour du joueur:", {
+      console.log("Ce n'est pas le tour du joueur pour jouer un bonus:", {
         currentTurn: game.currentTurn,
         playerId,
       });
       socket.emit("error", { message: "Ce n'est pas votre tour" });
+      return;
+    }
+
+    // Vérifier si un bonus a déjà été joué ce tour
+    if (game.bonusPlayedThisTurn) {
+      console.log("Un bonus a déjà été joué ce tour");
+      socket.emit("error", {
+        message:
+          "Vous avez déjà joué un bonus ce tour. Attendez le tour suivant.",
+      });
       return;
     }
 
@@ -400,30 +405,29 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Vérifier que le bonus a encore des tours disponibles
-    const tourbonus = parseInt(bonusCard.tourbonus);
-    if (tourbonus <= 0) {
-      console.log("Carte bonus épuisée:", bonusId);
-      socket.emit("error", { message: "Carte bonus épuisée" });
+    // Vérifier si le bonus a encore des tours disponibles
+    if (parseInt(bonusCard.tourbonus) <= 0) {
+      console.log("Ce bonus n'a plus de tours disponibles:", bonusId);
+      socket.emit("error", {
+        message: "Ce bonus n'a plus de tours disponibles",
+      });
       return;
     }
 
-    // Vérifier si le personnage cible existe dans les cartes du joueur
+    // Vérifier si la cible existe et est valide
     const targetCard = player.cards.personnages.find(
       (card) => card.id === targetId
     );
 
     if (!targetCard) {
-      console.log("Personnage cible non trouvé:", targetId);
-      socket.emit("error", {
-        message: "Personnage cible non trouvé dans vos cartes",
-      });
+      console.log("Carte cible non trouvée:", targetId);
+      socket.emit("error", { message: "Carte cible non trouvée" });
       return;
     }
 
-    // S'assurer que le personnage existe dans charactersState
+    // S'assurer que la cible existe dans charactersState
     if (!player.charactersState[targetId]) {
-      console.log("Initialisation du state du personnage:", targetId);
+      console.log("Initialisation du state de la cible:", targetId);
       player.charactersState[targetId] = {
         pointsdevie: parseInt(targetCard.pointsdevie),
         forceattaque: parseInt(targetCard.forceattaque),
@@ -432,40 +436,50 @@ io.on("connection", (socket) => {
       };
     }
 
-    // Stocker le bonus dans la structure isolée
+    const targetState = player.charactersState[targetId];
+
+    // Vérifier si la cible n'est pas KO
+    if (targetState.pointsdevie <= 0) {
+      console.log("La cible est KO:", targetId);
+      socket.emit("error", { message: "Cette cible est KO" });
+      return;
+    }
+
+    // S'assurer que la Map des bonus existe pour ce joueur
+    if (!gameBonusState[playerKey]) {
+      gameBonusState[playerKey] = new Map();
+    }
+
     const playerBonusMap = gameBonusState[playerKey];
+
+    // Vérifier si le personnage a déjà un bonus actif
     if (!playerBonusMap.has(targetId)) {
       playerBonusMap.set(targetId, []);
     }
 
     // Créer l'effet de bonus
     const bonusEffect = {
-      id: bonusId,
+      bonusId: bonusId,
       pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
+      remainingTurns: parseInt(bonusCard.tourbonus),
     };
 
-    // Ajouter le nouveau bonus
-    playerBonusMap.get(targetId).push(bonusEffect);
-    console.log("Bonus ajouté:", bonusEffect);
+    // Ajouter le bonus à la liste des bonus actifs du personnage
+    const activeBonuses = playerBonusMap.get(targetId);
+    activeBonuses.push(bonusEffect);
 
-    // Mettre à jour l'attaque du personnage avec tous les bonus actifs
-    const characterState = player.charactersState[targetId];
+    // Décrémenter le nombre de tours restants du bonus
+    bonusCard.tourbonus = parseInt(bonusCard.tourbonus) - 1;
+
+    // Recalculer l'attaque du personnage avec tous les bonus actifs
     const baseAttack = parseInt(targetCard.forceattaque);
-
-    // Calculer le bonus total en tenant compte de tous les bonus actifs
     let totalBonus = 1;
-    playerBonusMap.get(targetId).forEach((bonus) => {
+    activeBonuses.forEach((bonus) => {
       totalBonus += bonus.pourcentagebonus / 100;
     });
+    targetState.forceattaque = Math.ceil(baseAttack * totalBonus);
 
-    // Appliquer le bonus total et arrondir au nombre entier supérieur
-    characterState.forceattaque = Math.ceil(baseAttack * totalBonus);
-
-    // Décrémenter le tourbonus de la carte
-    bonusCard.tourbonus = Math.max(0, tourbonus - 1);
-    console.log("Nouveau tourbonus de la carte:", bonusCard.tourbonus);
-
-    // Marquer le bonus comme joué ce tour
+    // Mettre à jour l'état du jeu
     game.bonusPlayedThisTurn = true;
     game.lastBonusTarget = targetId;
 
@@ -475,13 +489,12 @@ io.on("connection", (socket) => {
       playerId,
       bonusId,
       targetId,
-      bonusName: bonusCard.nomcartebonus,
-      targetName: targetCard.nomcarteperso,
-      pourcentagebonus: bonusEffect.pourcentagebonus,
-      newAttack: characterState.forceattaque,
-      remainingTurns: bonusCard.tourbonus,
+      newAttack: targetState.forceattaque,
       newGameState: JSON.parse(JSON.stringify(game)),
     });
+
+    // Vérifier si la partie est terminée
+    checkGameEnd(gameId);
   });
 
   // Attaquer un personnage
