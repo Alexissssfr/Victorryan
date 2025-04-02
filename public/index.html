@@ -2134,8 +2134,11 @@
         socket.on("gameOver", function (data) {
           console.log("Événement gameOver reçu:", data);
 
-          // Désactiver toutes les interactions de jeu
-          disableGameInteractions();
+          // Désactiver les interactions de jeu SAUF le bouton de retour au menu
+          document.querySelectorAll(".card, .action-button").forEach((el) => {
+            el.style.pointerEvents = "none";
+            el.style.opacity = "0.7";
+          });
 
           // S'assurer que nous avons toutes les données nécessaires
           if (!data || !data.newGameState) {
@@ -2198,6 +2201,7 @@
           console.log("Affichage de l'écran de fin de partie:", data);
 
           // Masquer tous les écrans sauf l'écran de fin de partie
+          hideAllScreens();
           const gameOverScreen = document.getElementById("gameOverScreen");
           gameOverScreen.classList.remove("hidden");
 
@@ -2312,14 +2316,36 @@
 
           // S'assurer que le bouton de retour au menu fonctionne correctement
           const quitGameBtn = document.getElementById("quitGameBtn");
+          quitGameBtn.style.pointerEvents = "auto";
+          quitGameBtn.style.opacity = "1";
           quitGameBtn.onclick = () => {
-            gameOverScreen.classList.add("hidden");
+            // Informer le serveur que ce joueur quitte la partie
             if (socket) {
-              socket.emit("leaveGame", { gameId: gameState.game.id });
+              socket.emit("leaveGame", {
+                gameId: gameState.game.id,
+                playerId: gameState.playerId,
+              });
             }
-            window.location.reload(); // Recharger la page pour réinitialiser complètement l'état
+
+            // Réinitialiser l'état local et retourner au menu
+            gameState.game = null;
+            gameState.playerId = null;
+            currentGameId = null;
+            currentPlayerId = null;
+
+            // Recharger la page pour réinitialiser complètement l'état
+            window.location.reload();
           };
         }
+
+        // Ajouter un gestionnaire pour l'événement playerLeft
+        socket.on("playerLeft", function (data) {
+          if (data.playerId !== gameState.playerId) {
+            showMessage(
+              "L'autre joueur a quitté la partie. Vous pouvez également quitter."
+            );
+          }
+        });
 
         // Ajouter cette fonction pour déboguer le contenu des cartes
         function debugCardProperties() {
