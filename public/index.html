@@ -2961,11 +2961,9 @@
           document.getElementById("gameOverScreen").style.display = "block";
           document.getElementById("mainMenu").style.display = "none";
 
-          // Mettre à jour le titre et le message
+          // Mettre à jour le titre avec le résultat
           const gameOverTitle = document.getElementById("gameOverTitle");
-          const gameOverMessage = document.getElementById("gameOverMessage");
           const gameOverStats = document.getElementById("gameOverStats");
-          const gameOverReason = document.getElementById("gameOverReason");
 
           // Déterminer si le joueur a gagné ou perdu
           const isWinner = gameState.winner === playerId;
@@ -2977,40 +2975,99 @@
           // Mettre à jour le titre avec la couleur appropriée
           gameOverTitle.textContent = resultMessage;
           gameOverTitle.style.color = resultColor;
+          gameOverTitle.style.fontSize = "48px";
+          gameOverTitle.style.textAlign = "center";
+          gameOverTitle.style.marginBottom = "30px";
+          gameOverTitle.style.fontWeight = "bold";
+          gameOverTitle.style.textShadow = "2px 2px 4px rgba(0,0,0,0.2)";
 
-          // Créer le bloc de statistiques
+          // Masquer les éléments non utilisés
+          document.getElementById("gameOverMessage").style.display = "none";
+          document.getElementById("gameOverReason").style.display = "none";
+
+          // Créer le bloc de statistiques avec un style moderne
           const statsHTML = `
-            <div class="player-stats">
-              <h3>Statistiques de la partie</h3>
-              <div class="stats-grid">
+            <div class="stats-container" style="
+              background-color: rgba(255, 255, 255, 0.95);
+              border-radius: 15px;
+              padding: 20px;
+              margin: 20px auto;
+              max-width: 800px;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            ">
+              <div class="stats-grid" style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                margin-bottom: 30px;
+              ">
                 ${Object.entries(gameState.players)
                   .map(
                     ([id, player]) => `
-                  <div class="player-stat-block ${
-                    id === playerId ? "current-player" : "opponent"
-                  }">
-                    <h4>${player.name}</h4>
-                    <div class="character-stats">
+                  <div class="player-stat-block" style="
+                    padding: 15px;
+                    border-radius: 10px;
+                    background-color: ${
+                      id === playerId
+                        ? isWinner
+                          ? "#e8f5e9"
+                          : "#ffebee"
+                        : isWinner
+                        ? "#ffebee"
+                        : "#e8f5e9"
+                    };
+                    border-left: 4px solid ${
+                      id === playerId
+                        ? isWinner
+                          ? "#4CAF50"
+                          : "#f44336"
+                        : isWinner
+                        ? "#f44336"
+                        : "#4CAF50"
+                    };
+                  ">
+                    <h3 style="
+                      margin: 0 0 15px 0;
+                      color: #333;
+                      font-size: 20px;
+                      text-align: center;
+                    ">${
+                      id === playerId
+                        ? "Vos personnages"
+                        : "Personnages adverses"
+                    }</h3>
+                    <div style="
+                      display: grid;
+                      gap: 10px;
+                    ">
                       ${Object.entries(player.charactersState)
                         .map(([charId, state]) => {
                           const character = player.cards.personnages.find(
                             (c) => c.id === charId
                           );
                           return `
-                          <div class="character-stat">
-                            <span class="character-name">${
+                          <div style="
+                            display: grid;
+                            grid-template-columns: 2fr 1fr 1fr;
+                            align-items: center;
+                            padding: 8px;
+                            background-color: rgba(255, 255, 255, 0.7);
+                            border-radius: 8px;
+                          ">
+                            <span style="font-weight: bold;">${
                               character.nomcarteperso
                             }</span>
-                            <span class="health-status ${
-                              state.pointsdevie <= 0 ? "ko" : ""
-                            }">
-                              ${
-                                state.pointsdevie <= 0
-                                  ? "KO"
-                                  : state.pointsdevie + " PV"
-                              }
-                            </span>
-                            <span class="attack-power">${
+                            <span style="
+                              color: ${
+                                state.pointsdevie <= 0 ? "#f44336" : "#4CAF50"
+                              };
+                              text-align: center;
+                            ">${
+                              state.pointsdevie <= 0
+                                ? "KO"
+                                : state.pointsdevie + " PV"
+                            }</span>
+                            <span style="text-align: right;">${
                               state.forceattaque
                             } ATK</span>
                           </div>
@@ -3027,31 +3084,36 @@
           `;
 
           gameOverStats.innerHTML = statsHTML;
+          gameOverStats.style.display = "block";
 
-          // Afficher la raison de la fin de partie
-          let reasonText = "";
-          switch (gameState.endReason) {
-            case "all_characters_ko":
-              reasonText = "Tous les personnages d'un joueur ont été mis KO";
-              break;
-            case "player_abandoned":
-              reasonText = "Un joueur a quitté la partie";
-              break;
-            case "inactive":
-              reasonText = "La partie a été terminée pour inactivité";
-              break;
-            default:
-              reasonText = "La partie est terminée";
-          }
-          gameOverReason.textContent = reasonText;
-
-          // Désactiver les interactions de jeu
-          document.querySelectorAll(".card").forEach((card) => {
-            card.style.pointerEvents = "none";
-          });
-
-          // Gérer le bouton retour au menu
+          // Styliser le bouton retour au menu
           const returnToMenuBtn = document.getElementById("returnToMenuBtn");
+          returnToMenuBtn.style.display = "block";
+          returnToMenuBtn.style.margin = "0 auto";
+          returnToMenuBtn.style.padding = "15px 30px";
+          returnToMenuBtn.style.fontSize = "20px";
+          returnToMenuBtn.style.backgroundColor = "#4CAF50";
+          returnToMenuBtn.style.color = "white";
+          returnToMenuBtn.style.border = "none";
+          returnToMenuBtn.style.borderRadius = "25px";
+          returnToMenuBtn.style.cursor = "pointer";
+          returnToMenuBtn.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+          returnToMenuBtn.style.transition = "all 0.3s ease";
+
+          // Gérer le survol du bouton
+          returnToMenuBtn.onmouseover = () => {
+            returnToMenuBtn.style.backgroundColor = "#45a049";
+            returnToMenuBtn.style.transform = "translateY(-2px)";
+            returnToMenuBtn.style.boxShadow = "0 6px 8px rgba(0,0,0,0.2)";
+          };
+
+          returnToMenuBtn.onmouseout = () => {
+            returnToMenuBtn.style.backgroundColor = "#4CAF50";
+            returnToMenuBtn.style.transform = "translateY(0)";
+            returnToMenuBtn.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+          };
+
+          // Gérer le clic sur le bouton retour au menu
           returnToMenuBtn.onclick = () => {
             // Émettre l'événement leaveGame avant de réinitialiser
             socket.emit("leaveGame", { gameId: currentGameId });
@@ -3064,6 +3126,9 @@
             // Afficher le menu principal
             document.getElementById("gameOverScreen").style.display = "none";
             document.getElementById("mainMenu").style.display = "block";
+
+            // Réinitialiser les styles du bouton
+            returnToMenuBtn.style = "";
           };
         }
 
