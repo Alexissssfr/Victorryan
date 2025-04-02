@@ -3054,6 +3054,9 @@
           // Gérer le bouton retour au menu
           const quitButton = document.getElementById("quitGame");
           quitButton.onclick = () => {
+            // Émettre l'événement leaveGame avant de retourner au menu
+            socket.emit("leaveGame", { gameId: gameState.game.id });
+
             // Réinitialiser l'état du jeu
             gameState = {
               playerId: null,
@@ -3070,6 +3073,7 @@
           };
         }
 
+        // Écouter l'événement gameOver
         socket.on("gameOver", (data) => {
           console.log("Fin de partie:", data);
           if (gameState.game) {
@@ -3079,6 +3083,7 @@
           }
         });
 
+        // Écouter l'événement gameStateUpdate
         socket.on("gameStateUpdate", (data) => {
           console.log("Mise à jour de l'état du jeu:", data);
           if (data.game) {
