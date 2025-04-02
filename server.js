@@ -126,10 +126,7 @@ app.post("/api/games", (req, res) => {
   });
 
   // Initialiser la structure des bonus pour cette partie
-  gameBonus.set(gameId, {
-    player1: new Map(),
-    player2: new Map(),
-  });
+  gameBonus.set(gameId, {});
 
   console.log(`Nouvelle partie créée: ${gameId}`);
   res.json({ success: true, gameId });
@@ -151,6 +148,7 @@ app.post("/api/games/:id/join", (req, res) => {
   }
 
   const game = games.get(gameId);
+  const gameBonusState = gameBonus.get(gameId);
 
   if (Object.keys(game.players).length >= 2) {
     return res.status(403).json({ success: false, error: "Partie pleine" });
@@ -177,6 +175,11 @@ app.post("/api/games/:id/join", (req, res) => {
     };
   });
 
+  // Initialiser la Map des bonus pour ce joueur
+  if (!gameBonusState[playerId]) {
+    gameBonusState[playerId] = new Map();
+  }
+
   // Premier joueur devient le joueur actif
   if (Object.keys(game.players).length === 1) {
     game.currentTurn = playerId;
@@ -187,7 +190,7 @@ app.post("/api/games/:id/join", (req, res) => {
   if (Object.keys(game.players).length === 2) {
     game.status = "playing";
     game.turnNumber = 1;
-    game.bonusPlayedThisTurn = false;
+    game.bonusPlayedThisTurn = 0;
     game.lastBonusTarget = null;
     game.attackPerformed = false;
   }
@@ -446,11 +449,11 @@ io.on("connection", (socket) => {
     }
 
     // S'assurer que la Map des bonus existe pour ce joueur
-    if (!gameBonusState[playerKey]) {
-      gameBonusState[playerKey] = new Map();
+    if (!gameBonusState[playerId]) {
+      gameBonusState[playerId] = new Map();
     }
 
-    const playerBonusMap = gameBonusState[playerKey];
+    const playerBonusMap = gameBonusState[playerId];
 
     // Vérifier si le personnage a déjà un bonus actif
     if (!playerBonusMap.has(targetId)) {
