@@ -821,17 +821,6 @@ io.on("connection", (socket) => {
     if (!games.has(gameId)) return;
 
     const game = games.get(gameId);
-    const gameBonusState = gameBonus.get(gameId);
-
-    // Fonction pour vérifier si tous les personnages d'un joueur sont KO
-    function checkAllCharactersKO(playerKey) {
-      const player = game.players[playerKey];
-      if (!player || !player.charactersState) return false;
-
-      return Object.values(player.charactersState).every(
-        (char) => char.pointsdevie <= 0
-      );
-    }
 
     // Vérifier si un joueur a perdu tous ses personnages
     for (const playerId in game.players) {
@@ -846,46 +835,36 @@ io.on("connection", (socket) => {
 
         if (winner) {
           game.winner = winner;
-          game.endReason = "all_characters_ko";
           game.status = "finished";
+          game.endReason = "all_characters_ko";
 
-          // Envoyer l'état final du jeu à tous les joueurs
-          const gameState = {
-            game: {
-              ...game,
-              players: Object.fromEntries(
-                Object.entries(game.players).map(([id, player]) => [
-                  id,
-                  {
-                    ...player,
-                    cards: {
-                      personnages: player.cards.personnages.map((card) => ({
-                        ...card,
-                        tourattaque: parseInt(card.tourattaque),
-                      })),
-                      bonus: player.cards.bonus.map((card) => ({
-                        ...card,
-                        tourbonus: parseInt(card.tourbonus),
-                      })),
-                    },
-                  },
-                ])
+          // Calculer les statistiques finales
+          const stats = {};
+          Object.entries(game.players).forEach(([id, player]) => {
+            stats[id] = {
+              totalHealth: Object.values(player.charactersState).reduce(
+                (sum, char) => sum + Math.max(0, char.pointsdevie),
+                0
               ),
-            },
-          };
-
-          // Envoyer à tous les joueurs de la partie
-          Object.values(game.players).forEach((player) => {
-            player.socket.emit("gameOver", {
-              winner: winner,
-              reason: "all_characters_ko",
-              gameState: gameState,
-            });
+              koCount: Object.values(player.charactersState).filter(
+                (char) => char.pointsdevie <= 0
+              ).length,
+            };
           });
+
+          // Envoyer l'événement gameOver à tous les joueurs
+          io.to(gameId).emit("gameOver", {
+            winner: winner,
+            reason: "all_characters_ko",
+            newGameState: JSON.parse(JSON.stringify(game)),
+            stats: stats,
+          });
+
+          return true;
         }
-        break;
       }
     }
+    return false;
   }
 
   // Gérer la déconnexion
