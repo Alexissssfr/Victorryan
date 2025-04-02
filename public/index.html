@@ -1877,63 +1877,53 @@
           socket.on("gameOver", (data) => {
             console.log("Événement gameOver reçu:", data);
 
-            // Désactiver toutes les interactions de jeu
-            disableGameInteractions();
-
-            // S'assurer que nous avons toutes les données nécessaires
             if (!data || !data.newGameState) {
-              console.error("Données de fin de partie invalides:", data);
+              console.error("Données de fin de partie invalides");
               return;
             }
 
-            // Mettre à jour l'état du jeu avec les dernières données
-            gameState.game = data.newGameState;
+            // Déterminer si le joueur a gagné ou perdu
+            const isWinner = data.winner === playerId;
 
-            // Calculer les statistiques pour chaque joueur
-            const playerStats = {};
-            const playersTotalHealth = {};
+            // Créer et afficher le message de fin de partie
+            const gameEndMessage = document.createElement("div");
+            gameEndMessage.style.position = "fixed";
+            gameEndMessage.style.top = "50%";
+            gameEndMessage.style.left = "50%";
+            gameEndMessage.style.transform = "translate(-50%, -50%)";
+            gameEndMessage.style.backgroundColor = isWinner
+              ? "#4CAF50"
+              : "#f44336";
+            gameEndMessage.style.color = "white";
+            gameEndMessage.style.padding = "20px 40px";
+            gameEndMessage.style.borderRadius = "10px";
+            gameEndMessage.style.fontSize = "32px";
+            gameEndMessage.style.fontWeight = "bold";
+            gameEndMessage.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+            gameEndMessage.style.zIndex = "1000";
+            gameEndMessage.textContent = isWinner
+              ? "Vous avez gagné !"
+              : "Vous avez perdu !";
 
-            // Pour chaque joueur dans la partie
-            Object.entries(gameState.game.players).forEach(
-              ([playerId, player]) => {
-                const stats = {
-                  totalHealth: 0,
-                  koCharactersCount: 0,
-                  canAttack: false,
-                };
+            document.body.appendChild(gameEndMessage);
 
-                // Calculer les statistiques
-                if (player.charactersState) {
-                  Object.values(player.charactersState).forEach((char) => {
-                    stats.totalHealth += Math.max(
-                      0,
-                      char.currentHealth || char.pointsdevie || 0
-                    );
-                    if (char.currentHealth <= 0 || char.pointsdevie <= 0) {
-                      stats.koCharactersCount++;
-                    }
-                    if (
-                      (char.currentHealth > 0 || char.pointsdevie > 0) &&
-                      (char.currentTurns > 0 || char.tourattaque > 0)
-                    ) {
-                      stats.canAttack = true;
-                    }
-                  });
-                }
+            // Rediriger vers le menu principal après 3 secondes
+            setTimeout(() => {
+              // Nettoyer
+              document.body.removeChild(gameEndMessage);
 
-                playerStats[playerId] = stats;
-                playersTotalHealth[playerId] = stats.totalHealth;
-              }
-            );
+              // Émettre l'événement leaveGame
+              socket.emit("leaveGame", { gameId: currentGameId });
 
-            // Afficher immédiatement l'écran de fin de partie avec les statistiques
-            showGameOverScreen({
-              winner: data.winner,
-              playersTotalHealth: playersTotalHealth,
-              newGameState: gameState.game,
-              reason: data.reason,
-              playerStats: playerStats,
-            });
+              // Réinitialiser l'état du jeu
+              currentGameId = null;
+              playerId = null;
+              gameState = null;
+
+              // Afficher le menu principal
+              document.getElementById("gameScreen").style.display = "none";
+              document.getElementById("mainMenu").style.display = "block";
+            }, 3000);
           });
         }
 
@@ -2349,22 +2339,53 @@
         socket.on("gameOver", function (data) {
           console.log("Événement gameOver reçu:", data);
 
-          // Vérifier que nous avons les données nécessaires
           if (!data || !data.newGameState) {
             console.error("Données de fin de partie invalides");
             return;
           }
 
-          // Mettre à jour l'état du jeu
-          gameState.game = data.newGameState;
+          // Déterminer si le joueur a gagné ou perdu
+          const isWinner = data.winner === playerId;
 
-          // Afficher l'écran de fin de partie
-          showGameOverScreen({
-            winner: data.winner,
-            stats: data.stats,
-            reason: data.reason,
-            newGameState: data.newGameState,
-          });
+          // Créer et afficher le message de fin de partie
+          const gameEndMessage = document.createElement("div");
+          gameEndMessage.style.position = "fixed";
+          gameEndMessage.style.top = "50%";
+          gameEndMessage.style.left = "50%";
+          gameEndMessage.style.transform = "translate(-50%, -50%)";
+          gameEndMessage.style.backgroundColor = isWinner
+            ? "#4CAF50"
+            : "#f44336";
+          gameEndMessage.style.color = "white";
+          gameEndMessage.style.padding = "20px 40px";
+          gameEndMessage.style.borderRadius = "10px";
+          gameEndMessage.style.fontSize = "32px";
+          gameEndMessage.style.fontWeight = "bold";
+          gameEndMessage.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+          gameEndMessage.style.zIndex = "1000";
+          gameEndMessage.textContent = isWinner
+            ? "Vous avez gagné !"
+            : "Vous avez perdu !";
+
+          document.body.appendChild(gameEndMessage);
+
+          // Rediriger vers le menu principal après 3 secondes
+          setTimeout(() => {
+            // Nettoyer
+            document.body.removeChild(gameEndMessage);
+
+            // Émettre l'événement leaveGame
+            socket.emit("leaveGame", { gameId: currentGameId });
+
+            // Réinitialiser l'état du jeu
+            currentGameId = null;
+            playerId = null;
+            gameState = null;
+
+            // Afficher le menu principal
+            document.getElementById("gameScreen").style.display = "none";
+            document.getElementById("mainMenu").style.display = "block";
+          }, 3000);
         });
 
         function showGameOverScreen(data) {
