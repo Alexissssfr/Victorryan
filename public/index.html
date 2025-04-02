@@ -761,9 +761,88 @@
       #quitGame:hover {
         background: #cc0000;
       }
+
+      /* Styles pour le message de fin de partie */
+      #gameEndMessage {
+        background-color: #4caf50;
+        color: white;
+        padding: 20px 40px;
+        border-radius: 10px;
+        font-size: 32px;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        transition: opacity 0.3s ease-in-out;
+      }
+
+      /* Supprimer les styles de l'ancien écran de statistiques */
+      #gameOverScreen,
+      .game-over-title,
+      .game-end-reason,
+      .player-stats,
+      .stats-grid {
+        display: none !important;
+      }
+
+      /* Masquer définitivement l'écran de statistiques */
+      #gameOverScreen {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+      }
     </style>
   </head>
   <body>
+    <script>
+      // Script pour masquer l'écran de statistiques et corriger les erreurs
+      window.addEventListener("load", function () {
+        // Masquer l'écran de statistiques s'il existe
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        if (gameOverScreen) {
+          gameOverScreen.style.display = "none";
+          gameOverScreen.style.visibility = "hidden";
+          gameOverScreen.style.position = "absolute";
+          gameOverScreen.style.top = "-9999px";
+          gameOverScreen.style.left = "-9999px";
+        }
+
+        // Redéfinir la fonction showGameOverScreen pour qu'elle affiche seulement un message
+        window.showGameOverScreen = function (data) {
+          // Ignorer l'affichage des statistiques et montrer simplement le message de fin
+          const gameEndMessage = document.getElementById("gameEndMessage");
+          if (gameEndMessage) {
+            // Déterminer si le joueur a gagné (à adapter selon le contexte)
+            const playerId = window.gameState && window.gameState.playerId;
+            const isWinner = data && data.winner === playerId;
+
+            // Afficher le message
+            gameEndMessage.style.display = "block";
+            gameEndMessage.style.backgroundColor = isWinner
+              ? "#4CAF50"
+              : "#f44336";
+            gameEndMessage.textContent = isWinner
+              ? "Vous avez gagné !"
+              : "Vous avez perdu !";
+
+            // Rediriger vers le menu après 3 secondes
+            setTimeout(function () {
+              gameEndMessage.style.display = "none";
+              // Afficher le menu principal
+              const mainMenu = document.getElementById("mainMenu");
+              if (mainMenu) {
+                document.getElementById("gameScreen").style.display = "none";
+                mainMenu.style.display = "block";
+              }
+            }, 3000);
+          }
+        };
+      });
+    </script>
     <h1>Victorryan - Jeu de cartes</h1>
 
     <!-- Écran initial -->
@@ -863,6 +942,27 @@
       </button>
     </div>
 
+    <!-- Message de fin de partie -->
+    <div
+      id="gameEndMessage"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        background-color: #4caf50;
+        color: white;
+        padding: 20px 40px;
+        border-radius: 10px;
+        font-size: 32px;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      "
+    ></div>
+
     <div id="messages"></div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -875,6 +975,15 @@
           waiting: document.getElementById("waitingScreen"),
           game: document.getElementById("gameScreen"),
         };
+
+        // Ajouter au début pour s'assurer que l'écran gameOverScreen est masqué
+        const gameOverScreenElement = document.getElementById("gameOverScreen");
+        if (gameOverScreenElement) {
+          gameOverScreenElement.style.display = "none";
+          gameOverScreenElement.style.visibility = "hidden";
+          gameOverScreenElement.style.opacity = "0";
+          gameOverScreenElement.style.pointerEvents = "none";
+        }
 
         const createGameBtn = document.getElementById("createGameBtn");
         const joinGameBtn = document.getElementById("joinGameBtn");
@@ -913,6 +1022,10 @@
         const gameOverMessage = document.getElementById("gameOverMessage");
         const playerStats = document.getElementById("playerStats");
         const quitGameBtn = document.getElementById("quitGameBtn");
+
+        // Remplacer par:
+        // Variable pour le message de fin de partie
+        const gameEndMessage = document.getElementById("gameEndMessage");
 
         // Functions
         function showScreen(screenName) {
@@ -1885,9 +1998,9 @@
             // Déterminer si le joueur a gagné ou perdu
             const isWinner = data.winner === playerId;
 
-            // Créer et afficher le message de fin de partie
+            // Créer le message de fin de partie
             const gameEndMessage = document.createElement("div");
-            gameEndMessage.style.position = "fixed";
+            gameEndMessage.style.position = "absolute";
             gameEndMessage.style.top = "50%";
             gameEndMessage.style.left = "50%";
             gameEndMessage.style.transform = "translate(-50%, -50%)";
@@ -1905,12 +2018,15 @@
               ? "Vous avez gagné !"
               : "Vous avez perdu !";
 
-            document.body.appendChild(gameEndMessage);
+            // Ajouter le message à l'écran de jeu
+            const gameScreen = document.getElementById("gameScreen");
+            gameScreen.style.position = "relative"; // Pour le positionnement absolu du message
+            gameScreen.appendChild(gameEndMessage);
 
             // Rediriger vers le menu principal après 3 secondes
             setTimeout(() => {
               // Nettoyer
-              document.body.removeChild(gameEndMessage);
+              gameScreen.removeChild(gameEndMessage);
 
               // Émettre l'événement leaveGame
               socket.emit("leaveGame", { gameId: currentGameId });
@@ -2345,217 +2461,39 @@
           }
 
           // Déterminer si le joueur a gagné ou perdu
-          const isWinner = data.winner === playerId;
+          const isWinner = data.winner === gameState.playerId;
 
-          // Créer et afficher le message de fin de partie
-          const gameEndMessage = document.createElement("div");
-          gameEndMessage.style.position = "fixed";
-          gameEndMessage.style.top = "50%";
-          gameEndMessage.style.left = "50%";
-          gameEndMessage.style.transform = "translate(-50%, -50%)";
+          // Afficher le message de fin de partie
+          gameEndMessage.style.display = "block";
           gameEndMessage.style.backgroundColor = isWinner
             ? "#4CAF50"
             : "#f44336";
-          gameEndMessage.style.color = "white";
-          gameEndMessage.style.padding = "20px 40px";
-          gameEndMessage.style.borderRadius = "10px";
-          gameEndMessage.style.fontSize = "32px";
-          gameEndMessage.style.fontWeight = "bold";
-          gameEndMessage.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
-          gameEndMessage.style.zIndex = "1000";
           gameEndMessage.textContent = isWinner
             ? "Vous avez gagné !"
             : "Vous avez perdu !";
 
-          document.body.appendChild(gameEndMessage);
-
           // Rediriger vers le menu principal après 3 secondes
           setTimeout(() => {
-            // Nettoyer
-            document.body.removeChild(gameEndMessage);
+            // Cacher le message
+            gameEndMessage.style.display = "none";
 
             // Émettre l'événement leaveGame
-            socket.emit("leaveGame", { gameId: currentGameId });
+            socket.emit("leaveGame", { gameId: gameState.currentGameId });
 
             // Réinitialiser l'état du jeu
-            currentGameId = null;
-            playerId = null;
-            gameState = null;
+            gameState.currentGameId = null;
+            gameState.playerId = null;
+            gameState.game = null;
 
             // Afficher le menu principal
-            document.getElementById("gameScreen").style.display = "none";
+            hideAllScreens();
             document.getElementById("mainMenu").style.display = "block";
           }, 3000);
         });
 
+        // Supprimer ou remplacer la fonction showGameOverScreen
         function showGameOverScreen(data) {
-          // Cacher tous les écrans sauf l'écran de fin de partie
-          document.getElementById("gameScreen").style.display = "none";
-          document.getElementById("gameOverScreen").style.display = "block";
-          document.getElementById("mainMenu").style.display = "none";
-
-          // Mettre à jour le titre avec le résultat
-          const gameOverTitle = document.getElementById("gameOverTitle");
-
-          // Déterminer si le joueur a gagné ou perdu
-          const isWinner = data.winner === playerId;
-          const resultMessage = isWinner
-            ? "Vous avez gagné !"
-            : "Vous avez perdu !";
-          const resultColor = isWinner ? "#4CAF50" : "#f44336";
-
-          // Mettre à jour le titre avec la couleur appropriée
-          gameOverTitle.textContent = resultMessage;
-          gameOverTitle.style.color = resultColor;
-          gameOverTitle.style.fontSize = "48px";
-          gameOverTitle.style.textAlign = "center";
-          gameOverTitle.style.marginBottom = "30px";
-          gameOverTitle.style.fontWeight = "bold";
-          gameOverTitle.style.textShadow = "2px 2px 4px rgba(0,0,0,0.2)";
-
-          // Créer le bloc de statistiques avec un style moderne
-          const gameOverStats = document.getElementById("gameOverStats");
-          const statsHTML = `
-            <div class="stats-container" style="
-              background-color: rgba(255, 255, 255, 0.95);
-              border-radius: 15px;
-              padding: 20px;
-              margin: 20px auto;
-              max-width: 800px;
-              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            ">
-              <div class="stats-grid" style="
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-                margin-bottom: 30px;
-              ">
-                ${Object.entries(data.newGameState.players)
-                  .map(
-                    ([id, player]) => `
-                  <div class="player-stat-block" style="
-                    padding: 15px;
-                    border-radius: 10px;
-                    background-color: ${
-                      id === playerId
-                        ? isWinner
-                          ? "#e8f5e9"
-                          : "#ffebee"
-                        : isWinner
-                        ? "#ffebee"
-                        : "#e8f5e9"
-                    };
-                    border-left: 4px solid ${
-                      id === playerId
-                        ? isWinner
-                          ? "#4CAF50"
-                          : "#f44336"
-                        : isWinner
-                        ? "#f44336"
-                        : "#4CAF50"
-                    };
-                  ">
-                    <h3 style="
-                      margin: 0 0 15px 0;
-                      color: #333;
-                      font-size: 20px;
-                      text-align: center;
-                    ">${
-                      id === playerId
-                        ? "Vos personnages"
-                        : "Personnages adverses"
-                    }</h3>
-                    <div style="
-                      display: grid;
-                      gap: 10px;
-                    ">
-                      ${Object.entries(player.charactersState)
-                        .map(([charId, state]) => {
-                          const character = player.cards.personnages.find(
-                            (c) => c.id === charId
-                          );
-                          return `
-                          <div style="
-                            display: grid;
-                            grid-template-columns: 2fr 1fr 1fr;
-                            align-items: center;
-                            padding: 8px;
-                            background-color: rgba(255, 255, 255, 0.7);
-                            border-radius: 8px;
-                          ">
-                            <span style="font-weight: bold;">${
-                              character.nomcarteperso
-                            }</span>
-                            <span style="
-                              color: ${
-                                state.pointsdevie <= 0 ? "#f44336" : "#4CAF50"
-                              };
-                              text-align: center;
-                            ">${
-                              state.pointsdevie <= 0
-                                ? "KO"
-                                : state.pointsdevie + " PV"
-                            }</span>
-                            <span style="text-align: right;">${
-                              state.forceattaque
-                            } ATK</span>
-                          </div>
-                        `;
-                        })
-                        .join("")}
-                    </div>
-                  </div>
-                `
-                  )
-                  .join("")}
-              </div>
-            </div>
-          `;
-
-          gameOverStats.innerHTML = statsHTML;
-          gameOverStats.style.display = "block";
-
-          // Styliser le bouton retour au menu
-          const returnToMenuBtn = document.getElementById("returnToMenuBtn");
-          returnToMenuBtn.style.display = "block";
-          returnToMenuBtn.style.margin = "0 auto";
-          returnToMenuBtn.style.padding = "15px 30px";
-          returnToMenuBtn.style.fontSize = "20px";
-          returnToMenuBtn.style.backgroundColor = "#4CAF50";
-          returnToMenuBtn.style.color = "white";
-          returnToMenuBtn.style.border = "none";
-          returnToMenuBtn.style.borderRadius = "25px";
-          returnToMenuBtn.style.cursor = "pointer";
-          returnToMenuBtn.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
-          returnToMenuBtn.style.transition = "all 0.3s ease";
-
-          // Gérer le survol du bouton
-          returnToMenuBtn.onmouseover = () => {
-            returnToMenuBtn.style.backgroundColor = "#45a049";
-            returnToMenuBtn.style.transform = "translateY(-2px)";
-            returnToMenuBtn.style.boxShadow = "0 6px 8px rgba(0,0,0,0.2)";
-          };
-
-          returnToMenuBtn.onmouseout = () => {
-            returnToMenuBtn.style.backgroundColor = "#4CAF50";
-            returnToMenuBtn.style.transform = "translateY(0)";
-            returnToMenuBtn.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
-          };
-
-          // Gérer le clic sur le bouton retour au menu
-          returnToMenuBtn.onclick = () => {
-            // Émettre l'événement leaveGame avant de réinitialiser
-            socket.emit("leaveGame", { gameId: currentGameId });
-
-            // Réinitialiser l'état du jeu
-            currentGameId = null;
-            playerId = null;
-            gameState = null;
-
-            // Afficher le menu principal
-            document.getElementById("gameOverScreen").style.display = "none";
-            document.getElementById("mainMenu").style.display = "block";
-          };
+          // Ne faites rien - cette fonction sera supprimée
         }
 
         // Gestionnaire pour l'événement playerLeft
