@@ -121,6 +121,8 @@ app.post("/api/games", (req, res) => {
     status: "waiting",
     currentTurn: null,
     createdAt: new Date().toISOString(),
+    bonusPlayedThisTurn: 0, // Compteur de bonus joués ce tour
+    maxBonusPerTurn: 2, // Nombre maximum de bonus par tour
   });
 
   // Initialiser la structure des bonus pour cette partie
@@ -328,7 +330,7 @@ io.on("connection", (socket) => {
 
     // Mettre à jour l'état du jeu
     game.currentTurn = nextPlayer.id;
-    game.bonusPlayedThisTurn = false;
+    game.bonusPlayedThisTurn = 0; // Réinitialiser le compteur de bonus pour le nouveau tour
     game.lastBonusTarget = null;
 
     // Gestion du numéro de tour
@@ -386,12 +388,11 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Vérifier si un bonus a déjà été joué ce tour
-    if (game.bonusPlayedThisTurn) {
-      console.log("Un bonus a déjà été joué ce tour");
+    // Vérifier si le nombre maximum de bonus par tour a été atteint
+    if (game.bonusPlayedThisTurn >= game.maxBonusPerTurn) {
+      console.log("Nombre maximum de bonus par tour atteint");
       socket.emit("error", {
-        message:
-          "Vous avez déjà joué un bonus ce tour. Attendez le tour suivant.",
+        message: `Vous avez déjà joué ${game.maxBonusPerTurn} bonus ce tour. Attendez le tour suivant.`,
       });
       return;
     }
@@ -479,9 +480,8 @@ io.on("connection", (socket) => {
     });
     targetState.forceattaque = Math.ceil(baseAttack * totalBonus);
 
-    // Mettre à jour l'état du jeu
-    game.bonusPlayedThisTurn = true;
-    game.lastBonusTarget = targetId;
+    // Incrémenter le compteur de bonus joués ce tour
+    game.bonusPlayedThisTurn++;
 
     // Émettre l'événement de bonus joué
     io.to(gameId).emit("bonusPlayed", {
@@ -490,6 +490,8 @@ io.on("connection", (socket) => {
       bonusId,
       targetId,
       newAttack: targetState.forceattaque,
+      bonusPlayedThisTurn: game.bonusPlayedThisTurn,
+      maxBonusPerTurn: game.maxBonusPerTurn,
       newGameState: JSON.parse(JSON.stringify(game)),
     });
 
