@@ -2955,139 +2955,115 @@
           showScreen("homeScreen");
         });
 
-        function showGameOverScreen() {
-          if (!gameState.game) return;
-
+        function showGameOverScreen(gameState) {
           // Cacher tous les écrans sauf l'écran de fin de partie
-          document.querySelectorAll(".screen").forEach((screen) => {
-            screen.classList.add("hidden");
-          });
-          gameOverScreen.classList.remove("hidden");
+          document.getElementById("gameScreen").style.display = "none";
+          document.getElementById("gameOverScreen").style.display = "block";
+          document.getElementById("mainMenu").style.display = "none";
 
-          // Déterminer le résultat pour le joueur actuel
-          const isWinner = gameState.game.winner === gameState.playerId;
-          const result = {
-            title: isWinner ? "Victoire !" : "Défaite",
-            message: isWinner
-              ? "Félicitations, vous avez gagné la partie !"
-              : "Dommage, vous avez perdu la partie.",
-          };
+          // Mettre à jour le titre et le message
+          const gameOverTitle = document.getElementById("gameOverTitle");
+          const gameOverMessage = document.getElementById("gameOverMessage");
+          const gameOverStats = document.getElementById("gameOverStats");
+          const gameOverReason = document.getElementById("gameOverReason");
 
-          // Mettre à jour le titre et le message avec les classes appropriées
-          const titleElement = document.getElementById("gameOverTitle");
-          const messageElement = document.getElementById("gameOverMessage");
+          // Déterminer si le joueur a gagné ou perdu
+          const isWinner = gameState.winner === playerId;
+          const resultMessage = isWinner
+            ? "Vous avez gagné !"
+            : "Vous avez perdu !";
+          const resultColor = isWinner ? "#4CAF50" : "#f44336";
 
-          titleElement.textContent = result.title;
-          messageElement.textContent = result.message;
-          messageElement.className = isWinner
-            ? "message-victory"
-            : "message-defeat";
+          // Mettre à jour le titre avec la couleur appropriée
+          gameOverTitle.textContent = resultMessage;
+          gameOverTitle.style.color = resultColor;
 
-          // Créer une fonction pour afficher les statistiques d'un joueur
-          function createPlayerStatBlock(player, isCurrentPlayer) {
-            const playerStats = document.createElement("div");
-            playerStats.className = `player-stats ${
-              isCurrentPlayer ? "current-player" : "opponent"
-            }`;
-            playerStats.innerHTML = `
-              <h3>${
-                isCurrentPlayer
-                  ? "Vos statistiques"
-                  : "Statistiques de l'adversaire"
-              }</h3>
+          // Créer le bloc de statistiques
+          const statsHTML = `
+            <div class="player-stats">
+              <h3>Statistiques de la partie</h3>
               <div class="stats-grid">
-                ${Object.entries(player.charactersState)
-                  .map(([charId, charState]) => {
-                    const card = player.cards.personnages.find(
-                      (c) => c.id === charId
-                    );
-                    if (!card) return "";
-
-                    const healthClass =
-                      charState.pointsdevie <= 0
-                        ? "ko"
-                        : charState.pointsdevie <= 30
-                        ? "critical"
-                        : charState.pointsdevie <= 50
-                        ? "warning"
-                        : "good";
-
-                    return `
-                        <div class="character-stat">
-                          <div class="character-name">${
-                            card.nomcarteperso
-                          }</div>
-                          <div class="stat-item">
-                            <span class="health-${healthClass}">${
-                      charState.pointsdevie <= 0 ? "KO" : charState.pointsdevie
-                    }</span>
+                ${Object.entries(gameState.players)
+                  .map(
+                    ([id, player]) => `
+                  <div class="player-stat-block ${
+                    id === playerId ? "current-player" : "opponent"
+                  }">
+                    <h4>${player.name}</h4>
+                    <div class="character-stats">
+                      ${Object.entries(player.charactersState)
+                        .map(([charId, state]) => {
+                          const character = player.cards.personnages.find(
+                            (c) => c.id === charId
+                          );
+                          return `
+                          <div class="character-stat">
+                            <span class="character-name">${
+                              character.nomcarteperso
+                            }</span>
+                            <span class="health-status ${
+                              state.pointsdevie <= 0 ? "ko" : ""
+                            }">
+                              ${
+                                state.pointsdevie <= 0
+                                  ? "KO"
+                                  : state.pointsdevie + " PV"
+                              }
+                            </span>
+                            <span class="attack-power">${
+                              state.forceattaque
+                            } ATK</span>
                           </div>
-                          <div class="stat-item">${charState.forceattaque}</div>
-                          <div class="stat-item">${charState.tourattaque}</div>
-                        </div>
-                      `;
-                  })
+                        `;
+                        })
+                        .join("")}
+                    </div>
+                  </div>
+                `
+                  )
                   .join("")}
               </div>
-            `;
-            return playerStats;
-          }
+            </div>
+          `;
 
-          // Afficher les statistiques des deux joueurs
-          const playerStatsContent =
-            document.getElementById("playerStatsContent");
-          playerStatsContent.innerHTML = "";
-
-          // Trouver le joueur actuel et l'adversaire
-          let currentPlayer = null;
-          let opponent = null;
-          for (const playerId in gameState.game.players) {
-            if (playerId === gameState.playerId) {
-              currentPlayer = gameState.game.players[playerId];
-            } else {
-              opponent = gameState.game.players[playerId];
-            }
-          }
-
-          if (currentPlayer && opponent) {
-            playerStatsContent.appendChild(
-              createPlayerStatBlock(currentPlayer, true)
-            );
-            playerStatsContent.appendChild(
-              createPlayerStatBlock(opponent, false)
-            );
-          }
+          gameOverStats.innerHTML = statsHTML;
 
           // Afficher la raison de la fin de partie
-          const endReason = document.getElementById("endReason");
-          if (gameState.game.endReason === "all_characters_ko") {
-            endReason.textContent =
-              "Tous les personnages d'un joueur ont été mis KO";
-          } else if (gameState.game.endReason === "player_left") {
-            endReason.textContent = "Un joueur a quitté la partie";
-          } else if (gameState.game.endReason === "player_abandoned") {
-            endReason.textContent = "Un joueur a abandonné la partie";
+          let reasonText = "";
+          switch (gameState.endReason) {
+            case "all_characters_ko":
+              reasonText = "Tous les personnages d'un joueur ont été mis KO";
+              break;
+            case "player_abandoned":
+              reasonText = "Un joueur a quitté la partie";
+              break;
+            case "inactive":
+              reasonText = "La partie a été terminée pour inactivité";
+              break;
+            default:
+              reasonText = "La partie est terminée";
           }
+          gameOverReason.textContent = reasonText;
+
+          // Désactiver les interactions de jeu
+          document.querySelectorAll(".card").forEach((card) => {
+            card.style.pointerEvents = "none";
+          });
 
           // Gérer le bouton retour au menu
-          const quitButton = document.getElementById("quitGame");
-          quitButton.onclick = () => {
-            // Émettre l'événement leaveGame avant de retourner au menu
-            socket.emit("leaveGame", { gameId: gameState.game.id });
+          const returnToMenuBtn = document.getElementById("returnToMenuBtn");
+          returnToMenuBtn.onclick = () => {
+            // Émettre l'événement leaveGame avant de réinitialiser
+            socket.emit("leaveGame", { gameId: currentGameId });
 
             // Réinitialiser l'état du jeu
-            gameState = {
-              playerId: null,
-              game: null,
-              isMyTurn: false,
-              selectedCharacter: null,
-              selectedBonus: null,
-              targetCharacter: null,
-              currentTurnNumber: 1,
-            };
+            currentGameId = null;
+            playerId = null;
+            gameState = null;
 
-            // Retourner au menu principal
-            showScreen("menu");
+            // Afficher le menu principal
+            document.getElementById("gameOverScreen").style.display = "none";
+            document.getElementById("mainMenu").style.display = "block";
           };
         }
 
