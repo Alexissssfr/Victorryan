@@ -19,6 +19,80 @@ const games = new Map();
 // Structure pour stocker les bonus par partie
 const gameBonus = new Map();
 
+// Configuration des parties
+const GAME_CONFIG = {
+  maxPlayers: 2,
+  inactiveTimeout: 30 * 60 * 1000, // 30 minutes
+  cleanupInterval: 5 * 60 * 1000, // 5 minutes
+  maxGamesPerPlayer: 3, // Nombre maximum de parties qu'un joueur peut rejoindre
+};
+
+// Fonction pour vérifier si un joueur peut rejoindre une nouvelle partie
+function canPlayerJoinNewGame(playerId) {
+  let activeGamesCount = 0;
+  for (const game of games.values()) {
+    if (Object.keys(game.players).includes(playerId)) {
+      activeGamesCount++;
+    }
+  }
+  return activeGamesCount < GAME_CONFIG.maxGamesPerPlayer;
+}
+
+// Fonction pour nettoyer les parties inactives
+function cleanupInactiveGames() {
+  const now = Date.now();
+  for (const [gameId, game] of games.entries()) {
+    if (now - game.lastActivity > GAME_CONFIG.inactiveTimeout) {
+      if (game.status === "waiting" && Object.keys(game.players).length === 0) {
+        games.delete(gameId);
+        gameBonus.delete(gameId);
+        console.log(`Partie ${gameId} supprimée pour inactivité`);
+      } else if (game.status === "playing") {
+        game.status = "finished";
+        game.endReason = "inactive";
+        const winner = Object.entries(game.players).reduce(
+          (prev, [id, player]) => {
+            const prevHealth = calculateTotalHealth(
+              prev ? game.players[prev] : null
+            );
+            const currentHealth = calculateTotalHealth(player);
+            return currentHealth > prevHealth ? id : prev;
+          },
+          null
+        );
+
+        if (winner) {
+          game.winner = winner;
+          io.to(gameId).emit("gameOver", {
+            winner: winner,
+            reason: "inactive",
+            newGameState: JSON.parse(JSON.stringify(game)),
+          });
+        }
+      }
+    }
+  }
+}
+
+// Démarrer le nettoyage périodique
+setInterval(cleanupInactiveGames, GAME_CONFIG.cleanupInterval);
+
+// Fonction pour mettre à jour l'activité d'une partie
+function updateGameActivity(gameId) {
+  const game = games.get(gameId);
+  if (game) {
+    game.lastActivity = Date.now();
+  }
+}
+
+// Fonction pour calculer les points de vie totaux
+function calculateTotalHealth(player) {
+  if (!player || !player.charactersState) return 0;
+  return Object.values(player.charactersState).reduce((total, char) => {
+    return total + Math.max(0, parseInt(char.pointsdevie) || 0);
+  }, 0);
+}
+
 // Chargement des données des cartes
 let personnagesData = [];
 let bonusData = [];
@@ -115,14 +189,26 @@ app.get("/", (req, res) => {
 // Créer une partie
 app.post("/api/games", (req, res) => {
   const gameId = generateId();
+
+  // Vérifier si l'ID est déjà utilisé
+  if (games.has(gameId)) {
+    return res.status(409).json({
+      success: false,
+      error: "ID de partie déjà utilisé. Veuillez réessayer.",
+    });
+  }
+
+  // Créer la nouvelle partie avec un ID unique
   games.set(gameId, {
     id: gameId,
     players: {},
     status: "waiting",
     currentTurn: null,
     createdAt: new Date().toISOString(),
-    bonusPlayedThisTurn: 0, // Compteur de bonus joués ce tour
-    maxBonusPerTurn: 2, // Nombre maximum de bonus par tour
+    lastActivity: Date.now(),
+    bonusPlayedThisTurn: 0,
+    maxBonusPerTurn: 2,
+    maxPlayers: GAME_CONFIG.maxPlayers,
   });
 
   // Initialiser la structure des bonus pour cette partie
@@ -135,7 +221,7 @@ app.post("/api/games", (req, res) => {
 // Rejoindre une partie
 app.post("/api/games/:id/join", (req, res) => {
   const gameId = req.params.id;
-  const { name } = req.body;
+  const { name, playerId } = req.body;
 
   if (!name) {
     return res.status(400).json({ success: false, error: "Nom requis" });
@@ -150,24 +236,46 @@ app.post("/api/games/:id/join", (req, res) => {
   const game = games.get(gameId);
   const gameBonusState = gameBonus.get(gameId);
 
-  if (Object.keys(game.players).length >= 2) {
-    return res.status(403).json({ success: false, error: "Partie pleine" });
+  // Vérifier si le joueur peut rejoindre une nouvelle partie
+  if (playerId && !canPlayerJoinNewGame(playerId)) {
+    return res.status(403).json({
+      success: false,
+      error: `Vous ne pouvez pas rejoindre plus de ${GAME_CONFIG.maxGamesPerPlayer} parties simultanées.`,
+    });
   }
 
-  const playerId = generateId();
+  // Vérifier si la partie est déjà pleine
+  if (Object.keys(game.players).length >= game.maxPlayers) {
+    return res.status(403).json({
+      success: false,
+      error: "Partie pleine",
+    });
+  }
+
+  // Vérifier si le nom est déjà utilisé dans cette partie
+  if (Object.values(game.players).some((player) => player.name === name)) {
+    return res.status(409).json({
+      success: false,
+      error: "Ce nom est déjà utilisé dans cette partie",
+    });
+  }
+
+  const newPlayerId = playerId || generateId();
   const cards = distributeCards();
 
   // Initialiser l'état du joueur avec ses cartes
-  game.players[playerId] = {
-    id: playerId,
+  game.players[newPlayerId] = {
+    id: newPlayerId,
     name: name,
     cards: cards,
     charactersState: {},
+    connected: false,
+    lastActivity: Date.now(),
   };
 
   // Initialiser l'état des personnages du joueur
   cards.personnages.forEach((card) => {
-    game.players[playerId].charactersState[card.id] = {
+    game.players[newPlayerId].charactersState[card.id] = {
       pointsdevie: parseInt(card.pointsdevie) || 100,
       forceattaque: parseInt(card.forceattaque) || 30,
       tourattaque: parseInt(card.tourattaque) || 2,
@@ -176,13 +284,13 @@ app.post("/api/games/:id/join", (req, res) => {
   });
 
   // Initialiser la Map des bonus pour ce joueur
-  if (!gameBonusState[playerId]) {
-    gameBonusState[playerId] = new Map();
+  if (!gameBonusState[newPlayerId]) {
+    gameBonusState[newPlayerId] = new Map();
   }
 
   // Premier joueur devient le joueur actif
   if (Object.keys(game.players).length === 1) {
-    game.currentTurn = playerId;
+    game.currentTurn = newPlayerId;
     game.status = "waiting";
   }
 
@@ -195,11 +303,14 @@ app.post("/api/games/:id/join", (req, res) => {
     game.attackPerformed = false;
   }
 
-  console.log(`Joueur ${name} (${playerId}) a rejoint la partie ${gameId}`);
+  // Mettre à jour l'activité de la partie
+  updateGameActivity(gameId);
+
+  console.log(`Joueur ${name} (${newPlayerId}) a rejoint la partie ${gameId}`);
   res.json({
     success: true,
     gameId,
-    playerId,
+    playerId: newPlayerId,
     game: JSON.parse(JSON.stringify(game)),
   });
 });
@@ -268,6 +379,9 @@ io.on("connection", (socket) => {
     const gameBonusState = gameBonus.get(gameId);
 
     if (!game) return;
+
+    // Mettre à jour l'activité de la partie
+    updateGameActivity(gameId);
 
     // Trouver les clés du joueur actuel et du prochain joueur
     const currentPlayerKey = Object.keys(game.players).find(
@@ -362,6 +476,9 @@ io.on("connection", (socket) => {
 
     const game = games.get(gameId);
     const gameBonusState = gameBonus.get(gameId);
+
+    // Mettre à jour l'activité de la partie
+    updateGameActivity(gameId);
 
     if (!game || !gameBonusState) {
       console.log("État de jeu ou bonus non trouvé");
@@ -517,6 +634,9 @@ io.on("connection", (socket) => {
 
     const game = games.get(gameId);
     const gameBonusState = gameBonus.get(gameId);
+
+    // Mettre à jour l'activité de la partie
+    updateGameActivity(gameId);
 
     if (!game || !gameBonusState) {
       console.log("État de jeu ou bonus non trouvé");
@@ -786,6 +906,7 @@ io.on("connection", (socket) => {
       // Marquer le joueur comme déconnecté
       game.players[playerId].connected = false;
       game.players[playerId].lastDisconnect = Date.now();
+      game.lastActivity = Date.now();
 
       // Informer les autres joueurs
       socket.to(gameId).emit("playerLeft", {
@@ -888,6 +1009,9 @@ io.on("connection", (socket) => {
       socket.emit("error", { message: "Partie ou joueur non trouvé" });
       return;
     }
+
+    // Mettre à jour l'activité de la partie
+    updateGameActivity(gameId);
 
     // Ajouter la partie à la liste des parties du socket
     playerGames.add(gameId);
