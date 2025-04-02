@@ -258,24 +258,13 @@ io.on("connection", (socket) => {
   // Fin de tour
   socket.on("endTurn", ({ gameId, playerId }) => {
     if (!games.has(gameId)) return;
+
     const game = games.get(gameId);
-
-    // Vérifier que le socket est bien dans cette partie
-    if (!playerGames.has(gameId)) return;
-
     const gameBonusState = gameBonus.get(gameId);
 
-    if (!game || !gameBonusState) {
-      socket.emit("error", { message: "Partie non trouvée" });
-      return;
-    }
+    if (!game) return;
 
-    if (game.currentTurn !== playerId) {
-      socket.emit("error", { message: "Ce n'est pas votre tour" });
-      return;
-    }
-
-    // Trouver le joueur actuel et le prochain joueur
+    // Trouver les clés du joueur actuel et du prochain joueur
     const currentPlayerKey = Object.keys(game.players).find(
       (key) => game.players[key].id === playerId
     );
@@ -283,55 +272,68 @@ io.on("connection", (socket) => {
       (key) => game.players[key].id !== playerId
     );
 
-    if (!currentPlayerKey || !nextPlayerKey) {
-      socket.emit("error", { message: "Joueurs non trouvés" });
-      return;
-    }
+    if (!currentPlayerKey || !nextPlayerKey) return;
 
     const currentPlayer = game.players[currentPlayerKey];
     const nextPlayer = game.players[nextPlayerKey];
 
-    // Gérer les bonus du joueur actuel
-    const currentPlayerBonusMap =
-      gameBonusState[currentPlayerKey === "player1" ? "player1" : "player2"];
+    // Vérifier que c'est bien le tour du joueur
+    if (game.currentTurn !== playerId) {
+      socket.emit("error", { message: "Ce n'est pas votre tour" });
+      return;
+    }
 
-    for (const [characterId, bonusList] of currentPlayerBonusMap.entries()) {
-      const characterState = currentPlayer.charactersState[characterId];
-      const baseCard = currentPlayer.cards.personnages.find(
-        (c) => c.id === characterId
+    // Réinitialiser les tours d'attaque pour le prochain joueur
+    Object.keys(nextPlayer.charactersState).forEach((charId) => {
+      const characterState = nextPlayer.charactersState[charId];
+      const baseCard = nextPlayer.cards.personnages.find(
+        (card) => card.id === charId
       );
-
-      if (!characterState || !baseCard) continue;
-
-      // Décrémenter les tours de bonus seulement à la fin du tour
-      const updatedBonusList = bonusList
-        .map((bonus) => ({ ...bonus, tourbonus: bonus.tourbonus - 1 }))
-        .filter((bonus) => bonus.tourbonus > 0);
-
-      if (updatedBonusList.length > 0) {
-        // Récupérer la force d'attaque de base du personnage
-        const baseAttack = parseInt(baseCard.forceattaque);
-
-        // Calculer l'augmentation totale de l'attaque en fonction des bonus actifs
-        let totalBonus = 1; // Commencer à 1 (100%)
-        updatedBonusList.forEach((bonus) => {
-          totalBonus += bonus.pourcentagebonus / 100;
-        });
-
-        // Appliquer le bonus total et arrondir au nombre entier supérieur
-        characterState.forceattaque = Math.ceil(baseAttack * totalBonus);
-
-        // Mettre à jour la liste des bonus
-        currentPlayerBonusMap.set(characterId, updatedBonusList);
-      } else {
-        // Réinitialiser l'attaque et supprimer les bonus
-        characterState.forceattaque = parseInt(baseCard.forceattaque);
-        currentPlayerBonusMap.delete(characterId);
+      if (baseCard) {
+        characterState.tourattaque = parseInt(baseCard.tourattaque);
       }
+    });
 
-      // Mettre à jour currentAttack pour le client
-      if (characterState.currentAttack !== undefined) {
-        characterState.currentAttack = characterState.forceattaque;
+    // Gérer les bonus actifs du joueur courant
+    const currentPlayerBonusMap = gameBonusState[currentPlayerKey];
+    if (currentPlayerBonusMap) {
+      for (const [characterId, bonusList] of currentPlayerBonusMap.entries()) {
+        const characterState = currentPlayer.charactersState[characterId];
+        const baseCard = currentPlayer.cards.personnages.find(
+          (c) => c.id === characterId
+        );
+
+        if (!characterState || !baseCard) continue;
+
+        // Décrémenter les tours restants de chaque bonus
+        const updatedBonusList = bonusList
+          .map((bonus) => ({
+            ...bonus,
+            remainingTurns: bonus.remainingTurns - 1,
+          }))
+          .filter((bonus) => bonus.remainingTurns > 0);
+
+        // Recalculer l'attaque si des bonus sont encore actifs
+        if (updatedBonusList.length > 0) {
+          const baseAttack = parseInt(baseCard.forceattaque);
+          let totalBonus = 1;
+
+          updatedBonusList.forEach((bonus) => {
+            totalBonus += bonus.pourcentagebonus / 100;
+          });
+
+          characterState.forceattaque = Math.ceil(baseAttack * totalBonus);
+          currentPlayerBonusMap.set(characterId, updatedBonusList);
+        } else {
+          // Si plus aucun bonus actif, réinitialiser l'attaque
+          characterState.forceattaque = parseInt(baseCard.forceattaque);
+          currentPlayerBonusMap.delete(characterId);
+        }
+
+        // Synchroniser currentAttack avec forceattaque
+        if (characterState.currentAttack !== undefined) {
+          characterState.currentAttack = characterState.forceattaque;
+        }
       }
     }
 
@@ -344,9 +346,7 @@ io.on("connection", (socket) => {
     if (!game.turnNumber) {
       game.turnNumber = 1;
     } else if (currentPlayerKey === Object.keys(game.players)[1]) {
-      // Si c'est le joueur 2 qui a terminé son tour, on incrémente le tour pour le nouveau cycle
       game.turnNumber += 1;
-      console.log(`Tour incrémenté à: ${game.turnNumber}`);
     }
 
     // Émettre l'événement de changement de tour
@@ -463,10 +463,12 @@ io.on("connection", (socket) => {
       playerBonusMap.set(targetId, []);
     }
 
+    // Créer une copie du bonus pour l'effet actif
     const bonusEffect = {
       id: bonusId,
-      tourbonus: parseInt(bonusCard.tourbonus),
+      tourbonus: parseInt(bonusCard.tourbonus), // Garder le nombre initial de tours pour l'effet
       pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
+      remainingTurns: parseInt(bonusCard.tourbonus), // Nouveau compteur pour les tours restants
     };
 
     // Ajouter le nouveau bonus
@@ -475,40 +477,28 @@ io.on("connection", (socket) => {
 
     // Mettre à jour l'attaque du personnage avec tous les bonus actifs
     const characterState = player.charactersState[targetId];
+    const baseAttack = parseInt(targetCard.forceattaque);
 
-    // CORRECTION : Utiliser la force d'attaque actuelle comme base pour le nouveau calcul
-    // au lieu de toujours repartir de la force de base
-    const currentAttack = characterState.forceattaque;
-    // Calculer le pourcentage de bonus du bonus que nous venons d'ajouter
-    const newBonusPercentage = bonusEffect.pourcentagebonus / 100;
-
-    // Appliquer le bonus sur l'attaque actuelle (pas sur la force de base)
-    // et arrondir au nombre entier supérieur
-    characterState.forceattaque = Math.ceil(
-      currentAttack * (1 + newBonusPercentage)
-    );
-
-    console.log("Nouvelle attaque calculée:", {
-      currentAttack,
-      newBonusPercentage,
-      newAttack: characterState.forceattaque,
+    // Calculer le bonus total en tenant compte de tous les bonus actifs
+    let totalBonus = 1;
+    playerBonusMap.get(targetId).forEach((bonus) => {
+      if (bonus.remainingTurns > 0) {
+        totalBonus += bonus.pourcentagebonus / 100;
+      }
     });
 
-    // Mettre à jour les valeurs client si elles existent
-    if (characterState.currentAttack !== undefined) {
-      characterState.currentAttack = characterState.forceattaque;
-    }
+    // Appliquer le bonus total
+    characterState.forceattaque = Math.ceil(baseAttack * totalBonus);
 
-    // IMPORTANT: Ne pas retirer la carte bonus de la main du joueur
-    // Mais décrémenter son tourbonus pour suivre l'utilisation
-    bonusCard.tourbonus = Math.max(0, parseInt(bonusCard.tourbonus) - 1);
+    // Décrémenter le tourbonus de la carte
+    bonusCard.tourbonus = Math.max(0, tourbonus - 1);
     console.log("Nouveau tourbonus de la carte:", bonusCard.tourbonus);
 
     // Marquer le bonus comme joué ce tour
     game.bonusPlayedThisTurn = true;
     game.lastBonusTarget = targetId;
 
-    // Émettre l'événement de bonus joué
+    // Émettre l'événement de bonus joué avec toutes les informations nécessaires
     io.to(gameId).emit("bonusPlayed", {
       gameId,
       playerId,
@@ -518,7 +508,7 @@ io.on("connection", (socket) => {
       targetName: targetCard.nomcarteperso,
       pourcentagebonus: bonusEffect.pourcentagebonus,
       newAttack: characterState.forceattaque,
-      remainingTurns: bonusCard.tourbonus, // Tourbonus mis à jour
+      remainingTurns: bonusCard.tourbonus,
       newGameState: JSON.parse(JSON.stringify(game)),
     });
   });
