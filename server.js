@@ -857,13 +857,12 @@ io.on("connection", (socket) => {
               ),
             };
 
-            // Informer les joueurs restants
+            // Envoyer l'événement gameOver à tous les joueurs
             io.to(gameId).emit("gameOver", {
+              winner: remainingPlayerId,
               reason: "player_abandoned",
-              winner: game.winner,
-              abandonedBy: playerId,
-              finalStats: game.finalStats,
               newGameState: JSON.parse(JSON.stringify(game)),
+              finalStats: game.finalStats,
             });
 
             // Optionnel : Nettoyer la partie après un certain temps
