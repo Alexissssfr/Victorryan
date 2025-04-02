@@ -306,14 +306,13 @@ io.on("connection", (socket) => {
 
         // Recalculer l'attaque si des bonus sont encore actifs
         if (updatedBonusList.length > 0) {
-          const baseAttack = parseInt(baseCard.forceattaque);
-          let totalBonus = 1;
-
+          // On part de la valeur de base et on applique chaque bonus séquentiellement
+          let currentAttack = parseInt(baseCard.forceattaque);
           updatedBonusList.forEach((bonus) => {
-            totalBonus += bonus.pourcentagebonus / 100;
+            const bonusMultiplier = 1 + bonus.pourcentagebonus / 100;
+            currentAttack = Math.ceil(currentAttack * bonusMultiplier);
           });
-
-          characterState.forceattaque = Math.ceil(baseAttack * totalBonus);
+          characterState.forceattaque = currentAttack;
           currentPlayerBonusMap.set(characterId, updatedBonusList);
         } else {
           // Si plus aucun bonus actif, réinitialiser l'attaque
@@ -473,12 +472,10 @@ io.on("connection", (socket) => {
     bonusCard.tourbonus = parseInt(bonusCard.tourbonus) - 1;
 
     // Recalculer l'attaque du personnage avec tous les bonus actifs
-    const baseAttack = parseInt(targetCard.forceattaque);
-    let totalBonus = 1;
-    activeBonuses.forEach((bonus) => {
-      totalBonus += bonus.pourcentagebonus / 100;
-    });
-    targetState.forceattaque = Math.ceil(baseAttack * totalBonus);
+    // On part de la valeur actuelle de forceattaque et on applique le nouveau bonus
+    const currentAttack = targetState.forceattaque;
+    const bonusMultiplier = 1 + bonusEffect.pourcentagebonus / 100;
+    targetState.forceattaque = Math.ceil(currentAttack * bonusMultiplier);
 
     // Incrémenter le compteur de bonus joués ce tour
     game.bonusPlayedThisTurn++;
@@ -702,15 +699,70 @@ io.on("connection", (socket) => {
 
     const game = games.get(gameId);
 
-    // Vérifier si tous les personnages d'un joueur sont KO
-    const checkAllCharactersKO = (playerKey) => {
-      const player = game.players[playerKey];
-      if (!player || !player.charactersState) return false;
+    // Vérifier si un joueur a perdu tous ses personnages
+    const checkGameOver = (gameId) => {
+      const game = games.get(gameId);
+      if (!game) return;
 
-      // Vérifier si tous les personnages ont 0 points de vie
-      return Object.values(player.charactersState).every(
-        (char) => char.pointsdevie <= 0
-      );
+      for (const playerId in game.players) {
+        const player = game.players[playerId];
+        const allCharactersKO = Object.values(player.charactersState).every(
+          (char) => char.pointsdevie <= 0
+        );
+
+        if (allCharactersKO) {
+          // Trouver le gagnant (l'autre joueur)
+          const winner = Object.keys(game.players).find(
+            (id) => id !== playerId
+          );
+
+          if (winner) {
+            game.winner = winner;
+            game.endReason = "all_characters_ko";
+            game.status = "finished";
+
+            // Envoyer l'état final du jeu à tous les joueurs
+            const gameState = {
+              game: {
+                ...game,
+                players: Object.fromEntries(
+                  Object.entries(game.players).map(([id, player]) => [
+                    id,
+                    {
+                      ...player,
+                      cards: {
+                        personnages: player.cards.personnages.map((card) => ({
+                          ...card,
+                          tourattaque: parseInt(card.tourattaque),
+                        })),
+                        bonus: player.cards.bonus.map((card) => ({
+                          ...card,
+                          tourbonus: parseInt(card.tourbonus),
+                        })),
+                      },
+                    },
+                  ])
+                ),
+              },
+            };
+
+            // Envoyer à tous les joueurs de la partie
+            game.players[playerId].socket.emit("gameStateUpdate", gameState);
+            game.players[winner].socket.emit("gameStateUpdate", gameState);
+
+            // Émettre l'événement gameOver à tous les joueurs
+            game.players[playerId].socket.emit("gameOver", {
+              winner: winner,
+              reason: "all_characters_ko",
+            });
+            game.players[winner].socket.emit("gameOver", {
+              winner: winner,
+              reason: "all_characters_ko",
+            });
+          }
+          break;
+        }
+      }
     };
 
     // Trouver les clés des joueurs

@@ -657,6 +657,110 @@
         background-color: #ff9800;
         color: white;
       }
+
+      .game-over-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.9);
+        border-radius: 1rem;
+        max-width: 800px;
+        margin: 2rem auto;
+      }
+
+      .game-over-screen h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: #ffd700;
+      }
+
+      .game-over-screen p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        color: #fff;
+      }
+
+      .player-stats {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        width: 100%;
+      }
+
+      .player-stats h3 {
+        color: #ffd700;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+      }
+
+      .character-stat {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        text-align: left;
+      }
+
+      .character-name {
+        color: #fff;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-item {
+        color: #ccc;
+        margin: 0.25rem 0;
+      }
+
+      .health-ko {
+        color: #ff4444;
+      }
+
+      .health-critical {
+        color: #ff8800;
+      }
+
+      .health-warning {
+        color: #ffbb33;
+      }
+
+      .health-good {
+        color: #00c851;
+      }
+
+      #endReason {
+        color: #ffd700;
+        font-size: 1.2rem;
+        margin: 1rem 0;
+        padding: 0.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 0.5rem;
+      }
+
+      #quitGame {
+        background: #ff4444;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.2rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        margin-top: 2rem;
+      }
+
+      #quitGame:hover {
+        background: #cc0000;
+      }
     </style>
   </head>
   <body>
@@ -2836,6 +2940,155 @@
           showMessage(data.message, true);
           cleanupMessages();
           showScreen("homeScreen");
+        });
+
+        function showGameOverScreen() {
+          if (!gameState.game) return;
+
+          // Cacher tous les écrans sauf l'écran de fin de partie
+          document.querySelectorAll(".screen").forEach((screen) => {
+            screen.classList.add("hidden");
+          });
+          gameOverScreen.classList.remove("hidden");
+
+          // Déterminer le résultat pour le joueur actuel
+          const isWinner = gameState.game.winner === gameState.playerId;
+          const result = {
+            title: isWinner ? "Victoire !" : "Défaite",
+            message: isWinner
+              ? "Félicitations, vous avez gagné la partie !"
+              : "Dommage, vous avez perdu la partie.",
+          };
+
+          // Mettre à jour le titre et le message
+          document.getElementById("gameOverTitle").textContent = result.title;
+          document.getElementById("gameOverMessage").textContent =
+            result.message;
+
+          // Créer une fonction pour afficher les statistiques d'un joueur
+          function createPlayerStatBlock(player, isCurrentPlayer) {
+            const playerStats = document.createElement("div");
+            playerStats.className = `player-stats ${
+              isCurrentPlayer ? "current-player" : "opponent"
+            }`;
+            playerStats.innerHTML = `
+              <h3>${
+                isCurrentPlayer
+                  ? "Vos statistiques"
+                  : "Statistiques de l'adversaire"
+              }</h3>
+              <div class="stats-grid">
+                ${Object.entries(player.charactersState)
+                  .map(([charId, charState]) => {
+                    const card = player.cards.personnages.find(
+                      (c) => c.id === charId
+                    );
+                    if (!card) return "";
+
+                    const healthClass =
+                      charState.pointsdevie <= 0
+                        ? "ko"
+                        : charState.pointsdevie <= 30
+                        ? "critical"
+                        : charState.pointsdevie <= 50
+                        ? "warning"
+                        : "good";
+
+                    return `
+                        <div class="character-stat">
+                          <div class="character-name">${
+                            card.nomcarteperso
+                          }</div>
+                          <div class="stat-item">
+                            <span class="health-${healthClass}">${
+                      charState.pointsdevie <= 0 ? "KO" : charState.pointsdevie
+                    }</span>
+                          </div>
+                          <div class="stat-item">${charState.forceattaque}</div>
+                          <div class="stat-item">${charState.tourattaque}</div>
+                        </div>
+                      `;
+                  })
+                  .join("")}
+              </div>
+            `;
+            return playerStats;
+          }
+
+          // Afficher les statistiques des deux joueurs
+          const playerStatsContent =
+            document.getElementById("playerStatsContent");
+          playerStatsContent.innerHTML = "";
+
+          // Trouver le joueur actuel et l'adversaire
+          let currentPlayer = null;
+          let opponent = null;
+          for (const playerId in gameState.game.players) {
+            if (playerId === gameState.playerId) {
+              currentPlayer = gameState.game.players[playerId];
+            } else {
+              opponent = gameState.game.players[playerId];
+            }
+          }
+
+          if (currentPlayer && opponent) {
+            playerStatsContent.appendChild(
+              createPlayerStatBlock(currentPlayer, true)
+            );
+            playerStatsContent.appendChild(
+              createPlayerStatBlock(opponent, false)
+            );
+          }
+
+          // Afficher la raison de la fin de partie
+          const endReason = document.getElementById("endReason");
+          if (gameState.game.endReason === "all_characters_ko") {
+            endReason.textContent =
+              "Tous les personnages d'un joueur ont été mis KO";
+          } else if (gameState.game.endReason === "player_left") {
+            endReason.textContent = "Un joueur a quitté la partie";
+          } else if (gameState.game.endReason === "player_abandoned") {
+            endReason.textContent = "Un joueur a abandonné la partie";
+          }
+
+          // Gérer le bouton retour au menu
+          const quitButton = document.getElementById("quitGame");
+          quitButton.onclick = () => {
+            // Réinitialiser l'état du jeu
+            gameState = {
+              playerId: null,
+              game: null,
+              isMyTurn: false,
+              selectedCharacter: null,
+              selectedBonus: null,
+              targetCharacter: null,
+              currentTurnNumber: 1,
+            };
+
+            // Retourner au menu principal
+            showScreen("menu");
+          };
+        }
+
+        socket.on("gameOver", (data) => {
+          console.log("Fin de partie:", data);
+          if (gameState.game) {
+            gameState.game.winner = data.winner;
+            gameState.game.endReason = data.reason;
+            showGameOverScreen();
+          }
+        });
+
+        socket.on("gameStateUpdate", (data) => {
+          console.log("Mise à jour de l'état du jeu:", data);
+          if (data.game) {
+            gameState.game = data.game;
+            if (data.game.winner) {
+              showGameOverScreen();
+            } else {
+              renderGame();
+            }
+          }
         });
       });
     </script>
