@@ -2021,48 +2021,48 @@
             // Déterminer si le joueur a gagné ou perdu
             const isWinner = data.winner === playerId;
 
-            // Créer le message de fin de partie
-            const gameEndMessage = document.createElement("div");
-            gameEndMessage.style.position = "absolute";
-            gameEndMessage.style.top = "50%";
-            gameEndMessage.style.left = "50%";
-            gameEndMessage.style.transform = "translate(-50%, -50%)";
-            gameEndMessage.style.backgroundColor = isWinner
-              ? "#4CAF50"
-              : "#f44336";
-            gameEndMessage.style.color = "white";
-            gameEndMessage.style.padding = "20px 40px";
-            gameEndMessage.style.borderRadius = "10px";
-            gameEndMessage.style.fontSize = "32px";
-            gameEndMessage.style.fontWeight = "bold";
-            gameEndMessage.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
-            gameEndMessage.style.zIndex = "1000";
-            gameEndMessage.textContent = isWinner
-              ? "Vous avez gagné !"
-              : "Vous avez perdu !";
+            // Afficher le message de fin de partie
+            const gameEndMessage = document.getElementById("gameEndMessage");
+            if (gameEndMessage) {
+              gameEndMessage.style.position = "fixed";
+              gameEndMessage.style.top = "50%";
+              gameEndMessage.style.left = "50%";
+              gameEndMessage.style.transform = "translate(-50%, -50%)";
+              gameEndMessage.style.backgroundColor = isWinner
+                ? "#4CAF50"
+                : "#f44336";
+              gameEndMessage.style.color = "white";
+              gameEndMessage.style.padding = "20px 40px";
+              gameEndMessage.style.borderRadius = "10px";
+              gameEndMessage.style.fontSize = "32px";
+              gameEndMessage.style.fontWeight = "bold";
+              gameEndMessage.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+              gameEndMessage.style.zIndex = "1000";
+              gameEndMessage.style.display = "block";
+              gameEndMessage.textContent = isWinner
+                ? "Vous avez gagné !"
+                : "Vous avez perdu !";
 
-            // Ajouter le message à l'écran de jeu
-            const gameScreen = document.getElementById("gameScreen");
-            gameScreen.style.position = "relative"; // Pour le positionnement absolu du message
-            gameScreen.appendChild(gameEndMessage);
+              // Rediriger vers l'écran d'accueil après 3 secondes
+              setTimeout(() => {
+                // Cacher le message
+                gameEndMessage.style.display = "none";
 
-            // Rediriger vers le menu principal après 3 secondes
-            setTimeout(() => {
-              // Nettoyer
-              gameScreen.removeChild(gameEndMessage);
+                // Émettre l'événement leaveGame
+                socket.emit("leaveGame", { gameId: currentGameId });
 
-              // Émettre l'événement leaveGame
-              socket.emit("leaveGame", { gameId: currentGameId });
+                // Réinitialiser l'état du jeu
+                gameState = null;
+                currentGameId = null;
+                playerId = null;
 
-              // Réinitialiser l'état du jeu
-              currentGameId = null;
-              playerId = null;
-              gameState = null;
-
-              // Afficher le menu principal
-              document.getElementById("gameScreen").style.display = "none";
-              document.getElementById("mainMenu").style.display = "block";
-            }, 3000);
+                // Cacher tous les écrans et afficher l'écran d'accueil
+                Object.keys(screens).forEach((key) => {
+                  screens[key].classList.add("hidden");
+                });
+                screens.home.classList.remove("hidden");
+              }, 3000);
+            }
           });
         }
 
