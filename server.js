@@ -526,7 +526,8 @@ io.on("connection", (socket) => {
     }
 
     // Vérifier si le bonus a encore des tours disponibles
-    if (parseInt(bonusCard.tourbonus) <= 0) {
+    const tourbonus = parseInt(bonusCard.tourbonus);
+    if (tourbonus <= 0) {
       console.log("Ce bonus n'a plus de tours disponibles:", bonusId);
       socket.emit("error", {
         message: "Ce bonus n'a plus de tours disponibles",
@@ -581,7 +582,8 @@ io.on("connection", (socket) => {
     const bonusEffect = {
       bonusId: bonusId,
       pourcentagebonus: parseInt(bonusCard.pourcentagebonus),
-      remainingTurns: parseInt(bonusCard.tourbonus),
+      remainingTurns: tourbonus,
+      nomcartebonus: bonusCard.nomcartebonus,
     };
 
     // Ajouter le bonus à la liste des bonus actifs du personnage
@@ -589,13 +591,20 @@ io.on("connection", (socket) => {
     activeBonuses.push(bonusEffect);
 
     // Décrémenter le nombre de tours restants du bonus
-    bonusCard.tourbonus = parseInt(bonusCard.tourbonus) - 1;
+    bonusCard.tourbonus = (tourbonus - 1).toString();
 
     // Recalculer l'attaque du personnage avec tous les bonus actifs
-    // On part de la valeur actuelle de forceattaque et on applique le nouveau bonus
-    const currentAttack = targetState.forceattaque;
-    const bonusMultiplier = 1 + bonusEffect.pourcentagebonus / 100;
-    targetState.forceattaque = Math.ceil(currentAttack * bonusMultiplier);
+    let currentAttack = parseInt(targetCard.forceattaque);
+    activeBonuses.forEach((bonus) => {
+      const bonusMultiplier = 1 + bonus.pourcentagebonus / 100;
+      currentAttack = Math.ceil(currentAttack * bonusMultiplier);
+    });
+    targetState.forceattaque = currentAttack;
+
+    // Synchroniser currentAttack avec forceattaque
+    if (targetState.currentAttack !== undefined) {
+      targetState.currentAttack = targetState.forceattaque;
+    }
 
     // Incrémenter le compteur de bonus joués ce tour
     game.bonusPlayedThisTurn++;
@@ -606,6 +615,8 @@ io.on("connection", (socket) => {
       playerId,
       bonusId,
       targetId,
+      bonusName: bonusCard.nomcartebonus,
+      targetName: targetCard.nomcarteperso,
       newAttack: targetState.forceattaque,
       bonusPlayedThisTurn: game.bonusPlayedThisTurn,
       maxBonusPerTurn: game.maxBonusPerTurn,

@@ -2202,6 +2202,44 @@
           if (data.newGameState) {
             gameState.game = data.newGameState;
 
+            // Synchroniser les valeurs client et serveur
+            if (gameState.game && gameState.game.players) {
+              // Pour chaque joueur
+              for (const playerId in gameState.game.players) {
+                const player = gameState.game.players[playerId];
+
+                // Parcourir tous les personnages du joueur
+                if (player.charactersState) {
+                  for (const charId in player.charactersState) {
+                    const serverState = player.charactersState[charId];
+
+                    // Synchroniser les valeurs de base
+                    serverState.currentHealth = serverState.pointsdevie;
+                    serverState.currentAttack = serverState.forceattaque;
+                    serverState.currentTurns = serverState.tourattaque;
+
+                    // Synchroniser les bonus actifs
+                    if (serverState.activeBonus) {
+                      serverState.activeBonus = serverState.activeBonus.map(
+                        (bonus) => ({
+                          ...bonus,
+                          remainingTurns: parseInt(bonus.tourbonus),
+                        })
+                      );
+                    }
+                  }
+                }
+
+                // Synchroniser les cartes bonus
+                if (player.cards && player.cards.bonus) {
+                  player.cards.bonus = player.cards.bonus.map((card) => ({
+                    ...card,
+                    tourbonus: parseInt(card.tourbonus),
+                  }));
+                }
+              }
+            }
+
             // Mettre à jour le numéro de tour depuis le serveur si disponible
             if (gameState.game.turnNumber) {
               gameState.currentTurnNumber = gameState.game.turnNumber;
@@ -2213,14 +2251,10 @@
             }
 
             // Réinitialiser les flags d'action
-            if (gameState.game) {
-              gameState.game.attackPerformed = false;
-              // Stocker les flags de bonus dans l'état du jeu
-              gameState.bonusPlayedThisTurn = false;
-              gameState.lastBonusTarget = null;
-              // Réinitialiser le compteur d'actions bonus
-              gameState.bonusActionsRemaining = 2;
-            }
+            gameState.game.attackPerformed = false;
+            gameState.bonusPlayedThisTurn = false;
+            gameState.lastBonusTarget = null;
+            gameState.bonusActionsRemaining = 2;
           }
 
           // Réinitialiser les sélections au début de notre tour
@@ -2263,18 +2297,28 @@
                     const serverState = player.charactersState[charId];
 
                     // Mettre à jour currentHealth, currentAttack et currentTurns
-                    if (!serverState.currentHealth)
-                      serverState.currentHealth = serverState.pointsdevie;
-                    if (!serverState.currentAttack)
-                      serverState.currentAttack = serverState.forceattaque;
-                    if (!serverState.currentTurns)
-                      serverState.currentTurns = serverState.tourattaque;
-
-                    // Garder les deux jeux de valeurs synchronisés
                     serverState.currentHealth = serverState.pointsdevie;
                     serverState.currentAttack = serverState.forceattaque;
                     serverState.currentTurns = serverState.tourattaque;
+
+                    // Synchroniser les bonus actifs
+                    if (serverState.activeBonus) {
+                      serverState.activeBonus = serverState.activeBonus.map(
+                        (bonus) => ({
+                          ...bonus,
+                          remainingTurns: parseInt(bonus.tourbonus),
+                        })
+                      );
+                    }
                   }
+                }
+
+                // Synchroniser les cartes bonus
+                if (player.cards && player.cards.bonus) {
+                  player.cards.bonus = player.cards.bonus.map((card) => ({
+                    ...card,
+                    tourbonus: parseInt(card.tourbonus),
+                  }));
                 }
               }
             }
@@ -2289,7 +2333,7 @@
           const targetName = data.targetName || data.targetId;
           const newAttack = data.newAttack || "?";
           showMessage(
-            `${bonusName} appliqué sur ${targetName}. Nouvelle attaque: ${newAttack}`
+            `${bonusName} appliqué sur ${targetName} (Nouvelle attaque: ${newAttack})`
           );
 
           // Mettre à jour l'affichage
