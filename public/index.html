@@ -1464,8 +1464,11 @@
             ${imageHtml}
             <div style="position: absolute; top: 8px; left: 5px; right: 5px; z-index: 3; display: flex; flex-wrap: wrap; gap: 4px;">
               <div class="stat-item stat-bonus">+${pourcentage}%</div>
-              <div class="stat-item stat-turns">${tours}</div>
+              <div class="stat-item stat-turns">${tours} charge${
+            tours > 1 ? "s" : ""
+          }</div>
             </div>
+            ${tours <= 0 ? '<div class="depleted-overlay">Épuisé</div>' : ""}
           `;
 
           return cardEl;
@@ -1853,6 +1856,12 @@
             return;
           }
 
+          // Vérifier que la carte bonus a encore des tours disponibles
+          if (parseInt(bonusCard.tourbonus) <= 0) {
+            showMessage("Ce bonus n'a plus de charges disponibles", true);
+            return;
+          }
+
           // Vérifier que la carte personnage existe
           const characterCard = player.cards.personnages.find(
             (c) => c.id === gameState.selectedCharacter
@@ -1867,6 +1876,8 @@
             playerId: gameState.playerId,
             bonusId: gameState.selectedBonus,
             targetId: gameState.selectedCharacter,
+            previousTourbonus: bonusCard.tourbonus,
+            newTourbonus: parseInt(bonusCard.tourbonus) - 1,
           });
 
           socket.emit("playBonus", {
@@ -1878,6 +1889,9 @@
 
           // Décrémenter le compteur d'actions bonus
           gameState.bonusActionsRemaining--;
+
+          // Décrémenter immédiatement le tourbonus de la carte bonus
+          bonusCard.tourbonus = (parseInt(bonusCard.tourbonus) - 1).toString();
 
           // Afficher un message explicite avec le nombre d'actions bonus restantes
           showMessage(
@@ -2013,49 +2027,45 @@
           socket.on("gameOver", (data) => {
             console.log("Événement gameOver reçu:", data);
 
-            if (!data || !data.newGameState) {
-              console.error("Données de fin de partie invalides");
-              return;
+            if (!gameState.game) return;
+
+            // Créer l'élément gameEndMessage s'il n'existe pas
+            let gameEndMessage = document.getElementById("gameEndMessage");
+            if (!gameEndMessage) {
+              gameEndMessage = document.createElement("div");
+              gameEndMessage.id = "gameEndMessage";
+              gameEndMessage.className = "game-end-message";
+              document.body.appendChild(gameEndMessage);
             }
 
-            // Déterminer si le joueur a gagné ou perdu
-            const isWinner = data.winner === playerId;
-
-            // Afficher le message de fin de partie
-            const gameEndMessage = document.getElementById("gameEndMessage");
-            if (gameEndMessage) {
-              gameEndMessage.style.display = "block";
-              gameEndMessage.style.backgroundColor = isWinner
-                ? "#4CAF50"
-                : "#f44336";
-              gameEndMessage.textContent = isWinner
-                ? "Vous avez gagné !"
-                : "Vous avez perdu !";
-
-              // Rediriger vers l'écran d'accueil après 3 secondes
-              setTimeout(() => {
-                // Cacher le message
-                gameEndMessage.style.display = "none";
-
-                // Émettre l'événement leaveGame
-                if (data.newGameState.id) {
-                  socket.emit("leaveGame", { gameId: data.newGameState.id });
-                }
-
-                // Réinitialiser l'état du jeu
-                gameState.game = null;
-                gameState.playerId = null;
-
-                // Cacher tous les écrans
-                Object.keys(screens).forEach((key) => {
-                  screens[key].classList.add("hidden");
-                });
-
-                // Afficher l'écran d'accueil
-                screens.home.classList.remove("hidden");
-                screens.home.style.display = "block";
-              }, 3000);
+            // Déterminer le message de fin de partie
+            let message = "";
+            if (data.winner === gameState.playerId) {
+              message = "Félicitations ! Vous avez gagné la partie !";
+              gameEndMessage.className = "game-end-message victory";
+            } else {
+              message = "Dommage ! Vous avez perdu la partie.";
+              gameEndMessage.className = "game-end-message defeat";
             }
+
+            // Afficher le message
+            gameEndMessage.textContent = message;
+            gameEndMessage.style.display = "block";
+
+            // Désactiver toutes les interactions
+            const gameScreen = document.getElementById("gameScreen");
+            if (gameScreen) {
+              gameScreen.style.pointerEvents = "none";
+            }
+
+            // Rediriger vers le menu principal après 3 secondes
+            setTimeout(() => {
+              gameEndMessage.style.display = "none";
+              if (gameScreen) {
+                gameScreen.style.pointerEvents = "auto";
+              }
+              returnToMenu();
+            }, 3000);
           });
         }
 
@@ -2390,14 +2400,30 @@
 
         // Fonction pour retourner au menu principal
         function returnToMenu() {
-          if (socket) {
-            socket.emit("leaveGame", { gameId: currentGameId });
-            socket.disconnect();
+          console.log("Retour au menu principal");
+
+          // Nettoyer l'état du jeu
+          if (gameState.game && gameState.game.id) {
+            socket.emit("leaveGame", { gameId: gameState.game.id });
           }
-          currentGameId = null;
-          currentPlayerId = null;
-          hideAllScreens();
-          showScreen("menuScreen");
+
+          // Réinitialiser l'état du jeu
+          gameState.game = null;
+          gameState.playerId = null;
+          gameState.selectedCharacter = null;
+          gameState.selectedBonus = null;
+          gameState.selectedTarget = null;
+          gameState.bonusPlayedThisTurn = 0;
+          gameState.lastBonusTarget = null;
+          gameState.attackPerformed = false;
+
+          // Vider les conteneurs de cartes
+          document.getElementById("playerCards").innerHTML = "";
+          document.getElementById("opponentCards").innerHTML = "";
+          document.getElementById("bonusCards").innerHTML = "";
+
+          // Afficher l'écran d'accueil
+          showScreen("homeScreen");
         }
 
         // Fonction pour afficher l'écran de fin de partie
@@ -2507,52 +2533,180 @@
           disableGameInteractions();
         }
 
-        // Supprimer tous les anciens gestionnaires d'événements gameOver et playerLeft
+        // Supprimer tous les anciens gestionnaires d'événements gameOver
         socket.off("gameOver");
-        socket.off("playerLeft");
 
         // Gestionnaire unifié pour l'événement gameOver
         socket.on("gameOver", function (data) {
           console.log("Événement gameOver reçu:", data);
 
-          if (!data || !data.newGameState) {
-            console.error("Données de fin de partie invalides");
-            return;
+          // Vérifier que les données sont valides
+          if (!data || (!data.gameState && !data.newGameState)) {
+            console.error(
+              "Données de fin de partie invalides, mais continuons"
+            );
           }
 
-          // Déterminer si le joueur a gagné ou perdu
-          const isWinner = data.winner === gameState.playerId;
+          // Récupérer l'état du jeu, quelle que soit la structure
+          const gameStateData =
+            data.gameState || data.newGameState || gameState.game;
 
-          // Afficher le message de fin de partie
-          gameEndMessage.style.display = "block";
-          gameEndMessage.style.backgroundColor = isWinner
-            ? "#4CAF50"
-            : "#f44336";
-          gameEndMessage.textContent = isWinner
-            ? "Vous avez gagné !"
-            : "Vous avez perdu !";
+          // Créer un overlay pour le message de fin de partie
+          const gameOverOverlay = document.createElement("div");
+          gameOverOverlay.className = "game-over-overlay";
+          document.body.appendChild(gameOverOverlay);
 
-          // Rediriger vers le menu principal après 3 secondes
-          setTimeout(() => {
-            // Cacher le message
-            gameEndMessage.style.display = "none";
+          // Créer l'élément de message de fin de partie
+          const gameEndMessage = document.createElement("div");
+          gameEndMessage.className = "game-end-message";
+          gameOverOverlay.appendChild(gameEndMessage);
 
-            // Émettre l'événement leaveGame
-            socket.emit("leaveGame", { gameId: data.newGameState.id });
+          // Personnaliser le message selon le vainqueur
+          let message = "";
+          let isWinner = false;
+
+          if (data.winner === gameState.playerId) {
+            message = "<h1>VICTOIRE!</h1>";
+            message += "<p>Félicitations ! Vous avez gagné la partie !</p>";
+            if (data.reason === "all_characters_ko") {
+              message +=
+                "<p>Vous avez éliminé tous les personnages adverses.</p>";
+            } else if (data.reason === "no_more_attacks") {
+              message +=
+                "<p>Vous avez plus de points de vie restants à la fin des attaques.</p>";
+            }
+            gameEndMessage.className += " victory";
+            isWinner = true;
+          } else {
+            message = "<h1>DÉFAITE</h1>";
+            message += "<p>Vous avez perdu la partie.</p>";
+            if (data.reason === "all_characters_ko") {
+              message += "<p>Tous vos personnages ont été éliminés.</p>";
+            } else if (data.reason === "no_more_attacks") {
+              message +=
+                "<p>L'adversaire a plus de points de vie restants à la fin des attaques.</p>";
+            }
+            gameEndMessage.className += " defeat";
+          }
+
+          // Ajouter les statistiques si disponibles
+          if (data.stats) {
+            message += "<div class='stats'>";
+            message += "<h2>Statistiques finales</h2>";
+
+            for (const playerId in data.stats) {
+              const playerStats = data.stats[playerId];
+              const isCurrentPlayer =
+                playerId === gameState.playerId ||
+                (gameStateData.players &&
+                  gameStateData.players[playerId] &&
+                  gameStateData.players[playerId].id === gameState.playerId);
+
+              message += `<div class='player-stats ${
+                isCurrentPlayer ? "current-player" : "opponent-player"
+              }'>`;
+              message += `<h3>${isCurrentPlayer ? "Vous" : "Adversaire"}</h3>`;
+              message += `<p>Personnages KO: ${playerStats.koCount}</p>`;
+              message += `<p>Points de vie restants: ${playerStats.totalHealth}</p>`;
+              message += "</div>";
+            }
+            message += "</div>";
+          }
+
+          // Ajouter un bouton pour retourner au menu
+          message +=
+            "<button id='returnToMenuBtn' class='action-button'>Retour au menu</button>";
+
+          // Afficher le message
+          gameEndMessage.innerHTML = message;
+
+          // Désactiver les interactions avec le jeu
+          const gameBoard = document.getElementById("gameBoard");
+          if (gameBoard) {
+            gameBoard.style.pointerEvents = "none";
+          }
+
+          // Fonction pour revenir au menu
+          const returnToMenuFunction = function () {
+            // Cacher l'overlay
+            if (document.body.contains(gameOverOverlay)) {
+              gameOverOverlay.remove();
+            }
+
+            // Nettoyer l'état du jeu
+            if (gameStateData && gameStateData.id) {
+              socket.emit("leaveGame", { gameId: gameStateData.id });
+            }
 
             // Réinitialiser l'état du jeu
-            gameState.currentGameId = null;
-            gameState.playerId = null;
             gameState.game = null;
+            gameState.playerId = null;
+            gameState.selectedCharacter = null;
+            gameState.selectedBonus = null;
+            gameState.selectedTarget = null;
+            gameState.bonusPlayedThisTurn = 0;
+            gameState.lastBonusTarget = null;
+            gameState.attackPerformed = false;
 
-            // Masquer tous les écrans
-            Object.keys(screens).forEach((key) => {
-              screens[key].classList.add("hidden");
-            });
+            // Vider les conteneurs de cartes
+            const playerCards = document.getElementById("playerCards");
+            const opponentCards = document.getElementById("opponentCards");
+            const bonusCards = document.getElementById("bonusCards");
 
-            // Afficher l'écran d'accueil
-            screens.home.classList.remove("hidden");
-          }, 3000);
+            if (playerCards) playerCards.innerHTML = "";
+            if (opponentCards) opponentCards.innerHTML = "";
+            if (bonusCards) bonusCards.innerHTML = "";
+
+            // Réactiver les interactions
+            if (gameBoard) {
+              gameBoard.style.pointerEvents = "auto";
+            }
+
+            // Afficher l'écran d'accueil - gère les deux formats possibles
+            try {
+              // Nouveau format
+              showScreen("homeScreen");
+            } catch (e) {
+              // Ancien format
+              try {
+                hideAllScreens();
+                screens.home.classList.remove("hidden");
+                screens.home.style.display = "block";
+              } catch (e2) {
+                console.error("Impossible de retourner au menu:", e2);
+                // Dernière option: recharger la page
+                window.location.reload();
+              }
+            }
+          };
+
+          // Ajouter un effet sonore
+          try {
+            const soundEffect = new Audio();
+            soundEffect.src = isWinner
+              ? "./assets/sounds/victory.mp3"
+              : "./assets/sounds/defeat.mp3";
+            soundEffect
+              .play()
+              .catch((err) => console.log("Erreur audio:", err));
+          } catch (e) {
+            console.log("Erreur de lecture audio:", e);
+          }
+
+          // Écouter le clic sur le bouton de retour au menu
+          setTimeout(() => {
+            const returnBtn = document.getElementById("returnToMenuBtn");
+            if (returnBtn) {
+              returnBtn.addEventListener("click", returnToMenuFunction);
+            } else {
+              console.warn(
+                "Bouton de retour au menu non trouvé, retour automatique activé"
+              );
+            }
+          }, 100);
+
+          // Rediriger automatiquement après 5 secondes
+          setTimeout(returnToMenuFunction, 5000);
         });
 
         // Supprimer ou remplacer la fonction showGameOverScreen

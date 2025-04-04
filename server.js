@@ -423,7 +423,6 @@ io.on("connection", (socket) => {
 
         // Recalculer l'attaque si des bonus sont encore actifs
         if (updatedBonusList.length > 0) {
-          // On part de la valeur de base et on applique chaque bonus séquentiellement
           let currentAttack = parseInt(baseCard.forceattaque);
           updatedBonusList.forEach((bonus) => {
             const bonusMultiplier = 1 + bonus.pourcentagebonus / 100;
@@ -432,12 +431,10 @@ io.on("connection", (socket) => {
           characterState.forceattaque = currentAttack;
           currentPlayerBonusMap.set(characterId, updatedBonusList);
         } else {
-          // Si plus aucun bonus actif, réinitialiser l'attaque
           characterState.forceattaque = parseInt(baseCard.forceattaque);
           currentPlayerBonusMap.delete(characterId);
         }
 
-        // Synchroniser currentAttack avec forceattaque
         if (characterState.currentAttack !== undefined) {
           characterState.currentAttack = characterState.forceattaque;
         }
@@ -446,7 +443,7 @@ io.on("connection", (socket) => {
 
     // Mettre à jour l'état du jeu
     game.currentTurn = nextPlayer.id;
-    game.bonusPlayedThisTurn = 0; // Réinitialiser le compteur de bonus pour le nouveau tour
+    game.bonusPlayedThisTurn = 0;
     game.lastBonusTarget = null;
 
     // Gestion du numéro de tour
@@ -454,6 +451,16 @@ io.on("connection", (socket) => {
       game.turnNumber = 1;
     } else if (currentPlayerKey === Object.keys(game.players)[1]) {
       game.turnNumber += 1;
+    }
+
+    // Vérifier si le prochain joueur peut jouer
+    const nextPlayerCanPlay = Object.values(nextPlayer.charactersState).some(
+      (char) => char.pointsdevie > 0 && char.tourattaque > 0
+    );
+
+    if (!nextPlayerCanPlay) {
+      // Si le prochain joueur ne peut pas jouer, vérifier si la partie est terminée
+      checkGameEnd(gameId);
     }
 
     // Émettre l'événement de changement de tour
@@ -785,6 +792,12 @@ io.on("connection", (socket) => {
       console.log("La cible est KO:", targetId);
     }
 
+    // Vérifier si la partie est terminée après cette attaque
+    if (checkGameEnd(gameId)) {
+      console.log("La partie est terminée après cette attaque");
+      return; // Ne pas continuer si la partie est terminée
+    }
+
     // Mettre à jour l'état du jeu
     game.attackPerformed = true;
 
@@ -822,9 +835,6 @@ io.on("connection", (socket) => {
       currentTurn: game.currentTurn,
       newGameState: JSON.parse(JSON.stringify(game)),
     });
-
-    // Vérifier si la partie est terminée
-    checkGameEnd(gameId);
   });
 
   // Fonction pour vérifier si la partie est terminée
@@ -833,48 +843,126 @@ io.on("connection", (socket) => {
 
     const game = games.get(gameId);
 
-    // Vérifier si un joueur a perdu tous ses personnages
-    for (const playerId in game.players) {
-      const player = game.players[playerId];
-      const allCharactersKO = Object.values(player.charactersState).every(
+    console.log("Vérification de fin de partie pour", gameId);
+
+    // 1. Vérifier si un joueur a perdu tous ses personnages
+    for (const playerKey in game.players) {
+      const player = game.players[playerKey];
+      const allCharactersKO = Object.values(player.charactersState || {}).every(
         (char) => char.pointsdevie <= 0
       );
 
-      if (allCharactersKO) {
-        // Trouver le gagnant (l'autre joueur)
-        const winner = Object.keys(game.players).find((id) => id !== playerId);
+      if (
+        allCharactersKO &&
+        Object.values(player.charactersState || {}).length > 0
+      ) {
+        console.log(`Joueur ${playerKey} a perdu tous ses personnages`);
 
-        if (winner) {
-          game.winner = winner;
-          game.status = "finished";
+        // Trouver le gagnant (l'autre joueur)
+        const winnerKey = Object.keys(game.players).find(
+          (key) => key !== playerKey
+        );
+
+        if (winnerKey) {
+          console.log(`Le gagnant est ${winnerKey}`);
+          game.status = "ended";
+          game.winner = game.players[winnerKey].id;
           game.endReason = "all_characters_ko";
 
-          // Calculer les statistiques finales
-          const stats = {};
-          Object.entries(game.players).forEach(([id, player]) => {
-            stats[id] = {
-              totalHealth: Object.values(player.charactersState).reduce(
-                (sum, char) => sum + Math.max(0, char.pointsdevie),
-                0
-              ),
-              koCount: Object.values(player.charactersState).filter(
-                (char) => char.pointsdevie <= 0
-              ).length,
-            };
-          });
-
-          // Envoyer l'événement gameOver à tous les joueurs
+          console.log("Émission de l'événement gameOver - Tous KO");
           io.to(gameId).emit("gameOver", {
-            winner: winner,
+            winner: game.players[winnerKey].id,
             reason: "all_characters_ko",
-            newGameState: JSON.parse(JSON.stringify(game)),
-            stats: stats,
+            gameState: JSON.parse(JSON.stringify(game)),
           });
-
           return true;
         }
       }
     }
+
+    // 2. Vérifier si aucun des joueurs n'a plus de tourattaque
+    let noMoreAttacks = true;
+    let totalCharactersWithAttacks = 0;
+
+    for (const playerKey in game.players) {
+      const player = game.players[playerKey];
+
+      // Compter combien de personnages ont encore des tourattaque
+      const charactersWithAttacks = Object.values(
+        player.charactersState || {}
+      ).filter((char) => char.pointsdevie > 0 && char.tourattaque > 0);
+
+      totalCharactersWithAttacks += charactersWithAttacks.length;
+
+      console.log(
+        `Joueur ${playerKey} a ${charactersWithAttacks.length} personnages pouvant attaquer`
+      );
+    }
+
+    // Si aucun personnage ne peut attaquer, c'est la fin de la partie
+    if (totalCharactersWithAttacks === 0) {
+      console.log("Aucun personnage ne peut attaquer, fin de partie");
+
+      // Calculer les statistiques finales pour déterminer le gagnant
+      const stats = {};
+
+      for (const playerKey in game.players) {
+        const player = game.players[playerKey];
+
+        // Calculer le nombre de personnages KO
+        const koCount = Object.values(player.charactersState || {}).filter(
+          (char) => char.pointsdevie <= 0
+        ).length;
+
+        // Calculer les points de vie totaux restants
+        const totalHealth = Object.values(player.charactersState || {}).reduce(
+          (sum, char) => sum + Math.max(0, char.pointsdevie),
+          0
+        );
+
+        stats[playerKey] = { koCount, totalHealth };
+        console.log(`Statistiques du joueur ${playerKey}:`, stats[playerKey]);
+      }
+
+      // Déterminer le gagnant selon les règles
+      let winnerKey = null;
+      let minKO = Infinity;
+      let maxHealth = -1;
+
+      // D'abord, trouver le joueur avec le moins de KO
+      for (const playerKey in stats) {
+        if (stats[playerKey].koCount < minKO) {
+          minKO = stats[playerKey].koCount;
+          winnerKey = playerKey;
+        } else if (stats[playerKey].koCount === minKO) {
+          // En cas d'égalité, celui qui a le plus de points de vie gagne
+          if (stats[playerKey].totalHealth > maxHealth) {
+            maxHealth = stats[playerKey].totalHealth;
+            winnerKey = playerKey;
+          }
+        }
+      }
+
+      if (winnerKey) {
+        console.log(
+          `Le gagnant est ${winnerKey} avec ${minKO} KO et ${stats[winnerKey].totalHealth} PV`
+        );
+        game.status = "ended";
+        game.winner = game.players[winnerKey].id;
+        game.endReason = "no_more_attacks";
+        game.finalStats = stats;
+
+        console.log("Émission de l'événement gameOver - Plus d'attaques");
+        io.to(gameId).emit("gameOver", {
+          winner: game.players[winnerKey].id,
+          reason: "no_more_attacks",
+          gameState: JSON.parse(JSON.stringify(game)),
+          stats: stats,
+        });
+        return true;
+      }
+    }
+
     return false;
   }
 
