@@ -1,0 +1,522 @@
+// Victorryan - Jeu de Cartes
+// Règles et directives pour l'assistance AI Cursor
+
+// Variables d'environnement (.env)
+// ATTENTION : Ces informations sont sensibles et ne doivent pas être partagées
+// Utilisation : process.env.VARIABLE_NAME
+
+- PORT : Port du serveur
+- DB_CONNECTION : URL de connexion à la base de données
+- SECRET_KEY : Clé secrète pour les sessions
+- SOCKET_TIMEOUT : Timeout pour les connexions socket
+  // Ne jamais commiter le fichier .env
+  // Toujours utiliser un .env.example pour documenter les variables requises
+
+// Description détaillée du jeu
+Ce jeu de cartes stratégique oppose deux joueurs qui s'affrontent avec :
+
+- 5 cartes personnages par joueur
+- 5 cartes bonus par joueur pour améliorer les personnages
+
+Conditions de victoire (par ordre de priorité) :
+
+1. Éliminer tous les personnages adverses
+2. En fin de partie :
+   a. Le joueur avec le moins de personnages KO gagne
+   b. Si égalité de personnages KO :
+   - Victoire au joueur ayant le plus de points de vie totaux restants
+   - Les points de vie totaux = somme des PV de tous les personnages non-KO
+
+// Règles de jeu détaillées
+
+1. Tour de jeu
+
+   - Un joueur peut faire UNE attaque par tour avec UN personnage
+   - Maximum 2 bonus peuvent être joués par tour
+   - Les bonus peuvent être :
+     - De la même carte bonus (utilisant 2 charges)
+     - De deux cartes bonus différentes
+   - Ordre des actions :
+     1. Jouer des bonus (0-2)
+     2. Effectuer une attaque (0-1)
+     3. Fin du tour
+
+2. Limitations importantes
+
+   - Une carte personnage ne peut attaquer qu'une fois par tour
+   - Les bonus sont limités à 2 par tour
+   - IMPORTANT : Au sein d'un tour, on ne peut appliquer des bonus qu'à un seul personnage
+   - Système de charges des bonus :
+     - Le nombre tourbonus indique le nombre de charges disponibles
+     - Une charge est consommée immédiatement à chaque utilisation
+     - L'affichage doit être mis à jour en temps réel après utilisation
+     - Le bonus devient inutilisable quand tourbonus atteint 0
+     - On peut utiliser plusieurs fois le même bonus sur le même personnage si on a assez de charges
+     - Exemple : Un bonus avec 2 tourbonus peut être utilisé deux fois sur le même personnage
+   - Restrictions de ciblage par tour :
+     - Quand un bonus est joué sur un personnage pendant le tour :
+       - Seul ce personnage peut recevoir le second bonus du tour
+       - Seul ce personnage peut attaquer ce tour-ci
+     - Ces restrictions sont réinitialisées au début du tour suivant
+
+3. Fin de tour forcée
+
+   - Si un joueur n'a plus de tourattaque disponible sur aucune de ses cartes :
+     - Le tour passe automatiquement à l'autre joueur
+     - IMPORTANT : Les tourattaque et tourbonus ne sont PAS réinitialisés
+     - Les cartes avec tourattaque = 0 ou tourbonus = 0 restent inutilisables
+     - Les restrictions de ciblage sont réinitialisées
+   - Mécanisme détaillé :
+     - Exemple : Joueur 1 n'a plus de tourattaque disponible
+     - Le tour passe automatiquement au Joueur 2
+     - Le Joueur 2 peut alors jouer normalement :
+       - Utiliser jusqu'à 2 bonus (si tourbonus > 0)
+       - Effectuer une attaque (si tourattaque > 0)
+     - Le Joueur 2 continue de jouer jusqu'à :
+       - Qu'il n'ait plus de tourattaque disponible
+       - Ou que toutes les cartes du Joueur 1 soient KO (pointsdevie = 0)
+     - Si le Joueur 2 n'a plus de tourattaque :
+       - La partie continue avec le Joueur 1
+       - IMPORTANT : Les tourattaque du Joueur 1 restent à 0
+       - Les tourbonus restent inchangés
+       - La partie se termine car aucun des deux joueurs n'a de tourattaque disponible
+     - Ce cycle continue jusqu'à :
+       - Qu'un joueur n'ait plus de personnages (KO)
+       - Ou qu'aucun des deux joueurs n'ait de tourattaque disponible
+   - Affichage :
+     - Message "Plus d'attaques possibles, tour terminé"
+     - Animation de transition de tour
+     - Mise à jour visuelle des tourattaque
+     - Indication claire du joueur actif
+
+4. Fin de partie
+   - Conditions de fin :
+     - Tous les personnages d'un joueur sont KO
+     - Plus de tourattaque disponibles pour les deux joueurs
+     - Déconnexion d'un joueur
+   - Affichages :
+     - Message de victoire/défaite avec animation
+     - Affichage des statistiques de la partie
+     - Bouton "Retour au menu"
+   - Redirection :
+     - Retour automatique au menu principal après 3 secondes
+     - Nettoyage de l'état de la partie
+     - Libération des ressources Socket.IO
+   - Menu principal :
+     - Option "Créer une partie"
+     - Option "Rejoindre une partie"
+     - Affichage de l'historique des parties
+
+// Structure du projet étendue
+public/
+
+- index.html : Interface principale
+- styles/
+  - main.css : Styles généraux
+  - cards.css : Styles des cartes
+  - animations.css : Animations
+- assets/
+  _ characters/ : Images des personnages
+  _ bonus/ : Images des bonus \* ui/ : Éléments d'interface
+  server.js : Point d'entrée serveur
+  backend/
+- services/
+  - gameService.js : Logique de jeu
+  - bonusService.js : Gestion des bonus
+- controllers/
+  - gameController.js : Routes et événements
+- models/
+  - gameState.js : Structure des données
+  - cards.js : Configuration des cartes
+
+// Points de vigilance critiques
+
+1. Synchronisation des bonus
+
+   - Toujours vérifier tourbonus > 0
+   - Décrémenter tourbonus IMMÉDIATEMENT après chaque utilisation (pas à la fin du tour)
+   - Mettre à jour l'affichage en temps réel
+   - Nettoyer les bonus expirés
+   - Valider côté serveur ET client
+
+2. Limitations par tour
+
+   - Tracker bonusPlayedThisTurn (max 2)
+   - Tracker hasAttackedThisTurn (max 1)
+   - Tracker targetedCharacterThisTurn (personnage ayant reçu un bonus)
+   - Réinitialiser les compteurs à chaque nouveau tour
+   - Vérifier les limites avant chaque action
+
+3. État du jeu
+   - Synchroniser après chaque action
+   - Valider les actions côté serveur
+   - Gérer les conflits de données
+   - Maintenir la cohérence des points de vie
+   - Maintenir la cohérence des tourattaque
+   - Maintenir la cohérence des tourbonus
+
+// Gestion des personnages étendue
+
+- Attributs des cartes personnages :
+
+  - pointsdevie : Points de vie (0-100)
+  - forceattaque : Force d'attaque de base (10-50)
+  - tourattaque : Nombre d'attaques possibles par tour (1)
+  - nomcarteperso : Nom du personnage
+  - id : Identifiant unique de la carte
+  - effets actifs : tableau des bonus appliqués
+  - état : normal/attaqué/bonus
+
+- Attributs des cartes bonus :
+
+  - pourcentagebonus : Pourcentage d'augmentation de la force d'attaque (ex: 25 pour +25%)
+  - tourbonus : Nombre de fois que le bonus peut être utilisé
+  - nomcartebonus : Nom du bonus
+  - id : Identifiant unique de la carte
+  - type : Type de bonus (attack)
+  - stackable : Possibilité de cumuler les effets
+
+- Validation des attributs :
+  - Vérifier pointsdevie > 0 avant action
+  - Valider tourattaque disponible
+  - Gérer les effets de bonus cumulés
+  - Vérifier tourbonus > 0 pour les bonus
+
+// Système de bonus détaillé
+
+1. Types de bonus
+
+   - Augmentation d'attaque en pourcentage (pourcentagebonus)
+   - Exemple : +25% de forceattaque
+   - Calcul : forceattaque \* (1 + pourcentagebonus/100)
+   - IMPORTANT : Les bonus sont calculés de manière cumulative sur la valeur ACTUELLE
+   - Exemple :
+     - Bonus 1 : +25% sur forceattaque de 40 = 50
+     - Bonus 2 : +25% sur forceattaque de 50 = 62.5
+   - Les valeurs doivent être mises à jour après CHAQUE action :
+     - pointsdevie
+     - forceattaque
+     - tourattaque
+     - pourcentagebonus
+     - tourbonus
+
+2. Gestion des bonus
+
+   - Structure :
+
+   ```javascript
+   {
+     id: "bonusId",
+     type: "attack",
+     pourcentagebonus: 25, // pourcentage d'augmentation
+     tourbonus: 3, // nombre d'utilisations restantes
+     nomcartebonus: "Nom du bonus",
+     target: "characterId",
+     stackable: false // peut se cumuler ?
+   }
+   ```
+
+   - Validation :
+     - Vérifier tourbonus > 0
+     - Valider la cible
+     - Vérifier les limitations par tour
+     - Gérer les bonus existants
+     - Calculer correctement la force d'attaque finale
+
+3. Optimisation des appels à Supabase
+   - IMPORTANT : Limiter les appels à Supabase pour éviter les coûts excessifs
+   - Stratégies d'optimisation :
+     - Mettre en cache les données en mémoire côté serveur
+     - Synchroniser les états en batch plutôt qu'individuellement
+     - Utiliser des transactions pour les mises à jour multiples
+     - Implémenter un système de file d'attente pour les mises à jour
+     - Ne synchroniser que les changements critiques
+   - Points de synchronisation optimaux :
+     - Fin de tour
+     - Changement de joueur
+     - Fin de partie
+     - Déconnexion d'un joueur
+   - Structure de cache recommandée :
+   ```javascript
+   {
+     gameState: {
+       characters: Map<string, Character>,
+       bonuses: Map<string, Bonus>,
+       currentTurn: number,
+       lastSync: timestamp
+     },
+     pendingUpdates: Array<Update>,
+     syncInterval: 5000 // ms
+   }
+   ```
+
+// Optimisations recommandées
+
+1. Performance
+
+   - Minimiser les émissions Socket.IO
+   - Utiliser requestAnimationFrame pour les animations
+   - Mettre en cache les éléments DOM fréquemment utilisés
+   - Optimiser les calculs de bonus
+
+2. Sécurité
+
+   - Valider toutes les entrées utilisateur
+   - Vérifier les permissions à chaque action
+   - Protéger contre les actions simultanées
+   - Gérer les timeouts de connexion
+
+3. UX/UI
+   - Feedback visuel clair pour les limitations
+   - Animations fluides pour les actions
+   - Indicateurs d'état des cartes
+   - Messages d'erreur explicites
+   - Affichage en temps réel des charges de bonus restantes
+   - Affichages de fin de partie :
+     - Message de victoire/défaite en grand format
+     - Couleur verte pour victoire, rouge pour défaite
+     - Animation de transition fluide
+     - Statistiques de la partie (temps, tours, etc.)
+     - Bouton de retour au menu principal
+   - Transitions :
+     - Animation de fondu pour les messages
+     - Transition fluide vers le menu
+     - Nettoyage des éléments de jeu
+
+// Débogage avancé
+
+- Logs structurés :
+
+```javascript
+console.log({
+  event: "bonusPlayed",
+  data: {
+    bonusId,
+    target,
+    currentTurn,
+    bonusPlayedThisTurn,
+    previousTourbonus: bonus.tourbonus,
+    newTourbonus: bonus.tourbonus - 1,
+    targetedCharacterThisTurn: gameState.targetedCharacterThisTurn,
+    remainingCharges: bonus.tourbonus - 1,
+  },
+});
+```
+
+- Points de vérification critiques :
+  - Changement de tour
+  - Application de bonus
+  - Calcul des dégâts
+  - Fin de partie
+  - Mise à jour des charges de bonus
+
+// Tests critiques
+
+1. Scénarios de bonus
+
+   - Application multiple sur même cible
+   - Dépassement limite par tour
+   - Expiration correcte
+   - Calcul cumulé
+   - Mise à jour immédiate des charges
+   - Restrictions de ciblage
+
+2. Synchronisation
+   - Déconnexion pendant action
+   - Actions simultanées
+   - Mise à jour des compteurs
+   - État final cohérent
+   - Affichage des charges restantes
+
+// Maintenance et évolution
+
+- Documenter les bugs connus
+- Maintenir une liste des limitations actuelles
+- Planifier les futures fonctionnalités
+- Gérer les versions des cartes
+- Suivre les problèmes de synchronisation
+
+// Ressources additionnelles
+
+- Documentation interne du projet
+- Wiki des mécaniques de jeu
+- Guides de débogage
+- Patterns Socket.IO recommandés
+
+// Gestion des parties
+
+1. Création et rejoindre une partie
+
+   - Deux modes d'entrée :
+     - Création : Génère un ID unique de partie
+     - Rejoindre : Utilise un ID existant
+   - IMPORTANT : Une partie ne peut avoir que 2 joueurs
+   - Les cartes sont distribuées aléatoirement :
+     - 5 cartes personnages uniques par joueur
+     - 5 cartes bonus uniques par joueur
+     - Pas de doublons entre les joueurs
+   - Système d'ID de partie :
+     - Format : 6 caractères alphanumériques
+     - Exemple : "ABC123"
+     - Génération unique et vérification de disponibilité
+     - Stockage temporaire en mémoire avec timeout
+
+2. Gestion multi-parties
+
+   - Architecture :
+
+   ```javascript
+   {
+     activeGames: Map<string, GameState>,
+     gameTimeouts: Map<string, NodeJS.Timeout>,
+     maxGames: 100, // limite configurable
+     cleanupInterval: 3600000 // 1 heure
+   }
+   ```
+
+   - Isolation des parties :
+     - Chaque partie a son propre namespace Socket.IO
+     - Les événements sont isolés par ID de partie
+     - Pas d'interférence entre les parties
+   - Nettoyage automatique :
+     - Parties inactives supprimées après timeout
+     - Ressources libérées à la fin de partie
+     - Gestion des déconnexions
+
+3. Optimisation réseau
+
+   - Stratégies :
+     - Limiter les émissions Socket.IO par partie
+     - Mise en cache des états de partie
+     - Synchronisation par lots
+     - Gestion des reconnexions
+   - Points critiques :
+     - Validation des actions par partie
+     - Gestion des timeouts
+     - Nettoyage des ressources
+     - Limitation du nombre de parties simultanées
+
+4. Événements Socket.IO principaux
+
+   ```javascript
+   // Création de partie
+   socket.emit("createGame", (callback) => {
+     // Retourne l'ID de la nouvelle partie
+   });
+
+   // Rejoindre une partie
+   socket.emit("joinGame", { gameId }, (callback) => {
+     // Retourne l'état initial de la partie
+   });
+
+   // Distribution des cartes
+   socket.on("cardsDealt", ({ characters, bonuses }) => {
+     // Initialisation des mains des joueurs
+   });
+
+   // État de la partie
+   socket.on("gameState", (state) => {
+     // Mise à jour de l'interface
+   });
+   ```
+
+5. Validation des actions
+   - Vérifications par partie :
+     - ID de partie valide
+     - Joueur autorisé
+     - État de partie correct
+     - Actions valides dans le contexte
+   - Gestion des erreurs :
+     - Messages d'erreur spécifiques
+     - Logs par partie
+     - Nettoyage en cas d'erreur
+
+// Gestion des cartes et stockage
+
+1. Fichiers de base
+
+   - /stock/personnages.json : Base de données des cartes personnages
+   - /stock/bonus.json : Base de données des cartes bonus
+   - IMPORTANT : Ces fichiers ne sont jamais modifiés, ils servent de référence
+
+2. Distribution des cartes
+
+   - Au début de chaque partie :
+     - Lecture des fichiers JSON de base
+     - Création d'une copie des cartes pour la partie
+     - Distribution aléatoire :
+       - 5 cartes personnages uniques par joueur
+       - 5 cartes bonus uniques par joueur
+     - Vérification qu'il n'y a pas de doublons entre les joueurs
+
+3. Stockage par partie
+
+   ```javascript
+   {
+     gameId: {
+       players: {
+         player1: {
+           characters: [...], // 5 cartes personnages
+           bonuses: [...],    // 5 cartes bonus
+           currentTurn: true/false
+         },
+         player2: {
+           characters: [...],
+           bonuses: [...],
+           currentTurn: true/false
+         }
+       },
+       gameState: {
+         currentTurn: number,
+         lastAction: timestamp,
+         gameStatus: "active/ended"
+       }
+     }
+   }
+   ```
+
+4. Gestion des états
+
+   - Les cartes distribuées sont des copies des cartes de base
+   - Chaque carte a un ID unique pour la partie
+   - Les modifications (pointsdevie, tourattaque, etc.) sont appliquées sur les copies
+   - Les fichiers de base restent intacts
+   - Les états sont stockés en mémoire et synchronisés avec Supabase
+
+5. Nettoyage
+   - À la fin de la partie :
+     - Suppression des copies des cartes
+     - Libération de la mémoire
+     - Nettoyage des références dans la base de données
+
+// Gestion des versions et déploiement
+
+1. Commits Git
+
+   - Format recommandé pour les messages de commit :
+     - feat(module): description // pour nouvelles fonctionnalités
+     - fix(module): description // pour corrections de bugs
+     - refactor(module): description // pour refactoring
+     - style(module): description // pour modifications de style
+   - Exemples :
+     - feat(bonus): ajout système de charges
+     - fix(tourattaque): correction calcul fin de tour
+     - refactor(partie): optimisation gestion multi-parties
+
+2. Branches
+
+   - main : version stable en production
+   - develop : développement en cours
+   - feature/nom-feature : nouvelles fonctionnalités
+   - hotfix/nom-bug : corrections urgentes
+
+3. Déploiement sur Render
+   - Conseils pour optimiser le déploiement :
+     - Utiliser le cache de build
+     - Minimiser la taille des assets
+     - Configurer les variables d'environnement à l'avance
+   - Étapes recommandées :
+     1. Tester localement
+     2. Commit et push sur GitHub
+     3. Render se synchronise automatiquement
+     4. Vérifier les logs de build
