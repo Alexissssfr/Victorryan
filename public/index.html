@@ -844,15 +844,54 @@
 
       /* Styles pour le message de fin de partie */
       #gameEndMessage {
-        background-color: #4caf50;
-        color: white;
-        padding: 20px 40px;
-        border-radius: 10px;
-        font-size: 32px;
+        display: none;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        z-index: 9999 !important;
+        padding: 25px 50px;
+        border-radius: 15px;
+        font-size: 36px;
         font-weight: bold;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        color: white;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
         text-align: center;
-        transition: opacity 0.3s ease-in-out;
+        min-width: 300px;
+        max-width: 80%;
+        animation: fadeInEndMessage 0.5s ease-out;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      #gameEndMessage.victory {
+        background: linear-gradient(135deg, #4caf50, #8bc34a);
+      }
+
+      #gameEndMessage.defeat {
+        background: linear-gradient(135deg, #f44336, #e53935);
+      }
+
+      @keyframes fadeInEndMessage {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -55%);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%);
+        }
+      }
+
+      /* Reste des styles existants */
+      #gameOverScreen {
+        /* Vous pouvez le laisser stylisé s'il est utilisé ailleurs,
+           mais le JS s'assurera qu'il est caché quand #gameEndMessage est montré */
+        display: none; /* Assurez-vous qu'il est caché par défaut ou via JS */
+      }
+
+      #gameOverScreen.hidden {
+        display: none !important;
       }
 
       /* Supprimer les styles de l'ancien écran de statistiques */
@@ -1046,25 +1085,12 @@
     </div>
 
     <!-- Message de fin de partie -->
-    <div
-      id="gameEndMessage"
-      style="
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 9999;
-        background-color: #4caf50;
-        color: white;
-        padding: 20px 40px;
-        border-radius: 10px;
-        font-size: 32px;
-        font-weight: bold;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        text-align: center;
-      "
-    ></div>
+    <div id="gameEndMessage"></div>
+
+    <!-- (Optionnel) Écran de statistiques de fin de partie -->
+    <div id="gameOverScreen" class="hidden">
+      <!-- Contenu de l'écran de statistiques si vous l'utilisez toujours -->
+    </div>
 
     <div id="messages"></div>
 
@@ -2309,12 +2335,17 @@
                   }
                 }
 
-                // Synchroniser les cartes bonus
+                // Synchroniser explicitement les valeurs tourbonus des cartes bonus
                 if (player.cards && player.cards.bonus) {
-                  player.cards.bonus = player.cards.bonus.map((card) => ({
-                    ...card,
-                    tourbonus: parseInt(card.tourbonus),
-                  }));
+                  player.cards.bonus.forEach((card) => {
+                    // Assurons-nous que tourbonus est correctement formaté
+                    card.tourbonus = String(parseInt(card.tourbonus) || 0);
+                    console.log(
+                      `Synchronisation tourbonus pour ${
+                        card.nomcartebonus || card.id
+                      }: ${card.tourbonus}`
+                    );
+                  });
                 }
               }
             }
@@ -2392,12 +2423,17 @@
                   }
                 }
 
-                // Synchroniser les cartes bonus
+                // Synchroniser explicitement les valeurs tourbonus des cartes bonus
                 if (player.cards && player.cards.bonus) {
-                  player.cards.bonus = player.cards.bonus.map((card) => ({
-                    ...card,
-                    tourbonus: parseInt(card.tourbonus),
-                  }));
+                  player.cards.bonus.forEach((card) => {
+                    // Assurons-nous que tourbonus est correctement formaté
+                    card.tourbonus = String(parseInt(card.tourbonus) || 0);
+                    console.log(
+                      `Synchronisation tourbonus pour ${
+                        card.nomcartebonus || card.id
+                      }: ${card.tourbonus}`
+                    );
+                  });
                 }
               }
             }
@@ -3339,6 +3375,71 @@
           cleanupMessages();
           showScreen("homeScreen");
         });
+
+        socket.on("gameOver", (data) => {
+          console.log("Game Over event received", data);
+
+          const message = document.getElementById("gameEndMessage");
+          if (!message) {
+            console.error("gameEndMessage element not found");
+            return;
+          }
+
+          // Nettoyer les styles et classes existants
+          message.removeAttribute("style");
+          message.className = "";
+
+          // Déterminer si c'est une victoire
+          const isWinner = data.winner === currentPlayerId;
+
+          // Appliquer le style approprié
+          message.textContent = isWinner ? "Victoire !" : "Défaite !";
+          message.classList.add(isWinner ? "victory" : "defeat");
+
+          // Afficher le message
+          message.style.display = "block";
+
+          // Redirection après 3 secondes
+          setTimeout(() => {
+            message.style.display = "none";
+
+            // Quitter la partie
+            if (window.socket && gameState.game && gameState.game.id) {
+              window.socket.emit("leaveGame", { gameId: gameState.game.id });
+            }
+
+            // Réinitialiser l'état
+            gameState.game = null;
+            gameState.playerId = null;
+            currentPlayerId = null;
+
+            // Afficher l'écran d'accueil
+            const homeScreen = document.getElementById("homeScreen");
+            if (homeScreen) {
+              homeScreen.style.display = "block";
+              homeScreen.classList.remove("hidden");
+            }
+          }, 3000);
+        });
+
+        // Mettre à jour hideAllScreens pour inclure l'overlay
+        function hideAllScreens() {
+          const screensToHide = [
+            "homeScreen",
+            "gameScreen",
+            "gameOverScreen",
+            "gameEndMessage",
+            "gameOverOverlay",
+          ]; // Ajouter l'overlay
+          screensToHide.forEach((id) => {
+            const screen = document.getElementById(id);
+            if (screen) {
+              screen.style.display = "none";
+              screen.classList.add("hidden");
+            }
+          });
+          console.log("Hiding all screens");
+        }
       });
     </script>
   </body>
