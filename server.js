@@ -443,8 +443,9 @@ io.on("connection", (socket) => {
 
     // Mettre à jour l'état du jeu
     game.currentTurn = nextPlayer.id;
-    game.bonusPlayedThisTurn = 0;
-    game.lastBonusTarget = null;
+    // On ne réinitialise plus les compteurs de bonus par tour
+    // game.bonusPlayedThisTurn = 0;
+    // game.lastBonusTarget = null;
 
     // Gestion du numéro de tour
     if (!game.turnNumber) {

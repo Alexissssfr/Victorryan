@@ -914,6 +914,89 @@
         top: -9999px !important;
         left: -9999px !important;
       }
+
+      /* Styles pour la fenêtre modale de fin de partie */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-content {
+        background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+        border-radius: 15px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        animation: modalAppear 0.3s ease-out;
+      }
+
+      @keyframes modalAppear {
+        from {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .modal-title {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+
+      .modal-stats {
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 0.5rem 0;
+        color: #fff;
+      }
+
+      .modal-button {
+        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 1rem;
+      }
+
+      .modal-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+      }
+
+      .countdown {
+        font-size: 1.2rem;
+        color: #ff6b6b;
+        margin-top: 1rem;
+      }
     </style>
   </head>
   <body>
@@ -1085,7 +1168,35 @@
     </div>
 
     <!-- Message de fin de partie -->
-    <div id="gameEndMessage"></div>
+    <div id="gameEndMessage" class="modal-overlay">
+      <div class="modal-content">
+        <h2 class="modal-title"></h2>
+        <div class="modal-stats">
+          <div class="stat-item">
+            <span>Durée de la partie:</span>
+            <span id="gameDuration"></span>
+          </div>
+          <div class="stat-item">
+            <span>Nombre de tours:</span>
+            <span id="gameTurns"></span>
+          </div>
+          <div class="stat-item">
+            <span>Personnages KO:</span>
+            <span id="charactersKO"></span>
+          </div>
+          <div class="stat-item">
+            <span>Bonus utilisés:</span>
+            <span id="bonusesUsed"></span>
+          </div>
+        </div>
+        <button class="modal-button" onclick="returnToMainMenu()">
+          Retour au menu principal
+        </button>
+        <div class="countdown">
+          Retour au menu dans <span id="countdown">10</span> secondes...
+        </div>
+      </div>
+    </div>
 
     <!-- (Optionnel) Écran de statistiques de fin de partie -->
     <div id="gameOverScreen" class="hidden">
@@ -3440,6 +3551,116 @@
           });
           console.log("Hiding all screens");
         }
+
+        // ... existing code ...
+        socket.on("gameOver", (data) => {
+          console.log("Événement gameOver reçu:", data);
+          const gameEndMessage = document.getElementById("gameEndMessage");
+          if (!gameEndMessage) {
+            console.error("Element gameEndMessage non trouvé");
+            return;
+          }
+
+          // Calculer les statistiques
+          const duration = Math.floor((Date.now() - gameStartTime) / 1000);
+          const minutes = Math.floor(duration / 60);
+          const seconds = duration % 60;
+          const durationText = `${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+
+          const charactersKO = data.gameState.players[
+            data.winner === "player1" ? "player2" : "player1"
+          ].characters.filter((c) => c.pointsdevie <= 0).length;
+          const bonusesUsed = data.gameState.players[
+            data.winner
+          ].bonuses.filter((b) => b.tourbonus < 3).length;
+
+          // Mettre à jour le contenu de la modale
+          gameEndMessage.querySelector(".modal-title").textContent =
+            data.winner === "player1"
+              ? "Félicitations ! Vous avez gagné !"
+              : "Défaite...";
+
+          document.getElementById("gameDuration").textContent = durationText;
+          document.getElementById("gameTurns").textContent =
+            data.gameState.currentTurn;
+          document.getElementById("charactersKO").textContent = charactersKO;
+          document.getElementById("bonusesUsed").textContent = bonusesUsed;
+
+          // Afficher la modale
+          gameEndMessage.style.display = "flex";
+
+          // Démarrer le compte à rebours
+          let countdown = 10;
+          const countdownElement = document.getElementById("countdown");
+          const countdownInterval = setInterval(() => {
+            countdown--;
+            countdownElement.textContent = countdown;
+            if (countdown <= 0) {
+              clearInterval(countdownInterval);
+              returnToMainMenu();
+            }
+          }, 1000);
+        });
+
+        // Fonction pour retourner au menu principal
+        function returnToMainMenu() {
+          const gameEndMessage = document.getElementById("gameEndMessage");
+          if (gameEndMessage) {
+            gameEndMessage.style.display = "none";
+          }
+          document.getElementById("gameScreen").classList.add("hidden");
+          document.getElementById("homeScreen").classList.remove("hidden");
+          // Réinitialiser l'état du jeu
+          gameState = null;
+          gameStartTime = null;
+        }
+        // ... existing code ...
+
+        // ... existing code ...
+        function checkTurnEnd() {
+          console.log("Vérification de la fin de tour");
+          const currentPlayer =
+            gameState.currentTurn === 1 ? "player1" : "player2";
+          const currentPlayerCards =
+            gameState.players[currentPlayer].characters;
+          const hasAvailableAttacks = currentPlayerCards.some(
+            (card) => card.tourattaque > 0 && card.pointsdevie > 0
+          );
+
+          if (!hasAvailableAttacks) {
+            console.log(
+              `${currentPlayer} n'a plus d'attaques disponibles, passage au joueur suivant`
+            );
+            // On ne réinitialise jamais les tourattaque et tourbonus
+            // On change simplement le tour
+            gameState.currentTurn = gameState.currentTurn === 1 ? 2 : 1;
+            socket.emit("turnChanged", {
+              gameId,
+              newTurn: gameState.currentTurn,
+            });
+          }
+        }
+
+        // Fonction pour mettre à jour l'état du jeu après un changement de tour
+        function updateGameStateAfterTurnChange(data) {
+          if (!data.newGameState) return;
+
+          // Mettre à jour l'état du jeu avec les données du serveur
+          gameState = data.newGameState;
+
+          // Mettre à jour l'interface
+          updateGameStatus();
+          updateActionButtons();
+          renderCards();
+
+          // Afficher un message
+          showMessage(
+            `Tour du joueur ${gameState.currentTurn === 1 ? "1" : "2"}`
+          );
+        }
+        // ... existing code ...
       });
     </script>
   </body>
