@@ -551,24 +551,192 @@
 
       /* S'assurer que l'écran de fin est bien visible */
       #gameOverScreen {
-        position: absolute;
+        position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background-color: white;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-        padding: 20px;
-        z-index: 1000;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        padding: 30px;
+        z-index: 9999;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-direction: column;
         min-width: 300px;
+        max-width: 80%;
+        max-height: 80vh;
+        overflow-y: auto;
+        backdrop-filter: blur(10px);
+        animation: fadeIn 0.5s ease-out;
       }
 
       #gameOverScreen.hidden {
         display: none;
+      }
+
+      /* Animation pour l'apparition de l'écran de fin */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -55%);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%);
+        }
+      }
+
+      /* Message de fin de partie amélioré */
+      #gameEndMessage {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        background: linear-gradient(135deg, #4caf50, #8bc34a);
+        color: white;
+        padding: 25px 50px;
+        border-radius: 15px;
+        font-size: 36px;
+        font-weight: bold;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        text-align: center;
+        min-width: 300px;
+        max-width: 80%;
+        animation: pulsate 1.5s infinite alternate;
+        backdrop-filter: blur(5px);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Message de défaite en rouge */
+      #gameEndMessage.defeat {
+        background: linear-gradient(135deg, #f44336, #e53935);
+      }
+
+      /* Animation de pulsation pour le message de fin */
+      @keyframes pulsate {
+        from {
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        to {
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5),
+            0 0 40px rgba(255, 255, 255, 0.2);
+        }
+      }
+
+      /* Styles pour l'overlay de fin de partie */
+      .game-over-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 9990;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(3px);
+      }
+
+      .game-end-message {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        padding: 30px;
+        max-width: 80%;
+        max-height: 80vh;
+        overflow-y: auto;
+        text-align: center;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .game-end-message.victory {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.95),
+          rgba(232, 245, 233, 0.95)
+        );
+        border-left: 5px solid #4caf50;
+      }
+
+      .game-end-message.defeat {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.95),
+          rgba(255, 235, 238, 0.95)
+        );
+        border-left: 5px solid #f44336;
+      }
+
+      .game-end-message h1 {
+        font-size: 42px;
+        margin-bottom: 20px;
+        color: #333;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+      }
+
+      .game-end-message p {
+        font-size: 18px;
+        margin-bottom: 15px;
+      }
+
+      .game-end-message .stats {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: rgba(245, 245, 245, 0.9);
+        border-radius: 10px;
+      }
+
+      .game-end-message .player-stats {
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: white;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .game-end-message .current-player {
+        border-left: 4px solid #4caf50;
+      }
+
+      .game-end-message .opponent-player {
+        border-left: 4px solid #f44336;
+      }
+
+      #returnToMenuBtn {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 25px;
+        background: linear-gradient(45deg, #4caf50, #8bc34a);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      #returnToMenuBtn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
       }
 
       /* Style simplifié pour les statistiques */
@@ -885,10 +1053,8 @@
         const gameOverScreen = document.getElementById("gameOverScreen");
         if (gameOverScreen) {
           gameOverScreen.style.display = "none";
-          gameOverScreen.style.visibility = "hidden";
-          gameOverScreen.style.position = "absolute";
-          gameOverScreen.style.top = "-9999px";
-          gameOverScreen.style.left = "-9999px";
+          gameOverScreen.classList.add("hidden");
+          // Ne pas déplacer l'élément hors de l'écran pour permettre son animation correcte
         }
 
         // Redéfinir la fonction showGameOverScreen pour qu'elle affiche seulement un message
@@ -896,18 +1062,26 @@
           // Ignorer l'affichage des statistiques et montrer simplement le message de fin
           const gameEndMessage = document.getElementById("gameEndMessage");
           if (gameEndMessage) {
-            // Déterminer si le joueur a gagné (à adapter selon le contexte)
+            // Déterminer si le joueur a gagné
             const playerId = window.gameState && window.gameState.playerId;
             const isWinner = data && data.winner === playerId;
 
-            // Afficher le message
+            // Supprimer les styles inline qui pourraient interférer avec nos styles CSS
+            gameEndMessage.removeAttribute("style");
+
+            // Afficher le message avec nos classes CSS
             gameEndMessage.style.display = "block";
-            gameEndMessage.style.backgroundColor = isWinner
-              ? "#4CAF50"
-              : "#f44336";
-            gameEndMessage.textContent = isWinner
-              ? "Vous avez gagné !"
-              : "Vous avez perdu !";
+
+            // Ajouter la classe victory ou defeat en fonction du résultat
+            if (isWinner) {
+              gameEndMessage.classList.add("victory");
+              gameEndMessage.classList.remove("defeat");
+              gameEndMessage.textContent = "Victoire !";
+            } else {
+              gameEndMessage.classList.add("defeat");
+              gameEndMessage.classList.remove("victory");
+              gameEndMessage.textContent = "Défaite !";
+            }
 
             // Rediriger vers le menu après 3 secondes
             setTimeout(function () {
@@ -933,7 +1107,10 @@
 
               // Cacher tous les écrans
               document.getElementById("gameScreen").style.display = "none";
-              if (gameOverScreen) gameOverScreen.style.display = "none";
+              if (gameOverScreen) {
+                gameOverScreen.style.display = "none";
+                gameOverScreen.classList.add("hidden");
+              }
 
               // Afficher l'écran d'accueil correctement
               const homeScreen = document.getElementById("homeScreen");
@@ -1046,25 +1223,7 @@
     </div>
 
     <!-- Message de fin de partie -->
-    <div
-      id="gameEndMessage"
-      style="
-        display: none;
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 9999;
-        background-color: #4caf50;
-        color: white;
-        padding: 20px 40px;
-        border-radius: 10px;
-        font-size: 32px;
-        font-weight: bold;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        text-align: center;
-      "
-    ></div>
+    <div id="gameEndMessage"></div>
 
     <div id="messages"></div>
 
