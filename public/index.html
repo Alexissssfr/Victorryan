@@ -917,44 +917,50 @@
 
       /* Styles pour la fenêtre modale de fin de partie */
       .modal-overlay {
-        display: none;
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
-        z-index: 1000;
+        background-color: rgba(0, 0, 0, 0.8); /* Fond semi-transparent */
+        display: none; /* Caché par défaut */
         justify-content: center;
         align-items: center;
+        z-index: 10000; /* Au-dessus de tout */
+        animation: fadeIn 0.3s ease-out;
       }
 
       .modal-content {
-        background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        padding: 30px 40px;
         border-radius: 15px;
-        padding: 2rem;
-        max-width: 500px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        max-width: 550px;
         width: 90%;
         text-align: center;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        animation: modalAppear 0.3s ease-out;
-      }
-
-      @keyframes modalAppear {
-        from {
-          transform: scale(0.8);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
+        color: #ecf0f1;
+        position: relative;
+        animation: zoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Effet d'apparition */
       }
 
       .modal-title {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        font-size: 2.2rem;
+        margin-bottom: 20px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        /* Sera coloré dynamiquement par JS (victory/defeat) */
+      }
+
+      .modal-title.victory {
+        background: linear-gradient(45deg, #2ecc71, #27ae60); /* Vert */
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+
+      .modal-title.defeat {
+        background: linear-gradient(45deg, #e74c3c, #c0392b); /* Rouge */
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -962,41 +968,71 @@
       }
 
       .modal-stats {
-        margin: 1.5rem 0;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.1);
+        margin: 25px 0;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.08);
         border-radius: 10px;
+        text-align: left;
       }
 
       .stat-item {
         display: flex;
         justify-content: space-between;
-        margin: 0.5rem 0;
-        color: #fff;
+        padding: 8px 0;
+        font-size: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .stat-item:last-child {
+        border-bottom: none;
+      }
+      .stat-item span:first-child {
+        font-weight: 500;
+        color: #bdc3c7; /* Gris clair */
+      }
+      .stat-item span:last-child {
+        font-weight: bold;
+        color: #ffffff; /* Blanc */
       }
 
-      .modal-button {
-        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 25px;
+      .reason-text {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 12px;
+        border-radius: 8px;
+        margin: 20px 0;
+        font-style: italic;
+        color: #bdc3c7;
+        font-size: 0.95rem;
+      }
+
+      .btn-primary {
+        /* Styles existants pour .btn-primary */
+        /* ... */
+        margin-top: 25px; /* Espace au-dessus du bouton */
+        padding: 12px 30px;
         font-size: 1.1rem;
-        cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-        margin-top: 1rem;
       }
 
-      .modal-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
-      .countdown {
-        font-size: 1.2rem;
-        color: #ff6b6b;
-        margin-top: 1rem;
+      @keyframes zoomIn {
+        from {
+          opacity: 0;
+          transform: scale(0.8);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
+
+      /* ... (autres styles existants) ... */
     </style>
   </head>
   <body>
@@ -1031,39 +1067,13 @@
               ? "Vous avez gagné !"
               : "Vous avez perdu !";
 
-            // Rediriger vers le menu après 3 secondes
+            // SUPPRIMER LA REDIRECTION AUTOMATIQUE ICI
+            /*
             setTimeout(function () {
               gameEndMessage.style.display = "none";
-
-              // Émettre l'événement leaveGame
-              if (
-                window.socket &&
-                data &&
-                data.newGameState &&
-                data.newGameState.id
-              ) {
-                window.socket.emit("leaveGame", {
-                  gameId: data.newGameState.id,
-                });
-              }
-
-              // Réinitialiser l'état du jeu
-              if (window.gameState) {
-                window.gameState.game = null;
-                window.gameState.playerId = null;
-              }
-
-              // Cacher tous les écrans
-              document.getElementById("gameScreen").style.display = "none";
-              if (gameOverScreen) gameOverScreen.style.display = "none";
-
-              // Afficher l'écran d'accueil correctement
-              const homeScreen = document.getElementById("homeScreen");
-              if (homeScreen) {
-                homeScreen.style.display = "block";
-                homeScreen.classList.remove("hidden");
-              }
-            }, 3000);
+              // ... (code de nettoyage et redirection)
+            }, 3000); // SUPPRIMÉ
+            */
           }
         };
       });
@@ -1204,6 +1214,44 @@
     </div>
 
     <div id="messages"></div>
+
+    <!-- MODALE DE FIN DE PARTIE (UNIQUE) -->
+    <div id="gameOverModal" class="modal-overlay">
+      <!-- Assurez-vous que l'ID est bien gameOverModal -->
+      <div class="modal-content">
+        <h2 id="modalTitle" class="modal-title"></h2>
+        <!-- Titre dynamique -->
+        <p class="reason-text" id="stat-reason">-</p>
+        <!-- Raison de la fin -->
+        <div class="modal-stats">
+          <h3>Statistiques Finales</h3>
+          <div class="stat-item">
+            <span>Durée:</span> <span id="stat-duration">-</span>
+          </div>
+          <div class="stat-item">
+            <span>Tours:</span> <span id="stat-turns">-</span>
+          </div>
+          <h4>Vous</h4>
+          <div class="stat-item">
+            <span>PV Restants:</span> <span id="stat-hp-player">-</span>
+          </div>
+          <div class="stat-item">
+            <span>Personnages KO:</span> <span id="stat-kos-player">-</span>
+          </div>
+          <h4>Adversaire</h4>
+          <div class="stat-item">
+            <span>PV Restants:</span> <span id="stat-hp-opponent">-</span>
+          </div>
+          <div class="stat-item">
+            <span>Personnages KO:</span> <span id="stat-kos-opponent">-</span>
+          </div>
+        </div>
+        <button id="returnToMenuBtn" class="btn-primary">Retour au menu</button>
+      </div>
+    </div>
+
+    <!-- SUPPRIMER TOTALEMENT L'ANCIEN ÉLÉMENT S'IL EXISTE ENCORE -->
+    <!-- <div id="gameEndMessage">...</div> DOIT ÊTRE SUPPRIMÉ -->
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -2925,11 +2973,13 @@
               console.warn(
                 "Bouton de retour au menu non trouvé, retour automatique activé"
               );
+              // Si le bouton n'est pas trouvé, on ne devrait PAS rediriger automatiquement
+              // returnToMenuFunction(); // Supprimer l'appel automatique ici aussi
             }
           }, 100);
 
-          // Rediriger automatiquement après 5 secondes
-          setTimeout(returnToMenuFunction, 5000);
+          // Supprimer la redirection automatique après 5 secondes
+          // setTimeout(returnToMenuFunction, 5000);  // LIGNE SUPPRIMÉE
         });
 
         // Supprimer ou remplacer la fonction showGameOverScreen
@@ -3661,6 +3711,192 @@
           );
         }
         // ... existing code ...
+
+        // --- GESTIONNAIRE UNIQUE ET CORRECT POUR LA FIN DE PARTIE ---
+        socket.on("gameOver", (data) => {
+          console.log("Fin de partie reçue (gestionnaire unifié):", data);
+
+          // Cacher immédiatement tout autre message de fin potentiel
+          const oldMessage = document.getElementById("gameEndMessage"); // Au cas où il existerait encore
+          if (oldMessage) oldMessage.style.display = "none";
+          // Cacher aussi l'écran de stats de base s'il existe
+          const basicGameOverScreen = document.getElementById("gameOverScreen");
+          if (basicGameOverScreen) basicGameOverScreen.style.display = "none";
+
+          // Vérifier les données essentielles
+          if (!data || !data.winner || !data.reason || !data.stats) {
+            console.error("Données de fin de partie incomplètes reçues:", data);
+            alert("Erreur lors de la réception des données de fin de partie.");
+            returnToMainMenu(); // Retour prudent au menu
+            return;
+          }
+
+          const { winner, reason, stats } = data;
+          const isWinner = winner === gameState.playerId;
+
+          // Cibler les éléments de la MODALE
+          const modal = document.getElementById("gameOverModal");
+          const titleElement = modal.querySelector("#modalTitle");
+          const reasonElement = modal.querySelector("#stat-reason");
+          const durationElement = modal.querySelector("#stat-duration");
+          const turnsElement = modal.querySelector("#stat-turns");
+          const hpPlayerElement = modal.querySelector("#stat-hp-player");
+          const kosPlayerElement = modal.querySelector("#stat-kos-player");
+          const hpOpponentElement = modal.querySelector("#stat-hp-opponent");
+          const kosOpponentElement = modal.querySelector("#stat-kos-opponent");
+
+          if (
+            !modal ||
+            !titleElement ||
+            !reasonElement ||
+            !durationElement ||
+            !turnsElement ||
+            !hpPlayerElement ||
+            !kosPlayerElement ||
+            !hpOpponentElement ||
+            !kosOpponentElement
+          ) {
+            console.error(
+              "Éléments de la modale de fin de partie introuvables !"
+            );
+            alert("Erreur d'affichage de la fin de partie.");
+            returnToMainMenu();
+            return;
+          }
+
+          // 1. Mise à jour du titre
+          titleElement.textContent = isWinner
+            ? "🎉 VICTOIRE ! 🎉"
+            : "😥 DÉFAITE 😥";
+          titleElement.className = isWinner
+            ? "modal-title victory"
+            : "modal-title defeat";
+
+          // 2. Mise à jour de la raison
+          let reasonText = "La partie est terminée.";
+          switch (reason) {
+            case "all_characters_ko":
+              reasonText = isWinner
+                ? "Vous avez éliminé tous les personnages adverses !"
+                : "Tous vos personnages ont été éliminés.";
+              break;
+            case "no_more_attacks":
+              reasonText =
+                "Aucun joueur ne peut plus attaquer. Le décompte des PV décide du vainqueur.";
+              break;
+            case "player_abandoned":
+              reasonText = isWinner
+                ? "Votre adversaire a quitté la partie."
+                : "Vous avez quitté la partie."; // Ajuster si nécessaire
+              break;
+            default:
+              reasonText = `Raison: ${reason}`; // Afficher la raison brute si inconnue
+          }
+          reasonElement.textContent = reasonText;
+
+          // 3. Mise à jour des statistiques
+          const endTime = Date.now();
+          const startTime = gameState.startTime || endTime; // Éviter NaN si startTime est null
+          durationElement.textContent = formatDuration(endTime - startTime);
+          turnsElement.textContent =
+            stats.turnCount ?? gameState.game?.turnCount ?? "N/A";
+
+          // Extraire les stats des deux joueurs depuis data.stats
+          const playerStatsData = stats[gameState.playerId];
+          const opponentId = Object.keys(stats).find(
+            (id) => id !== gameState.playerId && id !== "turnCount"
+          );
+          const opponentStatsData = opponentId ? stats[opponentId] : null;
+
+          hpPlayerElement.textContent = playerStatsData?.totalHealth ?? "N/A";
+          kosPlayerElement.textContent = playerStatsData?.koCount ?? "N/A";
+
+          hpOpponentElement.textContent =
+            opponentStatsData?.totalHealth ?? "N/A";
+          kosOpponentElement.textContent = opponentStatsData?.koCount ?? "N/A";
+
+          // 4. Afficher la MODALE (et s'assurer qu'elle est bien en display: flex)
+          console.log("Affichage de la modale gameOverModal");
+          modal.style.display = "flex"; // Forcer l'affichage correct
+          modal.classList.remove("hidden"); // Au cas où la classe serait utilisée
+
+          // 5. PAS de redirection automatique !
+          // Le bouton dans la modale gère le retour au menu
+        });
+
+        // --- Gestionnaire pour la mise à jour après une attaque ---
+        socket.on("characterAttacked", (data) => {
+          console.log("Événement characterAttacked reçu:", data);
+          if (!gameState.game) return;
+
+          // Mettre à jour l'état du jeu localement IMMÉDIATEMENT
+          // même si le serveur envoie un newGameState complet, pour la réactivité
+          const { attackerId, targetId, damage, newHealth, newAttackerTurns } =
+            data;
+
+          // Trouver le joueur cible
+          let targetPlayer = null;
+          for (const pId in gameState.game.players) {
+            if (gameState.game.players[pId].charactersState[targetId]) {
+              targetPlayer = gameState.game.players[pId];
+              break;
+            }
+          }
+          // Trouver le joueur attaquant
+          let attackerPlayer = null;
+          for (const pId in gameState.game.players) {
+            if (gameState.game.players[pId].charactersState[attackerId]) {
+              attackerPlayer = gameState.game.players[pId];
+              break;
+            }
+          }
+
+          // Mettre à jour la santé de la cible
+          if (targetPlayer && targetPlayer.charactersState[targetId]) {
+            console.log(
+              `Mise à jour locale PV cible ${targetId}: ${newHealth}`
+            );
+            targetPlayer.charactersState[targetId].pointsdevie = newHealth;
+            targetPlayer.charactersState[targetId].currentHealth = newHealth; // Garder synchronisé
+          }
+
+          // Mettre à jour les tours de l'attaquant
+          if (attackerPlayer && attackerPlayer.charactersState[attackerId]) {
+            console.log(
+              `Mise à jour locale tours attaquant ${attackerId}: ${newAttackerTurns}`
+            );
+            attackerPlayer.charactersState[attackerId].tourattaque =
+              newAttackerTurns;
+            attackerPlayer.charactersState[attackerId].currentTurns =
+              newAttackerTurns; // Garder synchronisé
+          }
+
+          // Si le serveur envoie un état complet, le fusionner (optionnel mais plus sûr)
+          if (data.newGameState) {
+            console.log("Fusion de newGameState reçu après attaque");
+            gameState.game = data.newGameState; // Remplacer par l'état serveur fiable
+            // Re-synchroniser les valeurs currentXXX pour être sûr
+            // ... (logique de synchro si nécessaire, mais newGameState devrait être complet)
+          }
+
+          // Marquer l'attaque comme effectuée (si pertinent pour la logique client)
+          // gameState.game.attackPerformed = true; // Dépend si le serveur gère ça dans newGameState
+
+          // Afficher un message
+          const attackerName = data.attackerName || attackerId;
+          const targetName = data.targetName || targetId;
+          showMessage(
+            `${attackerName} attaque ${targetName} pour ${damage} dégâts! PV restants: ${newHealth}`
+          );
+
+          // *** APPELER RENDERCARDS IMMÉDIATEMENT ***
+          console.log("Appel de renderCards() après characterAttacked");
+          renderCards();
+
+          // Ne pas appeler checkGameOver ici, le serveur devrait envoyer l'event gameOver
+        });
+
+        // ... (reste du script, renderCards, createCharacterCard, etc.)
       });
     </script>
   </body>
