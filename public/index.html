@@ -5,19 +5,125 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Victorryan</title>
     <style>
+      /* Styles améliorés pour le menu d'accueil */
       body {
-        font-family: Arial, sans-serif;
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #f5f5f5;
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
       }
+
       .container {
         margin-top: 20px;
       }
+
+      .hidden {
+        display: none !important;
+      }
+
+      h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-size: 3em;
+      }
+
+      /* Design spécifique pour l'écran d'accueil */
+      #homeScreen {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        margin: 20px auto;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+
+      #homeScreen h2 {
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+      }
+
+      #homeScreen input {
+        padding: 12px 15px;
+        width: 100%;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        background-color: rgba(255, 255, 255, 0.8);
+        box-sizing: border-box;
+        transition: all 0.3s ease;
+      }
+
+      #homeScreen input:focus {
+        border-color: #4caf50;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        outline: none;
+      }
+
+      #homeScreen button {
+        padding: 12px 20px;
+        background: linear-gradient(45deg, #4caf50, #8bc34a);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        margin: 10px 0;
+        min-width: 200px;
+        box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+        transition: all 0.3s ease;
+        display: inline-block;
+      }
+
+      #homeScreen button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
+        background: linear-gradient(45deg, #43a047, #7cb342);
+      }
+
+      #joinGameBtn {
+        background: linear-gradient(45deg, #ff9800, #ffb74d);
+        box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+      }
+
+      #joinGameBtn:hover {
+        box-shadow: 0 6px 15px rgba(255, 152, 0, 0.4);
+        background: linear-gradient(45deg, #f57c00, #ffb74d);
+      }
+
+      #homeScreen hr {
+        margin: 20px 0;
+        border: none;
+        height: 1px;
+        background: linear-gradient(
+          to right,
+          transparent,
+          rgba(0, 0, 0, 0.2),
+          transparent
+        );
+      }
+
+      /* Reste des styles inchangés */
+      .container {
+        margin-top: 20px;
+      }
+
       .hidden {
         display: none;
       }
+
       button {
         padding: 8px 16px;
         background-color: #4caf50;
