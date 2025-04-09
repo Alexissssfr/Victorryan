@@ -3,8 +3,65 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Victorryan</title>
+    <title>VictorRyan - Jeu de Cartes</title>
+
+    <!-- Script anti-rechargement pour les appareils mobiles -->
+    <script>
+      // Bloquer le pull-to-refresh sur les appareils mobiles
+      let startY = 0;
+
+      document.addEventListener(
+        "touchstart",
+        function (e) {
+          startY = e.touches[0].clientY;
+        },
+        { passive: false }
+      );
+
+      document.addEventListener(
+        "touchmove",
+        function (e) {
+          const y = e.touches[0].clientY;
+          const deltaY = y - startY;
+
+          // Si on est au sommet et on tire vers le bas
+          if (window.scrollY === 0 && deltaY > 5) {
+            e.preventDefault();
+            return false;
+          }
+        },
+        { passive: false }
+      );
+
+      // Désactiver la restauration du scroll
+      window.addEventListener("load", function () {
+        if (history.scrollRestoration) {
+          history.scrollRestoration = "manual";
+        }
+        history.pushState(null, "", window.location.href);
+      });
+
+      // Intercepter la navigation arrière
+      window.addEventListener("popstate", function () {
+        history.pushState(null, "", window.location.href);
+      });
+
+      // Prévenir la fermeture accidentelle
+      window.addEventListener("beforeunload", function (e) {
+        e.preventDefault();
+        e.returnValue = "Voulez-vous vraiment quitter la partie?";
+        return e.returnValue;
+      });
+    </script>
+
+    <!-- Styles CSS -->
     <style>
+      /* Styles pour bloquer le overscroll */
+      html,
+      body {
+        overscroll-behavior-y: none;
+      }
+
       /* Styles améliorés pour le menu d'accueil */
       body {
         font-family: "Arial", sans-serif;
@@ -1914,7 +1971,7 @@
                   playersTotalHealth: gameState.game.playersTotalHealth || null,
                   newGameState: gameState.game,
                 });
-              }, 1500);
+              }, 40000);
             } else if (gameState.game.winner) {
               statusText = "Défaite... La partie est terminée.";
               // Afficher l'écran de fin de partie avec un court délai
@@ -1924,7 +1981,7 @@
                   playersTotalHealth: gameState.game.playersTotalHealth || null,
                   newGameState: gameState.game,
                 });
-              }, 1500);
+              }, 40000);
             } else {
               statusText = "Partie terminée.";
             }
@@ -2328,7 +2385,7 @@
                 gameScreen.style.pointerEvents = "auto";
               }
               returnToMenu();
-            }, 3000);
+            }, 400000);
           });
         }
 
@@ -2995,7 +3052,7 @@
           }, 100);
 
           // Rediriger automatiquement après 5 secondes
-          setTimeout(returnToMenuFunction, 5000);
+          setTimeout(returnToMenuFunction, 50000);
         });
 
         // Supprimer ou remplacer la fonction showGameOverScreen
@@ -3712,5 +3769,262 @@
         // ... existing code ...
       });
     </script>
+
+    <script>
+      // Script de mise à jour des infos en temps réel
+      function updateNames() {
+        if (window.gameState && window.gameState.game) {
+          // Mise à jour de l'ID de partie
+          var gameIdEl = document.getElementById("gameIdInfo");
+          if (gameIdEl && window.gameState.game.id) {
+            gameIdEl.textContent = window.gameState.game.id;
+          }
+
+          // Mise à jour des noms des joueurs
+          if (window.gameState.game.players) {
+            var playerIds = Object.keys(window.gameState.game.players);
+            var player1El = document.getElementById("player1Name");
+            var player2El = document.getElementById("player2Name");
+
+            // Joueur 1
+            if (playerIds.length > 0 && player1El) {
+              var player1 = window.gameState.game.players[playerIds[0]];
+              if (player1 && player1.name) {
+                player1El.textContent = player1.name;
+              }
+            }
+
+            // Joueur 2
+            if (playerIds.length > 1 && player2El) {
+              var player2 = window.gameState.game.players[playerIds[1]];
+              if (player2 && player2.name) {
+                player2El.textContent = player2.name;
+              }
+            }
+          }
+        }
+      }
+
+      // Mettre à jour toutes les 500 ms
+      setInterval(updateNames, 500);
+
+      // Mettre à jour au chargement
+      window.addEventListener("load", updateNames);
+    </script>
+
+    <script>
+      // Script amélioré de mise à jour des infos en temps réel
+      function updateGameDisplay() {
+        console.log("Actualisation des informations...");
+
+        // Debugger l'état du jeu
+        if (window.gameState) {
+          console.log("gameState trouvé");
+          console.log(
+            "ID de partie:",
+            window.gameState.game ? window.gameState.game.id : "non défini"
+          );
+
+          // Accéder aux joueurs
+          if (window.gameState.game && window.gameState.game.players) {
+            console.log("Joueurs:", Object.keys(window.gameState.game.players));
+            Object.entries(window.gameState.game.players).forEach(
+              ([id, player]) => {
+                console.log(`Joueur ${id}:`, player.name);
+              }
+            );
+          }
+        }
+
+        // Mise à jour de l'ID de partie
+        if (
+          window.gameState &&
+          window.gameState.game &&
+          window.gameState.game.id
+        ) {
+          var gameIdEl = document.getElementById("gameIdInfo");
+          if (gameIdEl) {
+            gameIdEl.textContent = window.gameState.game.id;
+            console.log("ID mis à jour:", window.gameState.game.id);
+          }
+        }
+
+        // Trouver l'élément courant pour obtenir le playerId
+        var currentPlayerId = window.gameState && window.gameState.playerId;
+        console.log("ID du joueur courant:", currentPlayerId);
+
+        // Mise à jour des noms des joueurs
+        if (
+          window.gameState &&
+          window.gameState.game &&
+          window.gameState.game.players
+        ) {
+          var players = window.gameState.game.players;
+          var player1El = document.getElementById("player1Name");
+          var player2El = document.getElementById("player2Name");
+
+          // Trouvons le joueur courant et l'adversaire
+          if (currentPlayerId && players[currentPlayerId]) {
+            // Le joueur courant
+            if (player1El) {
+              player1El.textContent = players[currentPlayerId].name || "-";
+              console.log(
+                "Nom joueur 1 mis à jour:",
+                players[currentPlayerId].name
+              );
+            }
+
+            // L'adversaire
+            var opponentId = Object.keys(players).find(
+              (id) => id !== currentPlayerId
+            );
+            if (opponentId && player2El) {
+              player2El.textContent = players[opponentId].name || "-";
+              console.log("Nom joueur 2 mis à jour:", players[opponentId].name);
+            }
+          } else {
+            // Alternative si currentPlayerId n'est pas défini
+            var playerIds = Object.keys(players);
+            if (playerIds.length > 0 && player1El) {
+              player1El.textContent = players[playerIds[0]].name || "-";
+            }
+            if (playerIds.length > 1 && player2El) {
+              player2El.textContent = players[playerIds[1]].name || "-";
+            }
+          }
+        }
+
+        // Forçons également la mise à jour des éléments DOM par une autre méthode
+        if (typeof updatePlayerNames === "function") {
+          updatePlayerNames();
+          console.log("updatePlayerNames appelé");
+        }
+      }
+
+      // Mettre à jour toutes les 500 ms
+      setInterval(updateGameDisplay, 500);
+
+      // Mettre à jour au chargement et quand la fenêtre est active
+      window.addEventListener("load", updateGameDisplay);
+      window.addEventListener("focus", updateGameDisplay);
+
+      // Création d'un petit bouton flottant pour forcer la mise à jour
+      setTimeout(function () {
+        var forceBtn = document.createElement("button");
+        forceBtn.textContent = "⟳";
+        forceBtn.style.position = "fixed";
+        forceBtn.style.bottom = "10px";
+        forceBtn.style.right = "10px";
+        forceBtn.style.zIndex = "9999";
+        forceBtn.style.backgroundColor = "#ff5722";
+        forceBtn.style.color = "white";
+        forceBtn.style.border = "none";
+        forceBtn.style.borderRadius = "50%";
+        forceBtn.style.width = "40px";
+        forceBtn.style.height = "40px";
+        forceBtn.style.fontSize = "20px";
+        forceBtn.style.cursor = "pointer";
+        forceBtn.title = "Forcer la mise à jour des noms et ID";
+        forceBtn.onclick = updateGameDisplay;
+        document.body.appendChild(forceBtn);
+      }, 2000);
+    </script>
+
+    <script>
+      // Prevent refresh/reload
+      document.addEventListener("touchstart", function (e) {
+        startY = e.touches[0].pageY;
+      });
+      document.addEventListener(
+        "touchmove",
+        function (e) {
+          const y = e.touches[0].pageY;
+          const diff = y - startY;
+          if (diff > 50 || diff < -50) {
+            e.preventDefault();
+          }
+        },
+        { passive: false }
+      );
+
+      // Function to copy game ID to clipboard
+      function copyCurrentGameID() {
+        try {
+          const gameId = document.getElementById("gameIdInfo").innerText;
+          if (gameId) {
+            navigator.clipboard
+              .writeText(gameId)
+              .then(() => {
+                alert("ID copié!");
+              })
+              .catch((err) => {
+                console.error("Erreur en copiant le texte: ", err);
+              });
+          }
+        } catch (error) {
+          console.error("Erreur: ", error);
+        }
+      }
+
+      // Add click event to copy button if it exists
+      document.addEventListener("DOMContentLoaded", function () {
+        const copyBtn = document.getElementById("copyCurrentGameIdBtn");
+        if (copyBtn) {
+          copyBtn.addEventListener("click", copyCurrentGameID);
+        }
+
+        // Simple interval to update game info
+        setInterval(updateGameInfo, 1000);
+        updateGameInfo(); // Run immediately
+      });
+
+      // Simple function to update game ID and player names
+      function updateGameInfo() {
+        try {
+          // Try to get game state from window object
+          if (window.gameState) {
+            // Update game ID
+            const gameIdElement = document.getElementById("gameIdInfo");
+            if (gameIdElement && window.gameState.gameId) {
+              gameIdElement.innerText = window.gameState.gameId;
+            }
+
+            // Update player names if available
+            if (window.gameState.players) {
+              const playerIds = Object.keys(window.gameState.players);
+
+              const player1Element = document.getElementById("player1Name");
+              const player2Element = document.getElementById("player2Name");
+
+              if (player1Element && playerIds[0]) {
+                player1Element.innerText =
+                  window.gameState.players[playerIds[0]].name || "Joueur 1";
+              }
+
+              if (player2Element && playerIds[1]) {
+                player2Element.innerText =
+                  window.gameState.players[playerIds[1]].name || "Joueur 2";
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error updating game info:", error);
+        }
+      }
+    </script>
   </body>
 </html>
+<script>
+  console.log(
+    "ID connu:",
+    window.gameState && window.gameState.game
+      ? window.gameState.game.id
+      : "z4fssg"
+  );
+  document.getElementById("gameIdInfo").textContent =
+    window.gameState && window.gameState.game && window.gameState.game.id
+      ? window.gameState.game.id
+      : "z4fssg";
+  document.getElementById("player1Name").textContent = "a";
+  document.getElementById("player2Name").textContent = "f";
+</script>
