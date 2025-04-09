@@ -617,7 +617,26 @@ io.on("connection", (socket) => {
     // Incrémenter le compteur de bonus joués ce tour
     game.bonusPlayedThisTurn++;
 
-    // Émettre l'événement de bonus joué
+    // Émettre l'événement de mise à jour de la charge du bonus (OPTIMISÉ)
+    io.to(gameId).emit("bonusChargeUpdated", {
+      gameId,
+      playerId,
+      bonusId,
+      newChargeCount: parseInt(bonusCard.tourbonus),
+    });
+
+    // Émettre l'événement de mise à jour de l'attaque du personnage (OPTIMISÉ)
+    io.to(gameId).emit("characterStatUpdated", {
+      gameId,
+      playerId,
+      characterId: targetId,
+      stats: {
+        forceattaque: targetState.forceattaque,
+        currentAttack: targetState.forceattaque, // Ajout de currentAttack pour mise à jour visuelle immédiate
+      },
+    });
+
+    // Émettre l'événement de bonus joué (sans l'état complet du jeu)
     io.to(gameId).emit("bonusPlayed", {
       gameId,
       playerId,
@@ -628,7 +647,7 @@ io.on("connection", (socket) => {
       newAttack: targetState.forceattaque,
       bonusPlayedThisTurn: game.bonusPlayedThisTurn,
       maxBonusPerTurn: game.maxBonusPerTurn,
-      newGameState: JSON.parse(JSON.stringify(game)),
+      // newGameState: JSON.parse(JSON.stringify(game)), // COMMENTÉ POUR OPTIMISATION
     });
 
     // Vérifier si la partie est terminée

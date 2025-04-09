@@ -823,22 +823,21 @@
 
       /* Style pour les statuts de santé */
       .health-depleted {
-        color: #ff5252;
+        color: #ff0000;
         font-weight: bold;
-        text-decoration: line-through;
+        text-shadow: 0 0 2px rgba(255, 0, 0, 0.5);
       }
 
       .health-critical {
-        color: #ff5252;
-        font-weight: bold;
+        color: #ff4000;
       }
 
       .health-warning {
-        color: #ffb74d;
+        color: #ffa500;
       }
 
       .health-normal {
-        color: #81c784;
+        color: #00ff00;
       }
 
       /* Style pour les cartes épuisées */
@@ -1042,6 +1041,29 @@
         position: absolute !important;
         top: -9999px !important;
         left: -9999px !important;
+      }
+
+      /* Styles pour les valeurs d'attaque */
+      .attack-normal {
+        color: #ffffff;
+      }
+      .attack-boosted {
+        color: #ffdd00;
+        font-weight: bold;
+        text-shadow: 0 0 3px rgba(255, 221, 0, 0.7);
+        animation: pulse 1.5s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          text-shadow: 0 0 2px rgba(255, 221, 0, 0.7);
+        }
+        50% {
+          text-shadow: 0 0 5px rgba(255, 221, 0, 0.9);
+        }
+        100% {
+          text-shadow: 0 0 2px rgba(255, 221, 0, 0.7);
+        }
       }
     </style>
   </head>
@@ -1658,13 +1680,19 @@
             healthDisplay = "KO";
           }
 
+          // Déterminer la classe d'attaque (pour indiquer visuellement les bonus)
+          let attackClass = "normal";
+          if (activeBonus && activeBonus.length > 0) {
+            attackClass = "boosted";
+          }
+
           // Construire le HTML de la carte simplifiée avec icônes
           cardEl.innerHTML = `
             ${imageHtml}
             ${bonusIndicator}
             <div style="position: absolute; top: 8px; left: 5px; right: 5px; z-index: 3; display: flex; flex-wrap: wrap; gap: 4px;">
               <div class="stat-item stat-hp"><span class="health-${healthClass}">${healthDisplay}</span></div>
-              <div class="stat-item stat-attack">${attack}</div>
+              <div class="stat-item stat-attack"><span class="attack-${attackClass}">${attack}</span></div>
               <div class="stat-item stat-turns">${turns}</div>
             </div>
           `;
@@ -2560,11 +2588,37 @@
                 }
               }
             }
-
-            // Marquer le bonus comme joué ce tour
-            gameState.bonusPlayedThisTurn = true;
-            gameState.lastBonusTarget = data.targetId;
           }
+
+          // Si la cible est spécifiée et que le jeu possède cet état, synchroniser manuellement
+          if (
+            data.targetId &&
+            data.newAttack &&
+            gameState.game &&
+            gameState.game.players
+          ) {
+            // Trouver le joueur qui a joué le bonus
+            const player = gameState.game.players[data.playerId];
+            if (
+              player &&
+              player.charactersState &&
+              player.charactersState[data.targetId]
+            ) {
+              const targetState = player.charactersState[data.targetId];
+
+              // Mettre à jour la force d'attaque et synchroniser avec currentAttack
+              targetState.forceattaque = data.newAttack;
+              targetState.currentAttack = data.newAttack;
+
+              console.log(
+                `Synchronisation manuelle de l'attaque pour ${data.targetId}: ${data.newAttack}`
+              );
+            }
+          }
+
+          // Marquer le bonus comme joué ce tour
+          gameState.bonusPlayedThisTurn = true;
+          gameState.lastBonusTarget = data.targetId;
 
           // Afficher un message plus informatif
           const bonusName = data.bonusName || "Bonus";
@@ -3498,6 +3552,164 @@
           cleanupMessages();
           showScreen("homeScreen");
         });
+
+        // *** AJOUT DU NOUVEL ÉCOUTEUR POUR LA MISE À JOUR DES CHARGES ***
+        socket.on("bonusChargeUpdated", (data) => {
+          console.log("Mise à jour charge bonus reçue:", data);
+          // Vérifier si on a les données nécessaires et si le jeu est chargé
+          if (
+            !data ||
+            !data.gameId ||
+            !data.playerId ||
+            !data.bonusId ||
+            data.newChargeCount === undefined
+          ) {
+            console.warn(
+              "Données bonusChargeUpdated incomplètes reçues:",
+              data
+            );
+            return;
+          }
+          if (!gameState || !gameState.game || !gameState.game.players) {
+            console.warn("État du jeu non prêt pour bonusChargeUpdated");
+            return;
+          }
+
+          const { gameId, playerId, bonusId, newChargeCount } = data;
+
+          // Vérifier si la mise à jour concerne la partie actuelle
+          if (gameId !== gameState.game.id) {
+            console.log("bonusChargeUpdated ignoré (autre partie)");
+            return;
+          }
+
+          // Trouver le joueur concerné dans l'état local
+          const player = gameState.game.players[playerId];
+          if (!player || !player.cards || !player.cards.bonus) {
+            console.warn(
+              `Joueur ${playerId} ou ses cartes bonus non trouvés localement.`
+            );
+            return;
+          }
+
+          // Trouver la carte bonus dans l'état local
+          const bonusCard = player.cards.bonus.find((b) => b.id === bonusId);
+
+          if (bonusCard) {
+            // Vérifier si la valeur a réellement changé pour éviter des rendus inutiles
+            if (bonusCard.tourbonus !== newChargeCount.toString()) {
+              console.log(
+                `Mise à jour locale tourbonus pour ${bonusId} (${bonusCard.nomcartebonus}): ${bonusCard.tourbonus} -> ${newChargeCount}`
+              );
+              bonusCard.tourbonus = newChargeCount.toString(); // Mettre à jour la valeur locale avec celle du serveur
+
+              // Rafraîchir l'affichage
+              renderCards();
+              updateActionButtons(); // Mettre à jour aussi les boutons
+            } else {
+              console.log(
+                `tourbonus pour ${bonusId} déjà à jour (${newChargeCount}).`
+              );
+            }
+          } else {
+            console.warn(
+              `Carte bonus ${bonusId} non trouvée localement pour mise à jour.`
+            );
+          }
+        });
+        // *** FIN DU NOUVEL ÉCOUTEUR ***
+
+        // *** AJOUT DE L'ÉCOUTEUR POUR LA MISE À JOUR DES STATS DE PERSONNAGE ***
+        socket.on("characterStatUpdated", (data) => {
+          console.log("Mise à jour des statistiques reçue", data);
+
+          // Vérification des données complètes
+          if (!data || !data.characterId || !data.playerId) {
+            console.warn("Données de mise à jour incomplètes:", data);
+            return;
+          }
+
+          // Vérification de l'état du jeu
+          if (!gameState || !gameState.game || !gameState.game.players) {
+            console.warn(
+              "État du jeu non initialisé pour la mise à jour des statistiques"
+            );
+            return;
+          }
+
+          // Trouver le joueur concerné
+          const player = gameState.game.players[data.playerId];
+          if (!player || !player.charactersState) {
+            console.warn(
+              `Joueur ${data.playerId} ou ses personnages non trouvés.`
+            );
+            return;
+          }
+
+          // Trouver le personnage concerné
+          const character = player.charactersState[data.characterId];
+          if (!character) {
+            console.warn(`Personnage ${data.characterId} non trouvé.`);
+            return;
+          }
+
+          // Mise à jour des statistiques - Gère à la fois l'ancien format (stat/newValue) et le nouveau format (stats object)
+          if (data.stats) {
+            // Nouveau format: object stats
+            Object.keys(data.stats).forEach((statKey) => {
+              // Mettre à jour la statistique dans l'état du jeu
+              character[statKey] = data.stats[statKey];
+
+              // Assurer la synchronisation des valeurs current*
+              if (
+                statKey === "forceattaque" &&
+                character.currentAttack !== undefined
+              ) {
+                character.currentAttack = data.stats[statKey];
+              } else if (
+                statKey === "pointsdevie" &&
+                character.currentHealth !== undefined
+              ) {
+                character.currentHealth = data.stats[statKey];
+              } else if (
+                statKey === "tourattaque" &&
+                character.currentTurns !== undefined
+              ) {
+                character.currentTurns = data.stats[statKey];
+              }
+            });
+          } else if (data.stat && data.newValue !== undefined) {
+            // Ancien format: stat + newValue
+            character[data.stat] = data.newValue;
+
+            // Synchroniser les valeurs current*
+            if (
+              data.stat === "forceattaque" &&
+              character.currentAttack !== undefined
+            ) {
+              character.currentAttack = data.newValue;
+            } else if (
+              data.stat === "pointsdevie" &&
+              character.currentHealth !== undefined
+            ) {
+              character.currentHealth = data.newValue;
+            } else if (
+              data.stat === "tourattaque" &&
+              character.currentTurns !== undefined
+            ) {
+              character.currentTurns = data.newValue;
+            }
+          }
+
+          // Rafraîchir l'affichage immédiatement
+          console.log(
+            `Mise à jour de l'affichage suite à la modification de statistiques pour ${data.characterId}`
+          );
+          renderCards();
+          updateActionButtons();
+        }); // FIN DU NOUVEL ÉCOUTEUR
+
+        // ... existing code ...
       });
     </script>
   </body>
