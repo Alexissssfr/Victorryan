@@ -3653,21 +3653,18 @@
           const bonusCard = player.cards.bonus.find((b) => b.id === bonusId);
 
           if (bonusCard) {
-            // Vérifier si la valeur a réellement changé pour éviter des rendus inutiles
-            if (bonusCard.tourbonus !== newChargeCount.toString()) {
-              console.log(
-                `Mise à jour locale tourbonus pour ${bonusId} (${bonusCard.nomcartebonus}): ${bonusCard.tourbonus} -> ${newChargeCount}`
-              );
-              bonusCard.tourbonus = newChargeCount.toString(); // Mettre à jour la valeur locale avec celle du serveur
+            // Convertir les valeurs en nombres pour la comparaison
+            const currentChargeCount = parseInt(bonusCard.tourbonus) || 0;
 
-              // Rafraîchir l'affichage
-              renderCards();
-              updateActionButtons(); // Mettre à jour aussi les boutons
-            } else {
-              console.log(
-                `tourbonus pour ${bonusId} déjà à jour (${newChargeCount}).`
-              );
-            }
+            // Toujours mettre à jour la valeur locale avec celle du serveur
+            console.log(
+              `Mise à jour locale tourbonus pour ${bonusId} (${bonusCard.nomcartebonus}): ${currentChargeCount} -> ${newChargeCount}`
+            );
+            bonusCard.tourbonus = newChargeCount.toString(); // Mettre à jour la valeur locale avec celle du serveur
+
+            // Rafraîchir l'affichage
+            renderCards();
+            updateActionButtons(); // Mettre à jour aussi les boutons
           } else {
             console.warn(
               `Carte bonus ${bonusId} non trouvée localement pour mise à jour.`

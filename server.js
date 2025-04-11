@@ -474,59 +474,42 @@ io.on("connection", (socket) => {
   // Jouer une carte bonus
   socket.on("playBonus", (data) => {
     const { gameId, playerId, bonusId, targetId } = data;
-    console.log("Tentative de jouer un bonus:", data);
 
-    if (!games.has(gameId)) {
+    // Vérifier si la partie existe
+    const game = games.get(gameId);
+    if (!game) {
       console.log("Partie non trouvée:", gameId);
       socket.emit("error", { message: "Partie non trouvée" });
       return;
     }
 
-    const game = games.get(gameId);
-    const gameBonusState = gameBonus.get(gameId);
-
-    // Mettre à jour l'activité de la partie
-    updateGameActivity(gameId);
-
-    if (!game || !gameBonusState) {
-      console.log("État de jeu ou bonus non trouvé");
-      socket.emit("error", { message: "Partie non trouvée" });
-      return;
-    }
-
-    // Vérifier que le joueur est dans la partie
-    const playerKey = Object.keys(game.players).find(
-      (key) => game.players[key].id === playerId
-    );
-
-    if (!playerKey) {
-      console.log("Joueur non trouvé dans la partie:", playerId);
-      socket.emit("error", { message: "Joueur non trouvé dans la partie" });
-      return;
-    }
-
-    // Vérifier que c'est bien le tour du joueur
+    // Vérifier si c'est le tour du joueur
     if (game.currentTurn !== playerId) {
-      console.log("Ce n'est pas le tour du joueur pour jouer un bonus:", {
-        currentTurn: game.currentTurn,
-        playerId,
-      });
+      console.log("Ce n'est pas votre tour:", playerId);
       socket.emit("error", { message: "Ce n'est pas votre tour" });
       return;
     }
 
-    // Vérifier si le nombre maximum de bonus par tour a été atteint
-    if (game.bonusPlayedThisTurn >= game.maxBonusPerTurn) {
-      console.log("Nombre maximum de bonus par tour atteint");
-      socket.emit("error", {
-        message: `Vous avez déjà joué ${game.maxBonusPerTurn} bonus ce tour. Attendez le tour suivant.`,
-      });
+    // Vérifier si le joueur a déjà joué 2 bonus ce tour
+    if (game.bonusPlayedThisTurn >= 2) {
+      console.log("Maximum de bonus joués ce tour:", playerId);
+      socket.emit("error", { message: "Vous avez déjà joué 2 bonus ce tour" });
       return;
     }
 
-    const player = game.players[playerKey];
-    const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
+    // Trouver le joueur
+    const player = game.players[playerId];
+    if (!player) {
+      console.log("Joueur non trouvé:", playerId);
+      socket.emit("error", { message: "Joueur non trouvé" });
+      return;
+    }
 
+    // Clé unique pour ce joueur dans cette partie
+    const playerKey = `${gameId}:${playerId}`;
+
+    // Trouver la carte bonus
+    const bonusCard = player.cards.bonus.find((card) => card.id === bonusId);
     if (!bonusCard) {
       console.log("Carte bonus non trouvée:", bonusId);
       socket.emit("error", { message: "Carte bonus non trouvée" });
@@ -599,7 +582,8 @@ io.on("connection", (socket) => {
     activeBonuses.push(bonusEffect);
 
     // Décrémenter le nombre de tours restants du bonus
-    bonusCard.tourbonus = (tourbonus - 1).toString();
+    const newChargeCount = tourbonus - 1;
+    bonusCard.tourbonus = newChargeCount.toString();
 
     // Recalculer l'attaque du personnage avec tous les bonus actifs
     let currentAttack = parseInt(targetCard.forceattaque);
@@ -609,20 +593,16 @@ io.on("connection", (socket) => {
     });
     targetState.forceattaque = currentAttack;
 
-    // Synchroniser currentAttack avec forceattaque
-    if (targetState.currentAttack !== undefined) {
-      targetState.currentAttack = targetState.forceattaque;
-    }
-
     // Incrémenter le compteur de bonus joués ce tour
     game.bonusPlayedThisTurn++;
 
     // Émettre l'événement de mise à jour de la charge du bonus (OPTIMISÉ)
+    console.log(`Émission bonusChargeUpdated: ${bonusId} -> ${newChargeCount}`);
     io.to(gameId).emit("bonusChargeUpdated", {
       gameId,
       playerId,
       bonusId,
-      newChargeCount: parseInt(bonusCard.tourbonus),
+      newChargeCount: newChargeCount,
     });
 
     // Émettre l'événement de mise à jour de l'attaque du personnage (OPTIMISÉ)
@@ -631,26 +611,11 @@ io.on("connection", (socket) => {
       playerId,
       characterId: targetId,
       stats: {
-        forceattaque: targetState.forceattaque,
-        currentAttack: targetState.forceattaque, // Ajout de currentAttack pour mise à jour visuelle immédiate
+        forceattaque: currentAttack,
       },
     });
 
-    // Émettre l'événement de bonus joué (sans l'état complet du jeu)
-    io.to(gameId).emit("bonusPlayed", {
-      gameId,
-      playerId,
-      bonusId,
-      targetId,
-      bonusName: bonusCard.nomcartebonus,
-      targetName: targetCard.nomcarteperso,
-      newAttack: targetState.forceattaque,
-      bonusPlayedThisTurn: game.bonusPlayedThisTurn,
-      maxBonusPerTurn: game.maxBonusPerTurn,
-      // newGameState: JSON.parse(JSON.stringify(game)), // COMMENTÉ POUR OPTIMISATION
-    });
-
-    // Vérifier si la partie est terminée
+    // Vérifier si le joueur a encore des actions possibles
     checkGameEnd(gameId);
   });
 
